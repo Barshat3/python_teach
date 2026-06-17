@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python at Mero Coding Class</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2330;
+      --border:    #2a3340;
+      --accent:    #7c3aed;
+      --accent2:   #a78bfa;
+      --accent3:   #34d399;
+      --text:      #e6edf3;
+      --text-dim:  #8b949e;
+      --tag-bg:    #1e2d3d;
+      --tag-text:  #58a6ff;
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-body: 'Nunito', sans-serif;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .header-meta {
+      font-family: var(--font-code);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-meta .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent3);
+      display: inline-block;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 5rem 2rem 3.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      color: var(--accent2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      height: 1px;
+      width: 40px;
+      background: var(--accent2);
+      opacity: 0.4;
+    }
+
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    h1 span {
+      background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto 2.25rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .stat-num {
+      font-family: var(--font-head);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    .stat-label {
+      font-family: var(--font-code);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .divider hr {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── SLIDE GRID ── */
+    .grid-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    .section-label {
+      font-family: var(--font-code);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .slide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--border);
+    }
+
+    .slide-card {
+      background: var(--surface);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .slide-card:hover {
+      background: var(--surface2);
+    }
+
+    .slide-card:hover::before {
+      opacity: 0.04;
+    }
+
+    .slide-card:hover .card-num {
+      color: var(--accent2);
+    }
+
+    .slide-card:hover .card-arrow {
+      transform: translateX(4px);
+      color: var(--accent2);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .card-num {
+      font-family: var(--font-code);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      transition: color 0.18s ease;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .card-arrow {
+      font-size: 0.75rem;
+      color: var(--border);
+      transition: transform 0.18s ease, color 0.18s ease;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+      line-height: 1.35;
+    }
+
+    .card-tag {
+      display: inline-block;
+      font-family: var(--font-code);
+      font-size: 0.65rem;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      border-radius: 4px;
+      padding: 2px 7px;
+      align-self: flex-start;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-family: var(--font-code);
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    footer a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    .footer-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-row span { color: var(--border); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 500px) {
+      header { padding: 0 1rem; }
+      .hero  { padding: 3.5rem 1rem 2.5rem; }
+      .grid-section { padding: 2rem 1rem 4rem; }
+      .slide-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">py</div>
+    Mero Coding Class
+  </a>
+  <div class="header-meta">
+    <span class="dot"></span>
+    Python Course &mdash; Class 10
+  </div>
+</header>
+
+<section class="hero">
+  <p class="hero-eyebrow">Interactive Slide Decks</p>
+  <h1>Learn Python,<br><span>one slide at a time.</span></h1>
+  <p class="hero-sub">29 lessons from introduction to deployment — with live code execution, quizzes, and bug hunts built right in.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num">29</span>
+      <span class="stat-label">Lessons</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">live</span>
+      <span class="stat-label">Python (Pyodide)</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">MCQ</span>
+      <span class="stat-label">Per Lesson</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><hr></div>
+
+<main class="grid-section">
+  <p class="section-label">All lessons</p>
+  <div class="slide-grid">
+
+    <a class="slide-card" href="1_Intro.html">
+      <div class="card-top">
+        <span class="card-num">01</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Introduction to Python</span>
+      <span class="card-tag">intro</span>
+    </a>
+
+    <a class="slide-card" href="2_DataTypesVariables.html">
+      <div class="card-top">
+        <span class="card-num">02</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Data Types &amp; Variables</span>
+      <span class="card-tag">basics</span>
+    </a>
+
+    <a class="slide-card" href="3_InputOutput.html">
+      <div class="card-top">
+        <span class="card-num">03</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Input &amp; Output</span>
+      <span class="card-tag">basics</span>
+    </a>
+
+    <a class="slide-card" href="4_Conditional_Statements.html">
+      <div class="card-top">
+        <span class="card-num">04</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Conditional Statements</span>
+      <span class="card-tag">control flow</span>
+    </a>
+
+    <a class="slide-card" href="5_For_Loops.html">
+      <div class="card-top">
+        <span class="card-num">05</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">For Loops</span>
+      <span class="card-tag">control flow</span>
+    </a>
+
+    <a class="slide-card" href="6_WhileLoops.html">
+      <div class="card-top">
+        <span class="card-num">06</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">While Loops</span>
+      <span class="card-tag">control flow</span>
+    </a>
+
+    <a class="slide-card" href="7_Functions.html">
+      <div class="card-top">
+        <span class="card-num">07</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Functions</span>
+      <span class="card-tag">functions</span>
+    </a>
+
+    <a class="slide-card" href="8_BuiltInFunc.html">
+      <div class="card-top">
+        <span class="card-num">08</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Built-in Functions</span>
+      <span class="card-tag">functions</span>
+    </a>
+
+    <a class="slide-card" href="9_Debugging.html">
+      <div class="card-top">
+        <span class="card-num">09</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Debugging</span>
+      <span class="card-tag">debugging</span>
+    </a>
+
+    <a class="slide-card" href="10_List.html">
+      <div class="card-top">
+        <span class="card-num">10</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Lists</span>
+      <span class="card-tag">data structures</span>
+    </a>
+
+    <a class="slide-card" href="11_ListProject.html">
+      <div class="card-top">
+        <span class="card-num">11</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">List Project</span>
+      <span class="card-tag">project</span>
+    </a>
+
+    <a class="slide-card" href="12_Dictionary.html">
+      <div class="card-top">
+        <span class="card-num">12</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Dictionary</span>
+      <span class="card-tag">data structures</span>
+    </a>
+
+    <a class="slide-card" href="13_DictProjects.html">
+      <div class="card-top">
+        <span class="card-num">13</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Dictionary Projects</span>
+      <span class="card-tag">project</span>
+    </a>
+
+    <a class="slide-card" href="14_TuplesSet.html">
+      <div class="card-top">
+        <span class="card-num">14</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Tuples &amp; Sets</span>
+      <span class="card-tag">data structures</span>
+    </a>
+
+    <a class="slide-card" href="15_Files.html">
+      <div class="card-top">
+        <span class="card-num">15</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">File Handling</span>
+      <span class="card-tag">i/o</span>
+    </a>
+
+    <a class="slide-card" href="16_ErrorHandling.html">
+      <div class="card-top">
+        <span class="card-num">16</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Error Handling</span>
+      <span class="card-tag">debugging</span>
+    </a>
+
+    <a class="slide-card" href="17_NestedLoops.html">
+      <div class="card-top">
+        <span class="card-num">17</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Nested Loops</span>
+      <span class="card-tag">control flow</span>
+    </a>
+
+    <a class="slide-card" href="18_DataVisualization.html">
+      <div class="card-top">
+        <span class="card-num">18</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Data Visualization</span>
+      <span class="card-tag">visualization</span>
+    </a>
+
+    <a class="slide-card" href="19_CustomizingGraphs.html">
+      <div class="card-top">
+        <span class="card-num">19</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Customizing Graphs</span>
+      <span class="card-tag">visualization</span>
+    </a>
+
+    <a class="slide-card" href="20_AdvancedGraphTypes.html">
+      <div class="card-top">
+        <span class="card-num">20</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Advanced Graph Types</span>
+      <span class="card-tag">visualization</span>
+    </a>
+
+    <a class="slide-card" href="21_PlanningFinalProject.html">
+      <div class="card-top">
+        <span class="card-num">21</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Planning the Final Project</span>
+      <span class="card-tag">project</span>
+    </a>
+
+    <a class="slide-card" href="22_PresentingFinalProject.html">
+      <div class="card-top">
+        <span class="card-num">22</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Presenting the Final Project</span>
+      <span class="card-tag">project</span>
+    </a>
+
+    <a class="slide-card" href="23_IntroToSDLC.html">
+      <div class="card-top">
+        <span class="card-num">23</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Intro to SDLC</span>
+      <span class="card-tag">sdlc</span>
+    </a>
+
+    <a class="slide-card" href="24_RequirementGathering.html">
+      <div class="card-top">
+        <span class="card-num">24</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Requirement Gathering</span>
+      <span class="card-tag">sdlc</span>
+    </a>
+
+    <a class="slide-card" href="25_DesigningProject.html">
+      <div class="card-top">
+        <span class="card-num">25</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Designing the Project</span>
+      <span class="card-tag">sdlc</span>
+    </a>
+
+    <a class="slide-card" href="26_DevelopmentAndTesting.html">
+      <div class="card-top">
+        <span class="card-num">26</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Development &amp; Testing</span>
+      <span class="card-tag">sdlc</span>
+    </a>
+
+    <a class="slide-card" href="27_DeploymentDocumentation.html">
+      <div class="card-top">
+        <span class="card-num">27</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Deployment &amp; Documentation</span>
+      <span class="card-tag">sdlc</span>
+    </a>
+
+    <a class="slide-card" href="28_API.html">
+      <div class="card-top">
+        <span class="card-num">28</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">APIs</span>
+      <span class="card-tag">advanced</span>
+    </a>
+
+    <a class="slide-card" href="29_SimpleGUIwithTkinter.html">
+      <div class="card-top">
+        <span class="card-num">29</span>
+        <i class="fa-solid fa-arrow-right card-arrow"></i>
+      </div>
+      <span class="card-title">Simple GUI with Tkinter</span>
+      <span class="card-tag">advanced</span>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-row">
+    <span>Mero Coding Class</span>
+    <span>·</span>
+    <span>Sankhamul, Kathmandu</span>
+    <span>·</span>
+    <a href="https://github.com/Barshat3/python_teach" target="_blank">
+      <i class="fa-brands fa-github"></i> Barshat3/python_teach
+    </a>
+  </div>
+  <div>Built with Pyodide · Prism.js · Space Grotesk</div>
+</footer>
+
+</body>
+</html>
