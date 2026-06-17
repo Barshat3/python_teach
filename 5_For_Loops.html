@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Programming: Mastering For Loops</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e1b4b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --accent-teal: #14b8a6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 750px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeInSlide 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #slide-counter {
+            position: absolute;
+            top: 2rem;
+            right: 3rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--accent-teal);
+            background: rgba(20, 184, 166, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(20, 184, 166, 0.2);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s ease-in-out;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        /* MCQ Style Overrides */
+        .mcq-option {
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+        .mcq-option:hover:not(.disabled) {
+            transform: translateX(8px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-primary);
+        }
+
+        /* Bug Hunt Style */
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .bug-line:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+
+        /* Pyodide Console style */
+        .console-output {
+            background: #090d16;
+            font-family: 'Fira Code', monospace;
+            min-height: 100px;
+            max-height: 180px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-50 antialiased selection:bg-indigo-500/30">
+
+<div id="presentation-container" class="relative">
+    
+    <div class="slide active custom-scrollbar">
+        <span class="text-indigo-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-code-branch mr-2"></i>Python Programming Foundations</span>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-purple-400">
+            Control Flow: Understanding Loops
+        </h1>
+        <p class="text-lg text-slate-300 max-w-2xl mb-8 leading-relaxed">
+            Imagine writing a script where you need to repeat an instruction 100 times. Copy-pasting code is exhausting and messy. <strong>Loops</strong> solve this by letting us run a block of code repeatedly with zero code duplication.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div class="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50 flex gap-4">
+                <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-arrows-spin text-xl text-indigo-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">For Loops</h3>
+                    <p class="text-slate-400 text-sm">Best utilized when you want to iterate over a precise, predefined sequence like a list, string, or fixed range.</p>
+                </div>
+            </div>
+            <div class="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50 flex gap-4 opacity-70">
+                <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-rotate-right text-xl text-purple-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">While Loops</h3>
+                    <p class="text-slate-400 text-sm">Used to loop purely based on a conditional state. It repeats continuously until the evaluation becomes False.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar">
+        <span class="text-teal-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-circle-nodes mr-2"></i>Core Mechanism</span>
+        <h2 class="text-3xl font-bold mb-4">Anatomy of a For Loop</h2>
+        <p class="text-slate-300 mb-6 text-sm md:text-base">
+            A <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 font-mono">for</code> loop steps through each element inside a sequence (like a range of numbers) sequentially.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="lg:col-span-5 space-y-4">
+                <div class="p-4 rounded-xl bg-slate-800/40 border-l-4 border-indigo-500">
+                    <span class="block font-bold text-xs text-indigo-400 uppercase tracking-wide">Abstract Syntax</span>
+                    <pre class="font-mono text-sm text-slate-200 mt-1">for variable in sequence:
+    # block of code to run</pre>
+                </div>
+                
+                <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+                    <h4 class="text-sm font-bold text-teal-400 mb-1"><i class="fa-solid fa-circle-info mr-1.5"></i>Pro-Tip: The Range Function</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        <code class="text-slate-200 font-mono">range(start, stop)</code> begins exactly at <code class="text-slate-200 font-mono">start</code>, but halts right <strong>before</strong> reaching <code class="text-slate-200 font-mono">stop</code>!
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7">
+                <span class="block font-bold text-xs text-slate-400 uppercase tracking-wide mb-2">Live Application Structure</span>
+                <pre class="rounded-xl overflow-hidden shadow-2xl !my-0"><code class="language-python"># This loop triggers exactly 5 times (from 1 up to 5)
+for i in range(1, 6):
+    print("Hello, World!")</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar">
+        <span class="text-purple-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-diamond-turn-right mr-2"></i>Advanced Flow Alteration</span>
+        <h2 class="text-3xl font-bold mb-6">Loop Modifiers: Break & Continue</h2>
+        <p class="text-slate-300 mb-6">
+            Sometimes we need to break out of a loop prematurely or bypass specific conditions mid-execution. Python offers two special operators to modify workflow.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-5 rounded-xl bg-rose-950/20 border border-rose-500/30 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-rose-400 font-bold text-lg mb-2">
+                        <i class="fa-solid fa-circle-stop"></i>
+                        <span>break Statement</span>
+                    </div>
+                    <p class="text-sm text-slate-300 mb-4">
+                        Terminates execution of the current loop completely and forces execution down to the subsequent block.
+                    </p>
+                </div>
+                <pre class="rounded-lg !bg-slate-950/80 !p-3"><code class="language-python">for i in range(1, 10):
+    if i == 5:
+        break  # Stops completely at 5
+    print(i)</code></pre>
+            </div>
+
+            <div class="p-5 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-lg mb-2">
+                        <i class="fa-solid fa-forward-step"></i>
+                        <span>continue Statement</span>
+                    </div>
+                    <p class="text-sm text-slate-300 mb-4">
+                        Skips the remaining statements within the current running block and immediately returns to evaluate the next cycle state.
+                    </p>
+                </div>
+                <pre class="rounded-lg !bg-slate-950/80 !p-3"><code class="language-python">for i in range(1, 10):
+    if i == 5:
+        continue # Skips printing 5
+    print(i)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar">
+        <span class="text-emerald-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-laptop-code mr-2"></i>Interactive Sandbox 01</span>
+        <h2 class="text-2xl font-bold mb-2">Challenge: Calculate Square Exponents</h2>
+        <p class="text-slate-300 text-sm mb-4">
+            Below is a program built to generate structural squares of integers tracking values starting from <code class="bg-slate-800 text-emerald-300 px-1 rounded font-mono">1 to 10</code>. Experiment and hit run!
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+            <div class="lg:col-span-7 flex flex-col h-full">
+                <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-xl border-t border-x border-slate-700">
+                    <span class="text-xs font-mono text-slate-400">main.py</span>
+                    <button class="run-btn text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded transition flex items-center gap-1" disabled>
+                        <i class="fa-solid fa-play"></i> Run Code
+                    </button>
+                </div>
+                <textarea class="code-editor flex-1 p-4 bg-slate-950 text-slate-200 font-mono text-sm border border-slate-700 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false">for i in range(1, 11):
+    print(f"Square of {i} is {i**2}")</textarea>
+            </div>
+            <div class="lg:col-span-5 flex flex-col h-full">
+                <span class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Execution Output:</span>
+                <div class="console-output flex-1 p-4 rounded-xl border border-slate-800 text-sm overflow-auto custom-scrollbar text-slate-300 whitespace-pre">Loading Python environment...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar">
+        <span class="text-emerald-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-laptop-code mr-2"></i>Interactive Sandbox 02</span>
+        <h2 class="text-2xl font-bold mb-2">Challenge: Dynamic Multiple Generator</h2>
+        <p class="text-slate-300 text-sm mb-4">
+            This module collects a targeted integer dynamically and uses a sequence iteration loop strategy to safely list out its first 10 absolute multiples.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+            <div class="lg:col-span-7 flex flex-col h-full">
+                <div class="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-t-xl border-t border-x border-slate-700">
+                    <span class="text-xs font-mono text-slate-400">multiples.py</span>
+                    <button class="run-btn text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded transition flex items-center gap-1" disabled>
+                        <i class="fa-solid fa-play"></i> Run Code
+                    </button>
+                </div>
+                <textarea class="code-editor flex-1 p-4 bg-slate-950 text-slate-200 font-mono text-sm border border-slate-700 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false">print("Multiples Generator")
+# In this standalone editor, we simulate the number input variable locally:
+number = 7 
+print(f"The first 10 multiples of {number} are:")
+for i in range(1, 11):
+    print(f"{number} x {i} = {number * i}")</textarea>
+            </div>
+            <div class="lg:col-span-5 flex flex-col h-full">
+                <span class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-1">Execution Output:</span>
+                <div class="console-output flex-1 p-4 rounded-xl border border-slate-800 text-sm overflow-auto custom-scrollbar text-slate-300 whitespace-pre">Loading Python environment...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar" id="bug-hunt-slide">
+        <span class="text-rose-400 font-bold uppercase tracking-wider text-sm mb-2"><i class="fa-solid fa-bug mr-2"></i>Code Analysis Diagnostic</span>
+        <h2 class="text-2xl font-bold mb-2">Code Bug Hunt!</h2>
+        <p class="text-slate-300 text-sm mb-4">
+            An engineer wrote this block intending to print numbers from 1 up to 5, but something went wrong. Click the exact row where a syntax or logic bug resides!
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-2">
+            <div class="lg:col-span-7 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-sm select-none">
+                <div class="bug-line p-2 rounded bg-slate-900/40" data-line="1" data-correct="false">
+                    <span class="text-slate-600 mr-4">1</span><span class="text-indigo-400">for</span> i <span class="text-indigo-400">in</span> range(1, 5):
+                </div>
+                <div class="bug-line p-2 rounded bg-slate-900/40" data-line="2" data-correct="true">
+                    <span class="text-slate-600 mr-4">2</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-indigo-400">if</span> i == 3
+                </div>
+                <div class="bug-line p-2 rounded bg-slate-900/40" data-line="3" data-correct="false">
+                    <span class="text-slate-600 mr-4">3</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-indigo-400">continue</span>
+                </div>
+                <div class="bug-line p-2 rounded bg-slate-900/40" data-line="4" data-correct="false">
+                    <span class="text-slate-600 mr-4">4</span>&nbsp;&nbsp;&nbsp;&nbsp;print(i)
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 space-y-4">
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/60">
+                    <span class="text-xs uppercase font-bold text-slate-400 block mb-1">Diagnostic Counter</span>
+                    <div class="text-2xl font-bold text-amber-400" id="bug-score-text">Bugs identified: 0 / 1</div>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900 text-xs text-slate-400 border border-slate-800 leading-relaxed hidden" id="bug-feedback">
+                    <strong class="text-emerald-400 block text-sm mb-1"><i class="fa-solid fa-square-check mr-1"></i>Spotted!</strong>
+                    Line 2 completely lacks the required trailing colon (<code class="text-slate-200 font-mono">:</code>) signaling the structural branch initialization. Additionally, notice that <code class="text-slate-200 font-mono">range(1, 5)</code> will stop short at 4!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide custom-scrollbar" id="mcq-slide">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <span class="text-purple-400 font-bold uppercase tracking-wider text-sm block"><i class="fa-solid fa-graduation-cap mr-2"></i>Knowledge Verification</span>
+                <h2 class="text-2xl font-bold">Check Your Understanding</h2>
+            </div>
+            <span class="text-xs bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full font-bold text-purple-300" id="mcq-progress">
+                Question 1 of 5
+            </span>
+        </div>
+
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 flex-1 flex flex-col justify-between">
+            <div id="mcq-questions-container">
+                <div class="mcq-question-wrapper" data-index="0">
+                    <p class="text-lg font-medium mb-4 text-slate-200">1. What is the purpose of a for loop in Python?</p>
+                    <div class="space-y-3">
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="A">A. To repeat code a fixed number of times.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="B">B. To check conditions repeatedly until false.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="C">C. To execute code without stopping.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="D">D. To store multiple values in a single variable.</div>
+                    </div>
+                </div>
+
+                <div class="mcq-question-wrapper hidden" data-index="1">
+                    <p class="text-lg font-medium mb-4 text-slate-200">2. What does the range(5) function generate?</p>
+                    <div class="space-y-3">
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="A">A. Numbers from 1 to 5.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="B">B. Numbers from 0 to 5.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="C">C. Numbers from 0 to 4.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="D">D. Numbers from 1 to 4.</div>
+                    </div>
+                </div>
+
+                <div class="mcq-question-wrapper hidden" data-index="2">
+                    <p class="text-lg font-medium mb-4 text-slate-200">3. What will the following code output?</p>
+                    <pre class="mb-3 !p-3 !bg-slate-950 font-mono text-xs rounded-lg"><code class="language-python">for i in range(1, 6):
+    print(i)</code></pre>
+                    <div class="space-y-3">
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="A">A. 1, 2, 3, 4</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="B">B. 1, 2, 3, 4, 5</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="C">C. 0, 1, 2, 3, 4</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="D">D. 0, 1, 2, 3, 4, 5</div>
+                    </div>
+                </div>
+
+                <div class="mcq-question-wrapper hidden" data-index="3">
+                    <p class="text-lg font-medium mb-4 text-slate-200">4. In the following code, what does the continue statement do?</p>
+                    <pre class="mb-3 !p-3 !bg-slate-950 font-mono text-xs rounded-lg"><code class="language-python">for i in range(1, 6):
+    if i == 3:
+        continue
+    print(i)</code></pre>
+                    <div class="space-y-3">
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="A">A. Stops the loop completely when i == 3.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="B">B. Skips printing i == 3 but continues the loop.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="C">C. Exits the loop and moves to the next iteration.</div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="D">D. Causes an error in the code.</div>
+                    </div>
+                </div>
+
+                <div class="mcq-question-wrapper hidden" data-index="4">
+                    <p class="text-lg font-medium mb-4 text-slate-200">5. Which of the following loops will print only even numbers from 0 to 10?</p>
+                    <div class="space-y-3">
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="A">
+                            A. <code class="font-mono bg-slate-950/60 text-slate-300 px-1 py-0.5 rounded ml-1">for i in range(0, 11): print(i)</code>
+                        </div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="B">
+                            B. <code class="font-mono bg-slate-950/60 text-slate-300 px-1 py-0.5 rounded ml-1">for i in range(0, 11, 2): print(i)</code>
+                        </div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="C">
+                            C. <code class="font-mono bg-slate-950/60 text-slate-300 px-1 py-0.5 rounded ml-1">for i in range(0, 11): if i % 2 != 0: print(i)</code>
+                        </div>
+                        <div class="mcq-option p-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-sm" data-ans="D">
+                            D. <code class="font-mono bg-slate-950/60 text-slate-300 px-1 py-0.5 rounded ml-1">for i in range(0, 11, 3): print(i)</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                <div class="text-xs font-semibold text-slate-400" id="mcq-feedback-text">Select an option above.</div>
+                <div class="flex gap-2">
+                    <button id="mcq-prev-btn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold opacity-50 cursor-not-allowed transition" disabled>
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                    </button>
+                    <button id="mcq-next-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition hidden">
+                        Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="id-holder" id="slide-counter">1 / 7</div>
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // Answers Array provided explicitly by user content
+    const mcqAnswers = ["A", "C", "B", "B", "B"];
+    let currentMcqIdx = 0;
+    let answeredQuestions = {};
+
+    // Slide Mechanics configuration
+    const slides = document.querySelectorAll('.slide');
+    let currentSlideIndex = 0;
+
+    function updatePresentationView() {
+        slides.forEach((slide, index) => {
+            if (index === currentSlideIndex) {
+                slide.classList.add('active');
+                // Force Prism re-highlighting on visual element injection
+                const codes = slide.querySelectorAll('pre code');
+                codes.forEach(code => Prism.highlightElement(code));
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Update indicators
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+        const pct = ((currentSlideIndex + 1) / slides.length) * 100;
+        document.getElementById('progress').style.width = `${pct}%`;
+    }
+
+    function navigateNext() {
+        if (currentSlideIndex < slides.length - 1) {
+            currentSlideIndex++;
+            updatePresentationView();
+        }
+    }
+
+    function navigatePrev() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentationView();
+        }
+    }
+
+    // Key handlers
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            // Prevent scrolling on space inside textareas
+            if (document.activeElement.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            navigateNext();
+        } else if (e.key === 'ArrowLeft') {
+            if (document.activeElement.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            navigatePrev();
+        }
+    });
+
+    // MCQ Logic
+    const qWrappers = document.querySelectorAll('.mcq-question-wrapper');
+    const mcqFeedback = document.getElementById('mcq-feedback-text');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+
+    function syncMcqQuestionState() {
+        qWrappers.forEach((wrap, idx) => {
+            if (idx === currentMcqIdx) wrap.classList.remove('hidden');
+            else wrap.classList.add('hidden');
+        });
+
+        document.getElementById('mcq-progress').textContent = `Question ${currentMcqIdx + 1} of ${qWrappers.length}`;
+        
+        // Navigation buttons state logic
+        mcqPrevBtn.disabled = currentMcqIdx === 0;
+        if (currentMcqIdx === 0) mcqPrevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        else mcqPrevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        if (answeredQuestions[currentMcqIdx] !== undefined) {
+            showExistingMcqAnswerFeedback(currentMcqIdx);
+        } else {
+            mcqFeedback.innerHTML = "Select an option above.";
+            mcqFeedback.className = "text-xs font-semibold text-slate-400";
+            mcqNextBtn.classList.add('hidden');
+        }
+    }
+
+    function showExistingMcqAnswerFeedback(idx) {
+        const selected = answeredQuestions[idx];
+        const correct = mcqAnswers[idx];
+        if (selected === correct) {
+            mcqFeedback.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> Correct!</span>`;
+        } else {
+            mcqFeedback.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Incorrect. Correct Answer is ${correct}</span>`;
+        }
+        
+        if (currentMcqIdx < qWrappers.length - 1) {
+            mcqNextBtn.innerHTML = `Next Question <i class="fa-solid fa-chevron-right ml-1"></i>`;
+            mcqNextBtn.classList.remove('hidden');
+        } else {
+            mcqNextBtn.innerHTML = `<i class="fa-solid fa-flag-checkered mr-1"></i> Finish Deck`;
+            mcqNextBtn.classList.remove('hidden');
+        }
+    }
+
+    document.querySelectorAll('.mcq-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const wrapper = this.closest('.mcq-question-wrapper');
+            const qIdx = parseInt(wrapper.getAttribute('data-index'));
+
+            if (answeredQuestions[qIdx] !== undefined) return; // already locked
+
+            const selectedLetter = this.getAttribute('data-ans');
+            answeredQuestions[qIdx] = selectedLetter;
+
+            const correctLetter = mcqAnswers[qIdx];
+            
+            // Highlight options
+            const siblings = wrapper.querySelectorAll('.mcq-option');
+            siblings.forEach(sib => {
+                sib.classList.add('disabled', 'opacity-60');
+                if (sib.getAttribute('data-ans') === correctLetter) {
+                    sib.classList.remove('opacity-60');
+                    sib.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                }
+            });
+
+            if (selectedLetter !== correctLetter) {
+                this.classList.remove('opacity-60');
+                this.classList.add('bg-rose-500/20', 'border-rose-500', 'text-rose-300');
+            }
+
+            showExistingMcqAnswerFeedback(qIdx);
+        });
+    });
+
+    mcqNextBtn.addEventListener('click', () => {
+        if (currentMcqIdx < qWrappers.length - 1) {
+            currentMcqIdx++;
+            syncMcqQuestionState();
+        } else {
+            mcqFeedback.innerHTML = `<span class="text-teal-400 font-bold text-sm"><i class="fa-solid fa-star mr-1"></i> Presentation complete! Excellent work.</span>`;
+            mcqNextBtn.classList.add('hidden');
+        }
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if (currentMcqIdx > 0) {
+            currentMcqIdx--;
+            syncMcqQuestionState();
+        }
+    });
+
+
+    // Bug Hunt Mechanism
+    let bugFound = false;
+    document.querySelectorAll('.bug-line').forEach(line => {
+        line.addEventListener('click', function() {
+            if (bugFound) return;
+            const isCorrect = this.getAttribute('data-correct') === 'true';
+            if (isCorrect) {
+                bugFound = true;
+                this.classList.add('bg-emerald-500/20', 'border', 'border-emerald-500');
+                document.getElementById('bug-score-text').textContent = "Bugs identified: 1 / 1";
+                document.getElementById('bug-score-text').className = "text-2xl font-bold text-emerald-400";
+                document.getElementById('bug-feedback').classList.remove('hidden');
+            } else {
+                this.classList.add('bg-rose-500/10', 'line-through', 'opacity-40');
+            }
+        });
+    });
+
+
+    // Real Pyodide Python Engine Setup
+    let pyodideInstance = null;
+    async function initPyodideEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.querySelectorAll('.console-output').forEach(el => el.textContent = "Python 3.12 Engine Ready.\nClick 'Run Code' to execute sandbox logic.");
+            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = false);
+        } catch(err) {
+            document.querySelectorAll('.console-output').forEach(el => el.textContent = "Error loading python environment framework.");
+        }
+    }
+
+    document.querySelectorAll('.run-btn').forEach((btn, index) => {
+        btn.addEventListener('click', async () => {
+            if (!pyodideInstance) return;
+            const textareas = document.querySelectorAll('.code-editor');
+            const consoles = document.querySelectorAll('.console-output');
+            const codeToExecute = textareas[index].value;
+            
+            consoles[index].textContent = "Executing code...";
+            
+            // Redirect absolute stdout standard channels
+            pyodideInstance.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+
+            try {
+                await pyodideInstance.runPythonAsync(codeToExecute);
+                let stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+                let stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+                consoles[index].textContent = stdout + (stderr ? "\nError:\n" + stderr : "") || "Code finished running executing output logs cleanly (No standard print streams generated).";
+            } catch (err) {
+                consoles[index].textContent = `Python execution raised a fatal Exception structure:\n${err.message}`;
+            }
+        });
+    });
+
+    // Boot everything up
+    initPyodideEngine();
+    syncMcqQuestionState();
+</script>
+</body>
+</html>

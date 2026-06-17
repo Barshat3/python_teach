@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Dictionaries - Class 11</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --bg-dark: #0F172A;
+            --card-dark: #1E293B;
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        #slide-counter {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            z-index: 50;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #presentation-container {
+            width: 90vw;
+            height: 80vh;
+            max-width: 1400px;
+            max-height: 850px;
+            background: var(--card-dark);
+            border-radius: 24px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key-box {
+            background: #334155;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-family: monospace;
+            border-bottom: 2px solid #1e293b;
+        }
+
+        /* MCQ Flow Styling */
+        .mcq-option {
+            background: #334155;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+        .mcq-option:hover:not(.disabled) {
+            background: #475569;
+            transform: translateX(6px);
+            border-color: var(--primary);
+        }
+        .mcq-option.correct {
+            background: rgba(16, 185, 129, 0.2) !important;
+            border-color: var(--secondary) !important;
+            color: #10B981 !important;
+        }
+        .mcq-option.incorrect {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: var(--danger) !important;
+            color: #EF4444 !important;
+        }
+
+        /* Bug hunt line selectors */
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            background: rgba(239, 68, 68, 0.15);
+            border-left-color: var(--danger);
+        }
+
+        /* Pyodide Console Layout */
+        .console-output {
+            font-family: 'Fira Code', monospace;
+            background: #090d16;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+<div id="presentation-container">
+    
+    <div class="slide active flex flex-row items-center justify-between">
+        <div class="w-1/2 pr-8">
+            <span class="px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-sm font-semibold rounded-full uppercase tracking-wider mb-6 inline-block">
+                Class 11 Computer Science
+            </span>
+            <h1 class="text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent leading-none">
+                Mastering Python Dictionaries
+            </h1>
+            <p class="text-xl text-slate-400 leading-relaxed mb-8">
+                Learn how to store, access, and manipulate mapped data dynamically using core built-in structures in Python.
+            </p>
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <i class="fa-solid fa-key text-xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-md">Key-Value Structure</h4>
+                    <p class="text-sm text-slate-400">Optimized mapping architecture</p>
+                </div>
+            </div>
+        </div>
+        <div class="w-1/2 h-full flex items-center justify-center">
+            <div class="w-full max-w-md bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 shadow-2xl relative">
+                <div class="absolute -top-3 -left-3 px-3 py-1 bg-amber-500 text-slate-950 text-xs font-black rounded-md transform -rotate-3 uppercase">Quick Preview</div>
+                <pre class="line-numbers"><code class="language-python"># A real-world map configuration
+student = {
+    "name": "Alice",
+    "age": 12,
+    "grade": "A"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-12 gap-8 items-center h-full">
+            <div class="col-span-6 flex flex-col justify-center">
+                <h2 class="text-4xl font-bold mb-4 flex items-center gap-3">
+                    <span class="text-indigo-500"><i class="fa-solid fa-book-bookmark"></i></span> What is a Dictionary?
+                </h2>
+                <p class="text-lg text-slate-300 mb-6">
+                    A dictionary is an unordered (or order-preserving from Python 3.7+), mutable collection of <strong>key-value pairs</strong>. Each key must be completely unique and maps uniquely to a specific target value.
+                </p>
+                <div class="space-y-4">
+                    <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                        <span class="text-emerald-400 font-bold block mb-1">Generic Mapping Blueprint</span>
+                        <code class="font-mono text-indigo-300">dictionary_name = {key1: value1, key2: value2}</code>
+                    </div>
+                    <div class="border-l-4 border-amber-500 bg-amber-500/10 p-4 rounded-r-xl">
+                        <strong class="text-amber-400 block"><i class="fa-solid fa-circle-exclamation mr-2"></i>Analogy Note</strong>
+                        Think of a real-world language dictionary: You look up a unique <strong>Word (Key)</strong> to find its matching <strong>Definition (Value)</strong>!
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-6 flex items-center justify-center">
+                <div class="w-full bg-slate-900 rounded-xl p-6 border border-slate-700 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <span class="text-xs tracking-widest text-slate-500 uppercase font-bold">Structural Syntax Breakdown</span>
+                        <div class="flex gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500"></span><span class="w-3 h-3 rounded-full bg-yellow-500"></span><span class="w-3 h-3 rounded-full bg-green-500"></span></div>
+                    </div>
+                    <pre><code class="language-python"># Declaring a dictionary object
+student = {
+    "name": "Alice",  # String key mapping to String value
+    "age": 12,        # String key mapping to Integer value
+    "grade": "A"      # String key mapping to String value
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2 class="text-4xl font-bold mb-6 flex items-center gap-3">
+            <span class="text-emerald-400"><i class="fa-solid fa-sliders"></i></span> Accessing & Modifying Target Elements
+        </h2>
+        <div class="grid grid-cols-2 gap-8">
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700/60">
+                <h3 class="text-xl font-bold text-indigo-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-square-caret-right"></i> Retrieval Architecture
+                </h3>
+                <p class="text-slate-300 mb-4 text-sm">
+                    We use the key encased in matching square brackets (<code class="bg-slate-900 px-1.5 py-0.5 rounded text-indigo-300 font-mono">[key]</code>) to rapidly fetch associated values.
+                </p>
+                <pre><code class="language-python">student = {"name": "Alice", "age": 12, "grade": "A"}
+
+# Fetch value mapped under key "name"
+print(student["name"]) 
+
+# Terminal Output:
+# Alice</code></pre>
+            </div>
+            
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700/60">
+                <h3 class="text-xl font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> Mutation Protocols
+                </h3>
+                <p class="text-slate-300 mb-4 text-sm">
+                    We shift or overwrite existing configurations by pinpointing the specific target key and assigning it a new value.
+                </p>
+                <pre><code class="language-python">student = {"name": "Alice", "age": 12, "grade": "A"}
+
+student["age"] = 13 # Modify key "age" securely
+
+print(student)
+# Terminal Output:
+# {'name': 'Alice', 'age': 13, 'grade': 'A'}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2 class="text-4xl font-bold mb-6 flex items-center gap-3">
+            <span class="text-amber-400"><i class="fa-solid fa-boxes-stacked"></i></span> Dynamic State Changes: Add & Delete
+        </h2>
+        <div class="grid grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <h3 class="text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus"></i> Element Inclusion Architecture
+                    </h3>
+                    <p class="text-sm text-slate-300 mb-3">
+                        If an assigned key does not exist yet inside your dictionary target, Python creates it instantly.
+                    </p>
+                    <pre class="text-xs"><code class="language-python">student["school"] = "XYZ High School"
+print(student)
+# {'name': 'Alice', 'age': 13, 'grade': 'A', 'school': 'XYZ High School'}</code></pre>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <h3 class="text-lg font-bold text-rose-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-minus"></i> Structural Removal Protocol
+                    </h3>
+                    <p class="text-sm text-slate-300 mb-3">
+                        The <code class="bg-slate-900 px-1.5 py-0.5 rounded text-rose-400 font-mono">del</code> command completely destroys the mapping key along with its paired values.
+                    </p>
+                    <pre class="text-xs"><code class="language-python">del student["grade"]
+print(student)
+# {'name': 'Alice', 'age': 13, 'school': 'XYZ High School'}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-12 gap-6 h-full items-stretch">
+            <div class="col-span-5 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2 text-indigo-400 flex items-center gap-2">
+                        <i class="fa-solid fa-terminal"></i> Interactive Code Lab
+                    </h2>
+                    <p class="text-sm text-slate-300 mb-4">
+                        Tweak the Python script configuration on the right side. Execute operations natively within your browser dashboard framework to test mutations dynamically.
+                    </p>
+                    <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-xs space-y-2 text-slate-300">
+                        <p class="font-bold text-amber-400"><i class="fa-solid fa-tasks mr-1"></i> Practice Missions:</p>
+                        <p>1. Store your custom metrics (e.g., favorite book, movie, or animal inside a dictionary wrapper).</p>
+                        <p>2. Inject or strip values explicitly via assignment patterns to see how elements output down below.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button onclick="runPythonCode()" id="run-btn" disabled class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black py-3 px-6 rounded-xl transition duration-150 flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-play"></i> <span id="run-btn-text">Loading Python environment...</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="col-span-7 flex flex-col justify-between border border-slate-700 rounded-xl overflow-hidden bg-slate-900">
+                <div class="flex-1 flex flex-col min-h-0">
+                    <div class="bg-slate-950 px-4 py-2 text-xs font-bold text-slate-400 border-b border-slate-800 flex justify-between items-center">
+                        <span>WORKSPACE (EDITABLE CODE)</span>
+                        <i class="fa-custom fa-brands fa-python text-lg text-indigo-400"></i>
+                    </div>
+                    <textarea id="code-editor" class="flex-1 w-full bg-slate-900 text-slate-100 p-4 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none">student = {"name": "Bob", "age": 14, "grade": "B"}
+print("Initial:", student["name"])
+
+# Let's perform modifications:
+student["grade"] = "A"
+student["school"] = "XYZ High"
+print("After Updates:", student)
+
+# Remove a key:
+del student["age"]
+print("After Deletion:", student)</textarea>
+                </div>
+                
+                <div class="h-1/3 border-t border-slate-800 flex flex-col min-h-[120px]">
+                    <div class="bg-slate-950 px-4 py-1.5 text-xs font-bold text-slate-400 border-b border-slate-800">
+                        OUTPUT CONSOLE
+                    </div>
+                    <pre class="console-output flex-1 p-3 text-xs text-emerald-400 overflow-y-auto" id="console-out">Click "Run Code Execution" to evaluate output values above.</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-12 gap-8 items-center h-full">
+            <div class="col-span-5">
+                <span class="px-3 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-full uppercase tracking-wider mb-4 inline-block">
+                    Debugging Simulation
+                </span>
+                <h2 class="text-4xl font-bold mb-4 text-white">The Bug Hunt Challenge</h2>
+                <p class="text-slate-300 mb-6">
+                    A developer wrote this code block to update and change metrics inside a user configuration record, but it causes a critical exception trace on runtime execution. Find and tap the invalid line!
+                </p>
+                <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div class="text-sm font-semibold text-slate-400">Target Score Status:</div>
+                    <div class="text-2xl font-black text-rose-400" id="bug-status">Find the broken mapping line</div>
+                </div>
+            </div>
+            
+            <div class="col-span-7 bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                    <span class="text-xs font-mono text-slate-500">broken_dictionary_logic.py</span>
+                    <span class="text-xs px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded font-bold">1 Bug Hidden</span>
+                </div>
+                <div class="font-mono text-sm space-y-1.5">
+                    <div onclick="checkBugLine(1, this)" class="bug-line p-2 rounded text-slate-300">Line 1: user_profile = {"id": 1045, "verified": True}</div>
+                    <div onclick="checkBugLine(2, this)" class="bug-line p-2 rounded text-slate-300">Line 2: user_profile["tier"] = "Premium"</div>
+                    <div onclick="checkBugLine(3, this)" class="bug-line p-2 rounded text-slate-300">Line 3: print(user_profile["location"])</div>
+                    <div onclick="checkBugLine(4, this)" class="bug-line p-2 rounded text-slate-300">Line 4: del user_profile["id"]</div>
+                </div>
+                <div id="bug-feedback" class="mt-4 p-3 bg-slate-900 border border-slate-800 text-xs rounded-lg text-slate-400 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="max-w-4xl mx-auto w-full flex flex-col justify-between h-full py-4">
+            <div>
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-4 mb-6">
+                    <h2 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        <span class="text-amber-400"><i class="fa-solid fa-circle-check"></i></span> Quick Check
+                    </h2>
+                    <span id="mcq-progress" class="text-sm font-bold text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                        Question 1 of 10
+                    </span>
+                </div>
+
+                <div id="mcq-card-container" class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 shadow-xl mb-4 min-h-[360px] flex flex-col justify-between">
+                    <div id="mcq-question-wrapper">
+                        <h3 id="mcq-title-text" class="text-xl font-bold text-slate-100 mb-6 leading-snug">
+                            Loading item questions...
+                        </h3>
+                        <div id="mcq-options-box" class="grid grid-cols-1 gap-3">
+                            </div>
+                    </div>
+                    
+                    <div id="mcq-feedback-box" class="mt-4 p-3 rounded-xl text-sm font-bold hidden transition-all duration-200">
+                        Feedback placeholder wrapper text elements...
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-2">
+                <button id="mcq-prev-btn" onclick="prevMcqQuestion()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-arrow-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" onclick="nextMcqQuestion()" disabled class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 transition">
+                    Next Question <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // System core slide tracking models
+    const slides = document.querySelectorAll('.slide');
+    let currentSlideIndex = 0;
+    const totalSlides = slides.length;
+    let pyodideInstance = null;
+
+    // Verbatim Question Structure Matrix Maps compiled from user prompt payload
+    const mcqQuestionsSet = [
+        {
+            q: "What is a dictionary in Python?",
+            options: ["A list of items.", "A collection of key-value pairs.", "A collection of unique values.", "A collection of items with duplicate keys."],
+            correct: 1,
+            expl: "Correct! A dictionary represents structured associative arrays composed of distinct unique key-value pairs."
+        },
+        {
+            q: "Which method is used to retrieve a value from a dictionary without causing an error if the key doesn’t exist?",
+            options: [".get()", ".items()", ".pop()", ".values()"],
+            correct: 0,
+            expl: "Correct! The .get() query parameters systematically return None or custom defaults instead of throwing standard crash loops."
+        },
+        {
+            q: "What will happen if you try to access a key that doesn’t exist in a dictionary using square brackets ([])?",
+            options: ["It returns None.", "It adds the key with a None value.", "It raises a KeyError.", "It deletes the dictionary."],
+            correct: 2,
+            expl: "Correct! Standard brackets throw a raw KeyError immediately if target parameters do not match structural schemas."
+        },
+        {
+            q: "What does the following code return?\n\nmy_dict = {\"name\": \"Alice\", \"age\": 25}\n\"age\" in my_dict",
+            options: ["True", "False", "\"age\"", "KeyError"],
+            correct: 0,
+            expl: "Correct! The 'in' tracking validation returns True because 'age' matches active indices within the map structure."
+        },
+        {
+            q: "How do you remove a key-value pair from a dictionary and retrieve its value?",
+            options: ["my_dict.delete(key)", "my_dict.clear(key)", "my_dict.pop(key)", "my_dict.remove(key)"],
+            correct: 2,
+            expl: "Correct! .pop() extracts the embedded data fields while dropping internal structural mappings instantly."
+        },
+        {
+            q: "Which method returns a list of all the keys in a dictionary?",
+            options: [".keys()", ".values()", ".items()", ".get()"],
+            correct: 0,
+            expl: "Correct! The structural .keys() mapping pipeline collects all mapped string/integer identifier tokens."
+        },
+        {
+            q: "What does the following code do?\n\nmy_dict = {\"name\": \"Alice\", \"age\": 25}\nmy_dict[\"city\"] = \"New York\"",
+            options: ["Updates the city key in my_dict.", "Adds a new key-value pair to my_dict.", "Deletes the city key from my_dict.", "Clears all keys in my_dict."],
+            correct: 1,
+            expl: "Correct! Because 'city' wasn't already mapped, assigning a value forces internal allocations to build it out dynamically."
+        },
+        {
+            q: "What does the .items() method return?",
+            options: ["A list of all keys.", "A list of all values.", "A list of all key-value pairs.", "A string representation of the dictionary."],
+            correct: 2,
+            expl: "Correct! .items() bundles structural tracking configurations out as an array array set of dual elements."
+        },
+        {
+            q: "What will the following code print?\n\nmy_dict = {\"a\": 1, \"b\": 2, \"c\": 3}\nfor key in my_dict:\n    print(key)",
+            options: ["Keys and their values.", "All keys.", "All values.", "A syntax error."],
+            correct: 1,
+            expl: "Correct! Looping configurations inherently map explicitly down over key paths by base design defaults."
+        },
+        {
+            q: "What will happen if you use .clear() on a dictionary?",
+            options: ["Removes a single key-value pair.", "Deletes the dictionary entirely.", "Removes all key-value pairs from the dictionary.", "Reverts the dictionary to its original state."],
+            correct: 2,
+            expl: "Correct! The .clear() operation resets structural parameters clean, leaving the base object empty."
+        }
+    ];
+
+    let activeMcqIndex = 0;
+    let selectedAnswerIndex = null;
+
+    // Slide Engine Controller Logic
+    function updateSlidePosition() {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === currentSlideIndex);
+        });
+        
+        // Render headers counters state details
+        document.getElementById('slide-counter').innerText = `${currentSlideIndex + 1} / ${totalSlides}`;
+        document.getElementById('progress').style.width = `${((currentSlideIndex + 1) / totalSlides) * 100}%`;
+        
+        // Re-compile styling metrics dynamically via internal Prism configurations
+        setTimeout(() => {
+            Prism.highlightAll();
+        }, 50);
+    }
+
+    function navigateNext() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updateSlidePosition();
+        }
+    }
+
+    function navigatePrev() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updateSlidePosition();
+        }
+    }
+
+    // Connect hardware keyboard routing links
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateNext();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigatePrev();
+        }
+    });
+
+    // Pyodide Integration Core Framework Setup logic
+    async function initializePyodideEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.getElementById('run-btn-text').innerText = 'Run Code Execution';
+            document.getElementById('run-btn').removeAttribute('disabled');
+        } catch (err) {
+            document.getElementById('run-btn-text').innerText = 'Failed initialization setup context';
+            console.error(err);
+        }
+    }
+
+    async function runPythonCode() {
+        if (!pyodideInstance) return;
+        const sourceCode = document.getElementById('code-editor').value;
+        const consoleDisplay = document.getElementById('console-out');
+        consoleDisplay.innerText = "Evaluating program parameters...\n";
+        
+        // Redirect logic streams inside sandboxed environment wrappers
+        try {
+            pyodideInstance.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+            
+            await pyodideInstance.runPythonAsync(sourceCode);
+            
+            const stdoutResult = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderrResult = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if (stderrResult) {
+                consoleDisplay.innerText = `Traceback Exception Error:\n${stderrResult}`;
+            } else {
+                consoleDisplay.innerText = stdoutResult || "Program evaluation finished with empty returned structural loops.";
+            }
+        } catch (exc) {
+            consoleDisplay.innerText = `Runtime Evaluation Crash:\n${exc.message}`;
+        }
+    }
+
+    // Bug Hunt Core Verification Triggers
+    function checkBugLine(lineNumber, inlineDOMElement) {
+        const feedbackContainer = document.getElementById('bug-feedback');
+        const statusBox = document.getElementById('bug-status');
+        
+        // De-select alternative active items
+        document.querySelectorAll('.bug-line').forEach(el => el.classList.remove('selected-bug'));
+        inlineDOMElement.classList.add('selected-bug');
+        feedbackContainer.classList.remove('hidden');
+
+        if (lineNumber === 3) {
+            statusBox.innerHTML = "🎯 Bug Found! Success.";
+            statusBox.className = "text-2xl font-black text-emerald-400";
+            feedbackContainer.innerText = "Correct! Line 3 tries to access user_profile['location']. Since the key 'location' was never defined, this triggers an immediate KeyError crash at runtime.";
+        } else {
+            statusBox.innerHTML = "❌ Try Again";
+            statusBox.className = "text-2xl font-black text-rose-500";
+            feedbackContainer.innerText = `Line ${lineNumber} is valid code syntax. Look for the missing dictionary key lookup error!`;
+        }
+    }
+
+    // MCQ Interactive Engine Implementation
+    function renderCurrentMcqItem() {
+        const questionData = mcqQuestionsSet[activeMcqIndex];
+        document.getElementById('mcq-progress').innerText = `Question ${activeMcqIndex + 1} of ${mcqQuestionsSet.length}`;
+        
+        // Convert dynamic template text layouts safely
+        const questionTitleElement = document.getElementById('mcq-title-text');
+        questionTitleElement.innerHTML = questionData.q.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
+        if(questionData.q.includes('my_dict')) {
+            questionTitleElement.className = "text-base font-mono bg-slate-900 p-4 rounded-xl text-indigo-300 border border-slate-700/50 mb-6 whitespace-pre-line";
+        } else {
+            questionTitleElement.className = "text-xl font-bold text-slate-100 mb-6 leading-snug";
+        }
+
+        const optionsContainer = document.getElementById('mcq-options-box');
+        optionsContainer.innerHTML = '';
+        
+        const feedbackWindow = document.getElementById('mcq-feedback-box');
+        feedbackWindow.classList.add('hidden');
+        
+        document.getElementById('mcq-next-btn').setAttribute('disabled', 'true');
+        selectedAnswerIndex = null;
+
+        // Toggle state logic maps down across back buttons dynamically
+        const prevButtonState = document.getElementById('mcq-prev-btn');
+        if(activeMcqIndex === 0) {
+            prevButtonState.setAttribute('disabled', 'true');
+        } else {
+            prevButtonState.removeAttribute('disabled');
+        }
+
+        // Set Next or End Text context based on arrays boundaries
+        const rawNextBtnText = document.getElementById('mcq-next-btn');
+        if (activeMcqIndex === mcqQuestionsSet.length - 1) {
+            rawNextBtnText.innerHTML = 'Complete Quiz Assessment <i class="fa-solid fa-flag-checkered"></i>';
+        } else {
+            rawNextBtnText.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right"></i>';
+        }
+
+        questionData.options.forEach((optionText, index) => {
+            const alternativeOptionBtn = document.createElement('button');
+            alternativeOptionBtn.className = "mcq-option w-full text-left p-4 rounded-xl text-slate-200 font-medium transition flex items-center justify-between";
+            alternativeOptionBtn.innerHTML = `<span>${optionText}</span><i class="fa-regular fa-circle text-slate-500 text-lg"></i>`;
+            alternativeOptionBtn.onclick = () => selectMcqAnswer(index, alternativeOptionBtn);
+            optionsContainer.appendChild(alternativeOptionBtn);
+        });
+    }
+
+    function selectMcqAnswer(selectedIndex, optionDOMObject) {
+        if (selectedAnswerIndex !== null) return; // Prevent double clicking logic changes
+        
+        selectedAnswerIndex = selectedIndex;
+        const currentQuestion = mcqQuestionsSet[activeMcqIndex];
+        const allOptionElements = document.querySelectorAll('.mcq-option');
+        const feedbackContainer = document.getElementById('mcq-feedback-box');
+
+        allOptionElements.forEach(btn => btn.classList.add('disabled'));
+
+        if (selectedIndex === currentQuestion.correct) {
+            optionDOMObject.classList.add('correct');
+            optionDOMObject.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            feedbackContainer.className = "mt-4 p-4 rounded-xl text-sm font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+            feedbackContainer.innerText = currentQuestion.expl;
+        } else {
+            optionDOMObject.classList.add('incorrect');
+            optionDOMObject.querySelector('i').className = "fa-solid fa-circle-xmark text-rose-400 text-lg";
+            
+            // Highlight explicit correct node target matches
+            const targetCorrectButton = allOptionElements[currentQuestion.correct];
+            targetCorrectButton.classList.add('correct');
+            targetCorrectButton.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+
+            feedbackContainer.className = "mt-4 p-4 rounded-xl text-sm font-bold bg-rose-500/10 border border-rose-500/30 text-rose-400";
+            feedbackContainer.innerText = `Incorrect selection. Elements mapped match alternative key parameters.`;
+        }
+
+        feedbackContainer.classList.remove('hidden');
+        document.getElementById('mcq-next-btn').removeAttribute('disabled');
+    }
+
+    function nextMcqQuestion() {
+        if (activeMcqIndex < mcqQuestionsSet.length - 1) {
+            activeMcqIndex++;
+            renderCurrentMcqItem();
+        } else {
+            // Quiz completed flow
+            const coreCardWrapper = document.getElementById('mcq-card-container');
+            coreCardWrapper.innerHTML = `
+                <div class="text-center py-12 flex flex-col items-center justify-center h-full">
+                    <div class="h-20 w-20 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-slate-950 text-4xl font-black mb-6 shadow-xl shadow-emerald-950/20 animate-bounce">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-3xl font-black text-white mb-2">Quiz Track Completed!</h3>
+                    <p class="text-slate-400 max-w-md mx-auto text-sm">
+                        You have validated comprehension models across all 10 core dictionary schema operations!
+                    </p>
+                </div>
+            `;
+            document.getElementById('mcq-next-btn').setAttribute('disabled', 'true');
+            document.getElementById('mcq-prev-btn').setAttribute('disabled', 'true');
+        }
+    }
+
+    function prevMcqQuestion() {
+        if (activeMcqIndex > 0) {
+            activeMcqIndex--;
+            renderCurrentMcqItem();
+        }
+    }
+
+    // Engine self-execution kickoff triggers
+    document.addEventListener("DOMContentLoaded", () => {
+        updateSlidePosition();
+        initializePyodideEngine();
+        renderCurrentMcqItem();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 22: Building and Presenting Projects</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #06b6d4;
+            --accent: #f43f5e;
+            --neutral-dark: #0f172a;
+            --neutral-light: #f8fafc;
+            --font-sans: 'Nunito', sans-serif;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: #020617;
+            color: #e2e8f0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            letter-spacing: -0.02em;
+        }
+
+        .font-mono {
+            font-family: var(--font-mono) !important;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.98) translateY(10px);
+            z-index: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+            color: var(--secondary);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .key-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 0.1rem 0.4rem;
+            border-radius: 0.25rem;
+            margin: 0 0.2rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Interactive styling tags */
+        .option-btn {
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: rgba(79, 70, 229, 0.15);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .buggy-line:hover {
+            background: rgba(244, 63, 94, 0.1) !important;
+        }
+        .buggy-line.selected-bug {
+            background: rgba(244, 63, 94, 0.25) !important;
+            border-left-color: var(--accent);
+        }
+
+        /* Custom scrollbar for terminals */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Pyodide loader indicator */
+        #pyodide-badge {
+            position: fixed;
+            top: 1.5rem;
+            left: 2rem;
+            z-index: 50;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div id="pyodide-badge">
+    <i id="py-loader-icon" class="fas fa-spinner fa-spin text-cyan-400"></i>
+    <span id="py-loader-text" class="text-slate-300">Loading Python Environment...</span>
+</div>
+
+<div id="slide-counter">1 / 1</div>
+
+<div id="presentation-container" class="relative w-full h-full">
+
+    <div class="slide active px-6 lg:px-24">
+        <div class="glass-panel p-8 lg:p-12 max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-t-4 border-indigo-500">
+            <div class="md:col-span-7 space-y-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 font-semibold text-sm">
+                    <i class="fas fa-graduation-cap"></i> Day 22 Capstone
+                </div>
+                <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+                    Building & Presenting <br><span class="bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">Your Python Projects</span>
+                </h1>
+                <p class="text-lg text-slate-300 leading-relaxed">
+                    You've synthesized logic, wrangled structures, and written clean programs. Now, it's time to communicate your triumphs, embrace peer insights, and ship functional user experiences.
+                </p>
+                <div class="flex gap-4 pt-2">
+                    <div class="flex items-center gap-2 text-sm text-slate-400 bg-slate-900/50 px-3 py-2 rounded-lg">
+                        <i class="fas fa-tv text-indigo-400"></i> Delivery Strategy
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-slate-400 bg-slate-900/50 px-3 py-2 rounded-lg">
+                        <i class="fas fa-comments text-cyan-400"></i> Peer Evaluations
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-5 bg-slate-950/50 rounded-xl p-6 border border-slate-800 space-y-4">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400"><i class="fas fa-list-ol mr-2 text-emerald-400"></i>Presentation Roadmap</h3>
+                <ol class="space-y-3 text-sm text-slate-300">
+                    <li class="flex items-start gap-2"><span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</span> <span><strong>Project Overview:</strong> Hook your audience.</span></li>
+                    <li class="flex items-start gap-2"><span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</span> <span><strong>Live Demo:</strong> Run working application streams.</span></li>
+                    <li class="flex items-start gap-2"><span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">3</span> <span><strong>Challenges & Learnings:</strong> Highlight engineering hurdles.</span></li>
+                    <li class="flex items-start gap-2"><span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">4</span> <span><strong>Future Scopes:</strong> Outline next iterations.</span></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide px-6 lg:px-24">
+        <div class="glass-panel p-8 lg:p-12 max-w-5xl w-full space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">Presenting the Project</h2>
+                    <p class="text-slate-400 text-sm mt-1">Four cornerstones of a stellar technical demonstration.</p>
+                </div>
+                <div class="text-right text-xs text-slate-500 font-mono hidden md:block">STAGE_01_DELIVERY</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-6">
+                    <div class="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-indigo-500/30 transition-all">
+                        <div class="text-3xl text-indigo-400 mt-1"><i class="fas fa-compass"></i></div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-100">1. High-Level Overview</h4>
+                            <p class="text-sm text-slate-400 mt-1">Introduce your core concept instantly. Hook listeners by describing what problems your tool solves before diving deep into complex code logic.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-cyan-400/30 transition-all">
+                        <div class="text-3xl text-cyan-400 mt-1"><i class="fas fa-play-circle"></i></div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-100">2. Live Interactive Demos</h4>
+                            <p class="text-sm text-slate-400 mt-1">Showcase fully functional mechanisms. Walk step-by-step through standard operational tracks to exhibit robust user interactions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-emerald-400/30 transition-all">
+                        <div class="text-3xl text-emerald-400 mt-1"><i class="fas fa-tools"></i></div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-100">3. Engineering Obstacles</h4>
+                            <p class="text-sm text-slate-400 mt-1">Confront edge-case failures out loud. Explain how exception safety parameters or type guards helped stabilize unpredicted script input loops.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-800 hover:border-amber-400/30 transition-all">
+                        <div class="text-3xl text-amber-400 mt-1"><i class="fas fa-forward"></i></div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-100">4. Futures & Enhancements</h4>
+                            <p class="text-sm text-slate-400 mt-1">Envision subsequent releases. Talk through features like cloud integrations, file serialization, or graphical dashboards you might implement next.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                <span class="text-xs font-bold font-mono tracking-wider text-indigo-400 block mb-2"><i class="fas fa-quote-left mr-1"></i> PITCH TEMPLATE:</span>
+                <p class="text-sm italic text-slate-300">
+                    "My project is a simple quiz game. It takes input from the user, checks answers, and keeps track of the score. I faced some challenges with handling invalid inputs, but I solved this by using error handling. I also added a timer to make it more exciting."
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide px-6 lg:px-24">
+        <div class="glass-panel p-6 lg:p-10 max-w-5xl w-full space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fab fa-python text-yellow-400"></i> Interactive Execution: Quiz Logic Showcase
+                </h2>
+                <p class="text-sm text-slate-400">Modify the game simulation below and evaluate runtime properties inside your browser.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div class="lg:col-span-7 flex flex-col space-y-2">
+                    <label class="text-xs font-mono text-slate-400 flex justify-between items-center bg-slate-900/80 px-4 py-2 rounded-t-lg border-t border-x border-slate-700">
+                        <span>LIVE_SANDBOX.PY</span>
+                        <span class="text-cyan-400 font-bold">Editable Code Zone</span>
+                    </label>
+                    <textarea id="live-code-box" class="w-full h-64 p-4 font-mono text-sm bg-slate-950 text-emerald-400 border border-slate-700 rounded-b-lg focus:outline-none focus:border-indigo-500 resize-none"># A simple functional quiz structure demonstrating robust architecture
+def run_quiz_engine(user_answer):
+    correct_answer = "python"
+    
+    # Validation loop / Check match
+    if user_answer.strip().lower() == correct_answer:
+        return "✨ Correct response! Score incremented +1."
+    elif user_answer == "":
+        return "⚠️ Warning: Input stream cannot be left empty."
+    else:
+        return "❌ Incorrect! Remember, Python is completely case-sensitive."
+
+# Simulating execution pipelines
+test_input = "Python"
+print(f"Submitting: '{test_input}'")
+result = run_quiz_engine(test_input)
+print(result)</textarea>
+                    <button id="run-btn" onclick="executePythonCode()" disabled class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all">
+                        <i class="fas fa-play"></i> Run Live Python Script
+                    </button>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col space-y-2">
+                    <span class="text-xs font-mono text-slate-400 bg-slate-900/80 px-4 py-2 rounded-t-lg border-t border-x border-slate-700"><i class="fas fa-terminal text-slate-400 mr-2"></i>CONSOLE OUTPUT</span>
+                    <pre id="console-output" class="w-full h-[312px] bg-slate-950 text-slate-200 border border-slate-700 rounded-b-lg p-4 font-mono text-xs overflow-auto">Loading environment runtime status...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide px-6 lg:px-24">
+        <div class="glass-panel p-8 lg:p-12 max-w-5xl w-full space-y-8">
+            <div class="border-b border-slate-800 pb-4">
+                <h2 class="text-3xl font-bold text-white">Reflection, Critique, and Wrap-Up</h2>
+                <p class="text-slate-400 text-sm mt-1">The development feedback loop does not end at compilation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-5 bg-slate-900/30 border border-slate-800 rounded-xl space-y-3 relative group hover:border-indigo-500/30 transition-all">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xl font-bold">
+                        <i class="fas fa-comments-dollar"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100">Constructive Feedback</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        When reviewing others’ projects, offer feedback that is <strong>specific</strong>, <strong>helpful</strong>, and <strong>positive</strong>. Avoid vague criticisms; pinpoint exact code features or UI states that shined or require tuning.
+                    </p>
+                </div>
+
+                <div class="p-5 bg-slate-900/30 border border-slate-800 rounded-xl space-y-3 relative group hover:border-cyan-400/30 transition-all">
+                    <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-xl font-bold">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100">Continuous Growth</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Be ready to discuss what you learned throughout the project. Synthesize structural concepts like multi-conditional code branches, iterative loops, array lists, and dynamic objects into subsequent programming goals.
+                    </p>
+                </div>
+
+                <div class="p-5 bg-slate-900/30 border border-slate-800 rounded-xl space-y-3 relative group hover:border-emerald-400/30 transition-all">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl font-bold">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100">Celebrating Success</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Congratulate students for completing their projects and showcasing their hard work. You have engineered operational programs out of raw logical constraints. Your engineering journey is officially launched!
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                <i class="fas fa-lightbulb text-amber-400 text-xl mt-0.5 shrink-0"></i>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400 block">Professional Engineering Standard</span>
+                    <p class="text-xs text-slate-300 mt-0.5">
+                        High performance code centers around <strong>User Experience (UX)</strong>—how easy and pleasant it feels for an everyday operator to cycle through parameters inside your interface.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide px-6 lg:px-24">
+        <div class="glass-panel p-8 lg:p-11 max-w-4xl w-full space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white"><i class="fas fa-bug text-rose-500 mr-2"></i>Code Bug Hunt!</h2>
+                    <p class="text-xs text-slate-400">Can you identify the line causing syntactic or logical breakdown?</p>
+                </div>
+                <div class="bg-rose-500/10 text-rose-400 text-xs px-3 py-1.5 rounded-md font-mono border border-rose-500/20">
+                    Bugs Tracked: <span id="bug-tracker-score" class="font-bold">0 / 1</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <span class="text-xs text-slate-400 font-mono block">CLICK THE BUGGY LINE BELOW:</span>
+                <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 overflow-hidden font-mono text-sm leading-relaxed">
+                    <div class="buggy-line p-2 rounded bg-slate-900/20" data-is-bug="false">line 1: def aggregate_scores(score_list):</div>
+                    <div class="buggy-line p-2 rounded bg-slate-900/20" data-is-bug="false">line 2:     total = 0</div>
+                    <div class="buggy-line p-2 rounded bg-slate-900/20 text-slate-200" data-is-bug="true">line 3:     for score in score_list</div>
+                    <div class="buggy-line p-2 rounded bg-slate-900/20" data-is-bug="false">line 4:         total += score</div>
+                    <div class="buggy-line p-2 rounded bg-slate-900/20" data-is-bug="false">line 5:     return total</div>
+                </div>
+            </div>
+
+            <div id="bug-hunt-feedback" class="h-10 text-center text-sm font-semibold text-slate-400 pt-1">
+                Click on the line where Python syntax rule boundaries break down.
+            </div>
+        </div>
+    </div>
+
+    <div class="slide px-6 lg:px-24">
+        <div class="glass-panel p-8 lg:p-12 max-w-4xl w-full space-y-6 relative">
+            
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-sm font-bold text-indigo-400 tracking-wider uppercase"><i class="fas fa-clipboard-check mr-2"></i>Quick Check</span>
+                <span id="mcq-progress-indicator" class="text-xs font-mono bg-slate-800 px-3 py-1 rounded-full text-slate-300">Question 1 of 10</span>
+            </div>
+
+            <div id="mcq-card-box" class="space-y-6 min-h-[320px]">
+                <h3 id="mcq-question-text" class="text-xl font-bold text-white">Question statement loader...</h3>
+                <div id="mcq-options-container" class="grid grid-cols-1 gap-3">
+                    </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-4 border-t border-slate-900">
+                <button id="mcq-prev-btn" onclick="navigateMcq(-1)" class="px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <div id="mcq-inline-feedback" class="text-sm font-bold text-center flex-1 px-4"></div>
+                <button id="mcq-next-btn" onclick="navigateMcq(1)" disabled class="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white font-bold rounded-lg transition-colors flex items-center gap-2">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // --- SLIDE DECK NAVIGATION ENGINE ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressBar = document.getElementById('progress');
+    const slideCounter = document.getElementById('slide-counter');
+
+    function updateSlidesView() {
+        slides.forEach((slide, idx) => {
+            if (idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Dynamically compute progress matrix values
+        const progressPercent = ((currentSlideIndex + 1) / totalSlides) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+        slideCounter.textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+
+        // Re-run Prism highlight arrays gracefully on active view changes
+        setTimeout(() => {
+            Prism.highlightAll();
+        }, 50);
+    }
+
+    function changeSlide(direction) {
+        let target = currentSlideIndex + direction;
+        if (target >= 0 && target < totalSlides) {
+            currentSlideIndex = target;
+            updateSlidesView();
+        }
+    }
+
+    // Capture explicit hardware user key down controls
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            changeSlide(1);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            changeSlide(-1);
+        }
+    });
+
+    // --- VERBATIM USER MCQ DATA ARRAY STORAGE ---
+    const mcqQuestionsData = [
+        {
+            q: "What is the primary goal of a project presentation?",
+            a: ["To write new code", "To show how the program works and explain its logic", "To find errors in other people's code", "To hide the source code"],
+            correct: 1
+        },
+        {
+            q: "What should you do if your code encounters a bug during a demo?",
+            a: ["Close the computer and sit down", "Explain what happened and how you would fix it", "Pretend it didn't happen", "Delete the code"],
+            correct: 1
+        },
+        {
+            q: "Which of these makes code easier for others to understand?",
+            a: ["Removing all spaces", "Using very short variable names like x, y, and z", "Adding descriptive comments", "Writing everything on one line"],
+            correct: 2
+        },
+        {
+            q: "What is \"User Experience\" (UX) in the context of your project?",
+            a: ["How fast the computer is", "How easy and pleasant it is for a person to use your program", "The color of the keyboard", "The version of Python being used"],
+            correct: 1
+        },
+        {
+            q: "When explaining your code, you should focus on:",
+            a: ["Reading every single line out loud", "Highlighting the most important logic and features", "Talking as fast as possible", "Only showing the errors"],
+            correct: 1
+        },
+        {
+            q: "True or False: A final project should ideally combine multiple concepts like variables, loops, and lists.",
+            a: ["True", "False"],
+            correct: 0
+        },
+        {
+            q: "What does it mean if a program is \"functional\"?",
+            a: ["It is written in a specific language", "It performs the tasks it was designed to do", "It has no comments", "it is 100 lines long"],
+            correct: 1
+        },
+        {
+            q: "Why is peer feedback important?",
+            a: ["To make fun of others", "To get new ideas and see different ways of solving problems", "To stop coding", "To compare who finished first"],
+            correct: 1
+        },
+        {
+            q: "What symbol is often used to start a comment in Python?",
+            a: ["//", "/*", "#", "--"],
+            correct: 2
+        },
+        {
+            q: "What is the best way to handle a question you don't know the answer to during a presentation?",
+            a: ["Make up an answer", "Say you are not sure but will look into it", "Ignore the person", "End the presentation immediately"],
+            correct: 1
+        }
+    ];
+
+    let currentMcqIndex = 0;
+    let selectedAnswersMap = {}; // Tracks submission patterns 
+
+    function renderMcqQuestionState() {
+        const currentData = mcqQuestionsData[currentMcqIndex];
+        const progressIndicator = document.getElementById('mcq-progress-indicator');
+        const questionText = document.getElementById('mcq-question-text');
+        const container = document.getElementById('mcq-options-container');
+        const feedbackBox = document.getElementById('mcq-inline-feedback');
+        const nextBtn = document.getElementById('mcq-next-btn');
+        const prevBtn = document.getElementById('mcq-prev-btn');
+
+        // Reset inline feedback blocks
+        feedbackBox.innerHTML = "";
+        
+        // Configure state configurations
+        progressIndicator.textContent = `Question ${currentMcqIndex + 1} of ${mcqQuestionsData.length}`;
+        questionText.textContent = currentData.q;
+        container.innerHTML = "";
+
+        // Toggle standard previous bounds tracking
+        prevBtn.disabled = currentMcqIndex === 0;
+        prevBtn.style.opacity = currentMcqIndex === 0 ? "0.4" : "1";
+
+        // Check if question was already answered previously
+        const questionAlreadyAnswered = selectedAnswersMap[currentMcqIndex] !== undefined;
+        
+        currentData.a.forEach((optionString, index) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn w-full text-left p-4 rounded-xl text-sm font-semibold text-slate-200 flex items-center justify-between transition-all";
+            btn.innerHTML = `<span>${optionString}</span> <i class="far fa-circle text-slate-500"></i>`;
+            
+            if (questionAlreadyAnswered) {
+                btn.disabled = true;
+                if (index === currentData.correct) {
+                    btn.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                    btn.querySelector('i').className = "fas fa-check-circle text-emerald-400";
+                } else if (index === selectedAnswersMap[currentMcqIndex]) {
+                    btn.classList.add('bg-rose-500/20', 'border-rose-500', 'text-rose-300');
+                    btn.querySelector('i').className = "fas fa-times-circle text-rose-400";
+                }
+            } else {
+                btn.onclick = () => evaluateChosenOption(index, btn);
+            }
+            container.appendChild(btn);
+        });
+
+        if (questionAlreadyAnswered) {
+            nextBtn.disabled = false;
+            if (currentMcqIndex === mcqQuestionsData.length - 1) {
+                nextBtn.innerHTML = `Finish Quiz <i class="fas fa-flag-checkered"></i>`;
+            } else {
+                nextBtn.innerHTML = `Next <i class="fas fa-arrow-right"></i>`;
+            }
+        } else {
+            nextBtn.disabled = true;
+            nextBtn.innerHTML = `Select an Answer`;
+        }
+    }
+
+    function evaluateChosenOption(chosenIdx, clickedButton) {
+        const currentData = mcqQuestionsData[currentMcqIndex];
+        selectedAnswersMap[currentMcqIndex] = chosenIdx;
+        
+        const allButtons = document.getElementById('mcq-options-container').querySelectorAll('button');
+        allButtons.forEach(b => b.disabled = true);
+
+        const feedbackBox = document.getElementById('mcq-inline-feedback');
+        const nextBtn = document.getElementById('mcq-next-btn');
+
+        if (chosenIdx === currentData.correct) {
+            clickedButton.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+            clickedButton.querySelector('i').className = "fas fa-check-circle text-emerald-400";
+            feedbackBox.innerHTML = `<span class="text-emerald-400"><i class="fas fa-check"></i> Correct Response!</span>`;
+        } else {
+            clickedButton.classList.add('bg-rose-500/20', 'border-rose-500', 'text-rose-300');
+            clickedButton.querySelector('i').className = "fas fa-times-circle text-rose-400";
+            
+            // Highlight actual valid choice
+            allButtons[currentData.correct].classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+            allButtons[currentData.correct].querySelector('i').className = "fas fa-check-circle text-emerald-400";
+            feedbackBox.innerHTML = `<span class="text-rose-400"><i class="fas fa-times"></i> Incorrect Choice.</span>`;
+        }
+
+        nextBtn.disabled = false;
+        if (currentMcqIndex === mcqQuestionsData.length - 1) {
+            nextBtn.innerHTML = `Finish Quiz <i class="fas fa-flag-checkered"></i>`;
+        } else {
+            nextBtn.innerHTML = `Next <i class="fas fa-arrow-right"></i>`;
+        }
+    }
+
+    function navigateMcq(step) {
+        const targetIdx = currentMcqIndex + step;
+        
+        if (step === 1 && currentMcqIndex === mcqQuestionsData.length - 1) {
+            // Trigger finished layout within cards
+            document.getElementById('mcq-card-box').innerHTML = `
+                <div class="text-center py-12 space-y-4 animate-bounce">
+                    <i class="fas fa-trophy text-6xl text-yellow-400"></i>
+                    <h3 class="text-2xl font-bold text-white">You've completed the quiz!</h3>
+                    <p class="text-slate-400 max-w-md mx-auto text-sm">All core evaluation targets for Day 22 structural reviews have been calculated and logged successfully.</p>
+                </div>
+            `;
+            document.getElementById('mcq-next-btn').style.display = 'none';
+            document.getElementById('mcq-prev-btn').style.display = 'none';
+            document.getElementById('mcq-inline-feedback').innerHTML = "<span class='text-emerald-400 font-bold'>Session Complete</span>";
+            return;
+        }
+
+        if (targetIdx >= 0 && targetIdx < mcqQuestionsData.length) {
+            currentMcqIndex = targetIdx;
+            renderMcqQuestionState();
+        }
+    }
+
+
+    // --- BUG HUNT RECOGNITION FLOW ---
+    document.querySelectorAll('.buggy-line').forEach(lineElement => {
+        lineElement.onclick = function() {
+            const isBug = this.getAttribute('data-is-bug') === 'true';
+            const feedbackText = document.getElementById('bug-hunt-feedback');
+            const trackerScore = document.getElementById('bug-tracker-score');
+
+            // Clear former layout states
+            document.querySelectorAll('.buggy-line').forEach(l => l.classList.remove('selected-bug'));
+            
+            this.classList.add('selected-bug');
+            if (isBug) {
+                feedbackText.className = "h-10 text-center text-sm font-bold text-emerald-400 pt-1";
+                feedbackText.innerHTML = "🎯 Brilliant spot! Python requires a closing colon ':' at the termination of 'for' loops expressions.";
+                trackerScore.textContent = "1 / 1";
+                trackerScore.className = "font-bold text-emerald-400";
+            } else {
+                feedbackText.className = "h-10 text-center text-sm font-bold text-rose-400 pt-1";
+                feedbackText.innerHTML = "❌ That line follows standard Python syntax. Inspect structural loops indentation frameworks closer.";
+                trackerScore.textContent = "0 / 1";
+                trackerScore.className = "font-bold text-rose-400";
+            }
+        };
+    });
+
+
+    // --- REAL PYODIDE ASYNCHRONOUS COMPILATION RUNNER ---
+    let pyodideInstance = null;
+    async function initPyodideEnvironment() {
+        const loaderText = document.getElementById('py-loader-text');
+        const loaderIcon = document.getElementById('py-loader-icon');
+        const runButton = document.getElementById('run-btn');
+        const consoleOut = document.getElementById('console-output');
+
+        try {
+            pyodideInstance = await loadPyodide();
+            // Ready states adjustments
+            loaderIcon.className = "fab fa-python text-emerald-400 animate-pulse";
+            loaderText.textContent = "Python Environment Ready";
+            runButton.disabled = false;
+            consoleOut.textContent = ">>> Python Environment Initialized successfully.\nClick 'Run Live Python Script' to test outputs.";
+        } catch (error) {
+            loaderText.textContent = "Failed loading environment variables.";
+            loaderIcon.className = "fas fa-exclamation-triangle text-rose-500";
+            consoleOut.textContent = "Error during runtime instance initialization:\n" + error;
+        }
+    }
+
+    async function executePythonCode() {
+        if (!pyodideInstance) return;
+        const codeText = document.getElementById('live-code-box').value;
+        const consoleOut = document.getElementById('console-output');
+        
+        consoleOut.textContent = "Executing runtime sequences...";
+
+        // Redirect Python sys.stdout to capture printing arrays efficiently
+        let captureOutputScript = `
+import sys
+import io
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+`;
+        try {
+            await pyodideInstance.runPythonAsync(captureOutputScript);
+            await pyodideInstance.runPythonAsync(codeText);
+            
+            let stdoutResult = await pyodideInstance.runPythonAsync("sys.stdout.getvalue()");
+            let stderrResult = await pyodideInstance.runPythonAsync("sys.stderr.getvalue()");
+            
+            let absoluteOutput = stdoutResult + stderrResult;
+            consoleOut.textContent = absoluteOutput || ">>> [Execution finished with no logged stdout statements]";
+        } catch (err) {
+            consoleOut.textContent = `⚠️ PYTHON RUNTIME EXCEPTION:\n${err}`;
+        }
+    }
+
+
+    // --- INITIALIZATION HOOKS ---
+    window.onload = () => {
+        updateSlidesView();
+        renderMcqQuestionState();
+        initPyodideEnvironment();
+    };
+</script>
+
+</body>
+</html>

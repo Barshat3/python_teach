@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 9: Debugging Basics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --secondary: #06B6D4;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark-bg: #0F172A;
+            --card-bg: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: var(--card-bg);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 3rem;
+            position: relative;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .key-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin: 0 3px;
+            font-family: monospace;
+        }
+
+        .nav-btn {
+            position: fixed;
+            bottom: 2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        #prev-slide-btn { left: 2rem; }
+        #next-slide-btn { right: 2rem; }
+
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 0.75rem !important;
+            background: #0B0F19 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pyodide-loader {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .pyodide-ready {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .buggy-line:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+        .buggy-line.selected-bug {
+            background: rgba(239, 68, 68, 0.3) !important;
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Custom Scrollbar for slide contents */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+
+<div id="presentation-container" class="w-full flex justify-center items-center">
+
+    <div class="slide active" id="slide-1">
+        <div class="flex flex-col justify-between h-full">
+            <div class="text-center my-auto">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-6 animate-bounce">
+                    <i class="fa-solid fa-bug-slash"></i> Computer Science - Class 9
+                </div>
+                <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-6">
+                    Debugging <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Basics</span>
+                </h1>
+                <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-12">
+                    Learn how to identify, analyze, and systematically resolve program errors like a professional developer.
+                </p>
+                <div id="pyodide-status" class="pyodide-loader">
+                    <i class="fa-solid fa-circle-notch animate-spin"></i> Loading Python execution environment...
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-auto">
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <div class="text-red-400 font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>1. Spot Errors</div>
+                    <p class="text-sm text-slate-400">Analyze diagnostic messages and incorrect runtime structures.</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <div class="text-cyan-400 font-bold mb-1"><i class="fa-solid fa-magnifying-glass mr-2"></i>2. Isolate Logic</div>
+                    <p class="text-sm text-slate-400">Trace runtime state variables using execution testing setups.</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <div class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>3. Implement Fix</div>
+                    <p class="text-sm text-slate-400">Refactor structural mechanics to guarantee programmatic correctness.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <h2 class="text-3xl font-bold mb-4 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-shield-halved text-indigo-400"></i> What is Debugging?
+        </h2>
+        <p class="text-lg text-slate-300 mb-6">
+            <strong>Debugging</strong> is the iterative engineering process of identifying, analyzing, and resolving the architectural or structural errors within an application.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+            <div class="bg-red-500/10 border border-red-500/20 p-6 rounded-xl hover:scale-105 transition-all">
+                <div class="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 text-xl font-bold mb-4">01</div>
+                <h3 class="text-xl font-bold text-red-400 mb-2">Syntax Errors</h3>
+                <p class="text-sm text-slate-400">Violations of Python's grammar rules. Prevent code compilation and compilation parsing entirely.</p>
+            </div>
+            <div class="bg-amber-500/10 border border-amber-500/20 p-6 rounded-xl hover:scale-105 transition-all">
+                <div class="w-12 h-12 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 text-xl font-bold mb-4">02</div>
+                <h3 class="text-xl font-bold text-amber-400 mb-2">Runtime Errors</h3>
+                <p class="text-sm text-slate-400">Abrupt operational failures triggered during code execution due to illegal runtime operations.</p>
+            </div>
+            <div class="bg-cyan-500/10 border border-cyan-500/20 p-6 rounded-xl hover:scale-105 transition-all">
+                <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl font-bold mb-4">03</div>
+                <h3 class="text-xl font-bold text-cyan-400 mb-2">Logical Errors</h3>
+                <p class="text-sm text-slate-400">The application builds and runs successfully, but produces inaccurate computations due to broken internal logic.</p>
+            </div>
+        </div>
+        <div class="mt-8 bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
+            <i class="fa-solid fa-lightbulb text-amber-400 text-2xl"></i>
+            <p class="text-sm text-slate-300">
+                <span class="font-bold text-white">Pro Tip:</span> Debugging generally consumes more engineering time than writing new source features. Learning to navigate diagnostics early is essential!
+            </p>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <h2 class="text-3xl font-bold mb-4 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-code text-red-400"></i> Type 1: Syntax Errors
+        </h2>
+        <p class="text-slate-300 mb-6">
+            Occur when the interpreter encounters code constructs violating the systemic structure rules of the Python language.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <div class="text-sm text-red-400 font-bold mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-xmark"></i> Erroneous Snippet (Missing colon `:`)
+                </div>
+                <pre class="language-python"><code class="language-python">def greet(name)
+        print("Hello,", name)</code></pre>
+                <div class="bg-red-500/10 text-red-400 p-3 rounded-lg text-xs font-mono mt-2 border border-red-500/20">
+                    SyntaxError: expected ':'
+                </div>
+            </div>
+            <div>
+                <div class="text-sm text-emerald-400 font-bold mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Refactored Production Code
+                </div>
+                <pre class="language-python"><code class="language-python">def greet(name):
+        print("Hello,", name)</code></pre>
+                <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-lg text-xs font-mono mt-2 border border-emerald-500/20">
+                    Code compiles cleanly and registers the object frame.
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <span class="text-red-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i> Common Culprits:</span> Missing block colons, unmatched brackets/braces, open quotation states, or incorrect semantic tab indentation layouts.
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <h2 class="text-3xl font-bold mb-4 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-bolt text-amber-400"></i> Type 2: Runtime Errors
+        </h2>
+        <p class="text-slate-300 mb-6">
+            Occur after parsing succeeds, triggering mid-execution when an operation tries to compute an explicitly invalid evaluation.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <div class="text-sm text-red-400 font-bold mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-xmark"></i> Broken Snippet (Zero Division Evaluation)
+                </div>
+                <pre class="language-python"><code class="language-python">num = 10
+denom = 0
+print(num / denom) # Triggers crash</code></pre>
+                <div class="bg-red-500/10 text-red-400 p-3 rounded-lg text-xs font-mono mt-2 border border-red-500/20">
+                    ZeroDivisionError: division by zero
+                </div>
+            </div>
+            <div>
+                <div class="text-sm text-emerald-400 font-bold mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Defensive Code Implementation
+                </div>
+                <pre class="language-python"><code class="language-python">num = 10
+denom = 0
+if denom != 0:
+    print(num / denom)
+else:
+    print("Cannot compute division by zero.")</code></pre>
+            </div>
+        </div>
+        <div class="mt-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <span class="text-amber-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Alternate Triggers:</span> Calling indexes out of bounds, targeting undefined keys, converting string objects to invalid integer bounds.
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <h2 class="text-3xl font-bold mb-4 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-brain text-cyan-400"></i> Type 3: Logical Errors
+        </h2>
+        <p class="text-slate-300 mb-4">
+            The script executes smoothly to termination without triggering system tracking exceptions, but produces unintended final data outputs because of flawed algorithmic logic formulas.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                <div class="text-red-400 font-bold mb-2 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch"></i> Flawed Mathematical Formula Layout
+                </div>
+                <pre class="language-python"><code class="language-python">def add(a, b):
+    return a - b # Logical Bug here!
+
+print(add(5, 3)) 
+# Intended: 8 | Output Received: 2</code></pre>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
+                <div class="text-emerald-400 font-bold mb-2 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i> Verified Correct Calculation Routine
+                </div>
+                <pre class="language-python"><code class="language-python">def add(a, b):
+    return a + b
+
+print(add(5, 3)) 
+# Intended: 8 | Output Received: 8</code></pre>
+            </div>
+        </div>
+        <div class="mt-6 bg-cyan-950/40 border border-cyan-800/60 p-4 rounded-xl text-sm text-cyan-200">
+            <i class="fa-solid fa-circle-info mr-2 text-cyan-400"></i>
+            <strong>Testing Strategy:</strong> Logical bugs cannot be surfaced via system trace dumps. Developers isolate them by designing strict algorithmic unit assertion tests.
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <h2 class="text-3xl font-bold mb-6 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-toolbox text-indigo-400"></i> Essential Debugging Workflows
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div>
+                    <div class="text-indigo-400 text-3xl mb-3"><i class="fa-solid fa-terminal"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-white">1. Read Error Messages</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Don't panic when an absolute crash trace dumps! Scan the bottom diagnostic line for the exception name and line reference to track down the culprit.
+                    </p>
+                </div>
+                <span class="text-xs text-indigo-300 font-mono mt-4 block bg-indigo-950/50 p-2 rounded">Check absolute bottom block lines first</span>
+            </div>
+            <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div>
+                    <div class="text-cyan-400 text-3xl mb-3"><i class="fa-solid fa-print"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-white">2. Print Diagnostics</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Inject explicit logging tracking points into mid-execution pipelines to snapshot your variables across internal runtime states.
+                    </p>
+                </div>
+                <span class="text-xs text-cyan-300 font-mono mt-4 block bg-cyan-950/50 p-2 rounded">print(f"Current state: {val}")</span>
+            </div>
+            <div class="bg-slate-800/80 p-6 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div>
+                    <div class="text-emerald-400 text-3xl mb-3"><i class="fa-solid fa-hashtag"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-white">3. Code Commenting</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Temporarily prefix broken target lines with a hashtag parameter token to isolate problem regions by process of elimination.
+                    </p>
+                </div>
+                <span class="text-xs text-emerald-300 font-mono mt-4 block bg-emerald-950/50 p-2 rounded">Isolate issues via commenting (#)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <h2 class="text-3xl font-bold mb-2 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-laptop-code text-cyan-400"></i> Interactive Practice: Resolve Live Code
+        </h2>
+        <p class="text-sm text-slate-300 mb-4">
+            Analyze the mathematical order-of-operations logic bug inside <code class="bg-slate-800 px-1 py-0.5 rounded text-cyan-400">find_average</code>. Fix it inside the live compiler and execute to verify the result!
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[52vh]">
+            <div class="lg:col-span-7 flex flex-col h-full">
+                <div class="bg-slate-900 px-4 py-2 border border-slate-700 rounded-t-xl text-xs font-mono text-slate-400 flex justify-between items-center">
+                    <span>main.py</span>
+                    <span class="text-amber-400"><i class="fa-solid fa-code-commit"></i> Logical Error inside function body</span>
+                </div>
+                <textarea id="live-code-editor" class="flex-1 w-full bg-slate-950 text-slate-100 font-mono p-4 rounded-b-xl border-x border-b border-slate-700 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none leading-relaxed text-sm">def find_average(a, b):
+    return a + b / 2  # Logical Bug: Order of operations issues!
+
+print("Testing calculation outputs with values 10 and 20:")
+print("Result obtained:", find_average(10, 20))
+# Intended correct output parameter must equal 15.0</textarea>
+                <button id="run-code-btn" disabled class="mt-2 w-full py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white font-bold rounded-lg transition-all hover:opacity-95 flex items-center justify-center gap-2 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-play"></i> Compile and Run Script
+                </button>
+            </div>
+            <div class="lg:col-span-5 flex flex-col h-full">
+                <div class="bg-slate-900 px-4 py-2 border border-slate-700 rounded-t-xl text-xs font-mono text-slate-400">
+                    <i class="fa-solid fa-terminal mr-1"></i> Standard Console Sandbox Output
+                </div>
+                <div id="live-code-output" class="flex-1 bg-black rounded-b-xl border-x border-b border-slate-700 p-4 font-mono text-xs text-emerald-400 whitespace-pre-wrap overflow-y-auto">
+Welcome to the interactive workspace terminal. Hit 'Compile and Run Script' above to verify execution.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-8">
+        <h2 class="text-3xl font-bold mb-2 flex items-center gap-3 border-b border-slate-700 pb-3">
+            <i class="fa-solid fa-spider text-red-400"></i> Interactive Bug Hunt Workspace
+        </h2>
+        <p class="text-slate-300 text-sm mb-4">
+            The target sequence logic block contains structural errors. Identify the buggy line by clicking directly on it!
+        </p>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden font-mono text-sm max-w-3xl mx-auto w-full">
+            <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs text-slate-400 flex justify-between">
+                <span>buggy_script.py</span>
+                <span class="text-red-400"><i class="fa-solid fa-bug"></i> Target: Find 1 Line Bug</span>
+            </div>
+            <div class="p-2 bg-[#0B0F19]">
+                <div class="buggy-line p-2 rounded select-none flex items-center gap-4" data-line="1" data-is-bug="false">
+                    <span class="text-slate-600 w-4 text-right">1</span>
+                    <span class="text-blue-400">numbers</span> <span class="text-white">= [1, 2, 3]</span>
+                </div>
+                <div class="buggy-line p-2 rounded select-none flex items-center gap-4" data-line="2" data-is-bug="true">
+                    <span class="text-slate-600 w-4 text-right">2</span>
+                    <span class="text-purple-400">print</span><span class="text-white">(numbers[5])</span>
+                </div>
+                <div class="buggy-line p-2 rounded select-none flex items-center gap-4" data-line="3" data-is-bug="false">
+                    <span class="text-slate-600 w-4 text-right">3</span>
+                    <span class="text-emerald-400"># Safely evaluation requires programmatic arrays checks</span>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 max-w-3xl mx-auto w-full text-center">
+            <div id="bug-hunt-feedback" class="p-4 rounded-xl font-bold text-lg border bg-slate-900 border-slate-800 text-slate-400">
+                Click on the faulty execution code block sequence row above!
+            </div>
+        </div>
+    </div>
+
+    <div id="slide-9" class="slide">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-6">
+            <h2 class="text-3xl font-bold flex items-center gap-3">
+                <i class="fa-solid fa-graduation-cap text-emerald-400"></i> Check Your Understanding
+            </h2>
+            <span id="mcq-progress" class="bg-slate-800 px-3 py-1 rounded-full text-sm font-bold text-slate-300">
+                Question 1 of 5
+            </span>
+        </div>
+
+        <div id="mcq-container" class="flex-1 flex flex-col justify-between">
+            <div>
+                <div id="mcq-question-text" class="text-xl font-semibold text-white mb-6 leading-relaxed">
+                    </div>
+                <div id="mcq-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div id="mcq-feedback" class="text-sm font-semibold opacity-0 transition-opacity flex items-center gap-2">
+                    Placeholder Validation Info Status
+                </div>
+                <div class="flex gap-3 w-full md:w-auto justify-end">
+                    <button id="mcq-prev-btn" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg font-bold text-sm text-slate-300 transition hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Prev Question
+                    </button>
+                    <button id="mcq-next-btn" disabled class="px-5 py-2 bg-emerald-600 rounded-lg font-bold text-sm text-white transition hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2">
+                        Next Question <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<button class="nav-btn" id="prev-slide-btn" disabled><i class="fa-solid fa-arrow-left mr-1"></i> Previous</button>
+<button class="nav-btn" id="next-slide-btn">Next <i class="fa-solid fa-arrow-right ml-1"></i></button>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // 1. Data Store Definition: Verbatim MCQ Input Data mapping
+    const mcqQuestions = [
+        {
+            q: "What is the first step in debugging a program?",
+            options: [
+                { key: "A", text: "Add comments to your code." },
+                { key: "B", text: "Run the program without fixing anything." },
+                { key: "C", text: "Read the error message and locate the problem." },
+                { key: "D", text: "Delete the problematic part of the code." }
+            ],
+            answer: "C",
+            feedback: "Correct! Standard debugging workflow requires tracing system error readouts down to the explicitly logged fault line."
+        },
+        {
+            q: "Which of the following is an example of a syntax error?",
+            options: [
+                { key: "A", text: "Dividing a number by zero." },
+                { key: "B", text: "Using the wrong formula in a calculation." },
+                { key: "C", text: "Forgetting to add a closing parenthesis." },
+                { key: "D", text: "Using the wrong variable in a print statement." }
+            ],
+            answer: "C",
+            feedback: "Correct! Omitted enclosing bracket structures directly break grammar specifications tracked by structural parsers."
+        },
+        {
+            q: "What does the following error message indicate?\n\nSyntaxError: unexpected EOF while parsing",
+            options: [
+                { key: "A", text: "A variable was used without being defined." },
+                { key: "B", text: "The program is missing a required closing bracket or quote." },
+                { key: "C", text: "A function was called with the wrong number of arguments." },
+                { key: "D", text: "A loop is missing a break statement." }
+            ],
+            answer: "B",
+            feedback: "Correct! 'Unexpected EOF' means the compiler reached the End Of File processing limit while seeking a missing brace character boundary."
+        },
+        {
+            q: "How can you temporarily disable a line of code for debugging purposes?",
+            options: [
+                { key: "A", text: "By deleting it." },
+                { key: "B", text: "By adding a print() statement before it." },
+                { key: "C", text: "By commenting it out with #." },
+                { key: "D", text: "By adding it to a list." }
+            ],
+            answer: "C",
+            feedback: "Correct! Prefixing statements with hash identifiers bypasses execution processing via interpretation runtime ignores."
+        },
+        {
+            q: "Which of the following tools can be used to debug Python code?",
+            options: [
+                { key: "A", text: "PythonTutor for step-by-step visualization." },
+                { key: "B", text: "Print statements to track variable values." },
+                { key: "C", text: "Built-in debuggers in IDEs like VS Code." },
+                { key: "D", text: "All of the above." }
+            ],
+            answer: "D",
+            feedback: "Correct! Visual trace environments, mid-pipeline context prints, and full hardware breakpoints form core diagnostic toolkit blocks."
+        }
+    ];
+
+    // 2. Initial Setup Constants & State Elements
+    let currentSlideIndex = 1;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlidesCount = slides.length;
+    let pyodideInstance = null;
+    let currentMcqIndex = 0;
+    let chosenMcqAnswer = null;
+
+    // 3. Dynamic Structural Deck Routing Logic
+    function refreshDeckState() {
+        slides.forEach(slide => slide.classList.remove('active'));
+        const activeSlide = document.getElementById(`slide-${currentSlideIndex}`);
+        if(activeSlide) activeSlide.classList.add('active');
+
+        // Update Deck Counter Indicators
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex} / ${totalSlidesCount}`;
+        
+        // Progress Width Computations
+        const metricPercentage = ((currentSlideIndex - 1) / (totalSlidesCount - 1)) * 100;
+        document.getElementById('progress').style.width = `${metricPercentage}%`;
+
+        // Navigation Boundary Protection
+        document.getElementById('prev-slide-btn').disabled = (currentSlideIndex === 1);
+        document.getElementById('next-slide-btn').disabled = (currentSlideIndex === totalSlidesCount);
+
+        // Re-run prism highlighting on slide shifts to preserve layout rules
+        setTimeout(() => { Prism.highlightAll(); }, 5);
+    }
+
+    function navigateNextSlide() {
+        if (currentSlideIndex < totalSlidesCount) {
+            currentSlideIndex++;
+            refreshDeckState();
+        }
+    }
+
+    function navigatePrevSlide() {
+        if (currentSlideIndex > 1) {
+            currentSlideIndex--;
+            refreshDeckState();
+        }
+    }
+
+    // Connect global navigation event hooks
+    document.getElementById('next-slide-btn').addEventListener('click', navigateNextSlide);
+    document.getElementById('prev-slide-btn').addEventListener('click', navigatePrevSlide);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateNextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigatePrevSlide();
+        }
+    });
+
+    // 4. Pyodide Compilation Runtime Pipeline Integration
+    async function initializePyodideEnvironment() {
+        try {
+            pyodideInstance = await loadPyodide();
+            const widget = document.getElementById('pyodide-status');
+            widget.className = "pyodide-loader pyodide-ready";
+            widget.innerHTML = `<i class="fa-solid fa-circle-check"></i> Python Environment Sandbox Engine Ready`;
+            document.getElementById('run-code-btn').disabled = false;
+        } catch (err) {
+            console.error("Pyodide Engine Fault:", err);
+            document.getElementById('pyodide-status').textContent = "Failed to launch internal sandbox compiler.";
+        }
+    }
+    initializePyodideEnvironment();
+
+    document.getElementById('run-code-btn').addEventListener('click', async () => {
+        if (!pyodideInstance) return;
+        const codeText = document.getElementById('live-code-editor').value;
+        const consoleOut = document.getElementById('live-code-output');
+        consoleOut.textContent = "Compiling and evaluating runtime routines...\n";
+        
+        // Setup execution isolation channels
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(codeText);
+            const standardOut = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const errorOut = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if (errorOut) {
+                consoleOut.className = "flex-1 bg-black rounded-b-xl border-x border-b border-slate-700 p-4 font-mono text-xs text-red-400 whitespace-pre-wrap overflow-y-auto";
+                consoleOut.textContent = errorOut;
+            } else {
+                consoleOut.className = "flex-1 bg-black rounded-b-xl border-x border-b border-slate-700 p-4 font-mono text-xs text-emerald-400 whitespace-pre-wrap overflow-y-auto";
+                consoleOut.textContent = standardOut || "Script finished running (Empty standard output buffer detected).";
+            }
+        } catch(pyError) {
+            consoleOut.className = "flex-1 bg-black rounded-b-xl border-x border-b border-slate-700 p-4 font-mono text-xs text-red-400 whitespace-pre-wrap overflow-y-auto";
+            consoleOut.textContent = pyError.message;
+        }
+    });
+
+    // 5. Bug Hunt Selection Routine Hooks
+    document.querySelectorAll('.buggy-line').forEach(lineElement => {
+        lineElement.addEventListener('click', () => {
+            // Remove selection state from siblings
+            document.querySelectorAll('.buggy-line').forEach(el => el.classList.remove('selected-bug'));
+            lineElement.classList.add('selected-bug');
+
+            const isBuggy = lineElement.getAttribute('data-is-bug') === 'true';
+            const feedbackContainer = document.getElementById('bug-hunt-feedback');
+
+            if (isBuggy) {
+                feedbackContainer.className = "p-4 rounded-xl font-bold text-lg border bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+                feedbackContainer.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Excellent Catch! Line 2 requests index 5 on a sequence array containing only 3 elements, causing an IndexError runtime crash.`;
+            } else {
+                feedbackContainer.className = "p-4 rounded-xl font-bold text-lg border bg-red-500/10 border-red-500/30 text-red-400";
+                feedbackContainer.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> That line is correct. Look closely for a runtime operation that asks for data outside bounds!`;
+            }
+        });
+    });
+
+    // 6. Multi-Choice Assessment Pipeline Component
+    function renderMcqQuestionState() {
+        chosenMcqAnswer = null;
+        const currentDataBlock = mcqQuestions[currentMcqIndex];
+        
+        // Update Questionnaire Header Labels
+        document.getElementById('mcq-progress').textContent = `Question ${currentMcqIndex + 1} of ${mcqQuestions.length}`;
+        document.getElementById('mcq-question-text').textContent = currentDataBlock.q;
+        
+        // Clean feedback canvas
+        const feedbackContainer = document.getElementById('mcq-feedback');
+        feedbackContainer.className = "text-sm font-semibold opacity-0 transition-opacity flex items-center gap-2";
+        
+        // Set dynamic layout button states
+        document.getElementById('mcq-prev-btn').disabled = (currentMcqIndex === 0);
+        
+        const nextButton = document.getElementById('mcq-next-btn');
+        nextButton.disabled = true;
+        if (currentMcqIndex === mcqQuestions.length - 1) {
+            nextButton.innerHTML = `Complete Quiz <i class="fa-solid fa-flag-checkered text-xs ml-1"></i>`;
+        } else {
+            nextButton.innerHTML = `Next Question <i class="fa-solid fa-chevron-right text-xs ml-1"></i>`;
+        }
+
+        // Generate target interactive option maps
+        const gridCanvas = document.getElementById('mcq-options-grid');
+        gridCanvas.innerHTML = '';
+        
+        currentDataBlock.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 p-4 rounded-xl transition-all flex items-start gap-4 font-inherit text-slate-200 group";
+            btn.innerHTML = `
+                <span class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700 text-slate-400 font-bold flex items-center justify-center shrink-0 group-hover:border-indigo-400 group-hover:text-indigo-400 transition-colors">${opt.key}</span>
+                <span class="pt-0.5 leading-relaxed text-sm">${opt.text}</span>
+            `;
+            
+            btn.addEventListener('click', () => handleMcqOptionSelect(btn, opt.key, currentDataBlock));
+            gridCanvas.appendChild(btn);
+        });
+    }
+
+    function handleMcqOptionSelect(buttonNode, clickedKey, questionBlock) {
+        if (chosenMcqAnswer !== null) return; // Disallow double selection
+        chosenMcqAnswer = clickedKey;
+        
+        const isCorrect = (clickedKey === questionBlock.answer);
+        const feedbackContainer = document.getElementById('mcq-feedback');
+        
+        // Style selected row element node parameters
+        if (isCorrect) {
+            buttonNode.className = "w-full text-left bg-emerald-500/10 border-2 border-emerald-500 p-4 rounded-xl transition-all flex items-start gap-4 text-emerald-300 font-inherit";
+            buttonNode.querySelector('span').className = "w-7 h-7 rounded-lg bg-emerald-500 text-white font-bold flex items-center justify-center shrink-0";
+            
+            feedbackContainer.className = "text-sm font-semibold opacity-100 flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg border border-emerald-500/20 max-w-xl";
+            feedbackContainer.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>${questionBlock.feedback}</span>`;
+        } else {
+            buttonNode.className = "w-full text-left bg-red-500/10 border-2 border-danger p-4 rounded-xl transition-all flex items-start gap-4 text-red-300 font-inherit";
+            buttonNode.querySelector('span').className = "w-7 h-7 rounded-lg bg-red-500 text-white font-bold flex items-center justify-center shrink-0";
+            
+            feedbackContainer.className = "text-sm font-semibold opacity-100 flex items-center gap-2 text-red-400 bg-red-500/10 px-4 py-2 rounded-lg border border-red-500/20 max-w-xl";
+            feedbackContainer.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i> <span>Incorrect. Review error fundamentals and try again!</span>`;
+            
+            // Highlight right answer candidate dynamically
+            const matchingOptionNode = Array.from(document.getElementById('mcq-options-grid').children).find(child => 
+                child.innerText.trim().startsWith(questionBlock.answer)
+            );
+            if (matchingOptionNode) {
+                matchingOptionNode.classList.add('border-emerald-500/40', 'bg-emerald-500/5');
+            }
+        }
+
+        document.getElementById('mcq-next-btn').disabled = false;
+    }
+
+    document.getElementById('mcq-next-btn').addEventListener('click', () => {
+        if (currentMcqIndex < mcqQuestions.length - 1) {
+            currentMcqIndex++;
+            renderMcqQuestionState();
+        } else {
+            // Reached Quiz Termination State
+            const container = document.getElementById('mcq-container');
+            container.className = "flex-1 flex flex-col items-center justify-center text-center p-8";
+            container.innerHTML = `
+                <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center text-4xl mb-6 border border-emerald-500/30 animate-scale">
+                    <i class="fa-solid fa-square-check"></i>
+                </div>
+                <h3 class="text-3xl font-bold mb-2">Review Completed Successfully!</h3>
+                <p class="text-slate-400 max-w-md mx-auto mb-6">
+                    You have processed all assessment review questions for the Class 9 Debugging Foundations routine.
+                </p>
+                <button onclick="window.location.reload()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition text-sm">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Restart Lesson Slide Deck
+                </button>
+            `;
+        }
+    });
+
+    document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+        if (currentMcqIndex > 0) {
+            currentMcqIndex--;
+            renderMcqQuestionState();
+        }
+    });
+
+    // Run startup configurations
+    window.addEventListener('DOMContentLoaded', () => {
+        refreshDeckState();
+        renderMcqQuestionState();
+    });
+</script>
+
+</body>
+</html>

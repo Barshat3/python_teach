@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastering Python Functions & Lists</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #EEF2FF;
+            --secondary: #10B981;
+            --dark: #0F172A;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .slide {
+            display: none;
+            height: 82vh;
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #slide-counter {
+            position: fixed;
+            top: 1rem;
+            right: 1.5rem;
+            background: rgba(15, 23, 42, 0.08);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            z-index: 50;
+            color: var(--dark);
+        }
+        .progress-bar {
+            height: 6px;
+            background-color: #E2E8F0;
+            width: 100%;
+            position: fixed;
+            bottom: 3rem;
+            left: 0;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .key-box {
+            background: #E2E8F0;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 0.5rem;
+        }
+        .bug-line {
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .bug-line:hover {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+        }
+        .bug-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.3) !important;
+            border-left: 4px solid var(--danger);
+        }
+        .bug-line.selected-correct {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-left: 4px solid var(--secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 1</div>
+<div id="presentation-container" class="flex-grow">
+
+    <div class="slide active justify-center items-center text-center bg-gradient-to-br from-indigo-50 via-white to-emerald-50">
+        <div class="max-w-4xl px-4">
+            <span class="text-xs font-bold uppercase tracking-widest text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">Python Core Concept Series</span>
+            <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 mt-4 mb-6 leading-tight">
+                Mastering <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-emerald-600">Functions & Lists</span>
+            </h1>
+            <p class="text-lg text-slate-600 mb-10 max-w-2xl mx-auto">
+                Explore return values, dynamic list aggregations, functional parameter flexibility, and real-world implementation projects.
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-indigo-600 font-bold text-xl mb-1">01</div>
+                    <div class="text-xs font-semibold uppercase text-slate-400">Return Syntax</div>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-emerald-600 font-bold text-xl mb-1">02</div>
+                    <div class="text-xs font-semibold uppercase text-slate-400">List Evaluation</div>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-amber-600 font-bold text-xl mb-1">03</div>
+                    <div class="text-xs font-semibold uppercase text-slate-400">Tuple Returns</div>
+                </div>
+                <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-purple-600 font-bold text-xl mb-1">04</div>
+                    <div class="text-xs font-semibold uppercase text-slate-400">Live Code Sandbox</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Core Foundations
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Functions with Return Values</h2>
+                    <p class="text-slate-600 mb-4 leading-relaxed">
+                        Functions perform tasks, but they become immensely powerful when they pass data back to the calling ecosystem using the <code class="bg-slate-100 text-pink-600 px-1 rounded font-mono font-bold">return</code> statement.
+                    </p>
+                    <blockquote class="border-l-4 border-indigo-500 bg-indigo-50/50 p-4 rounded-r-lg my-4 text-sm text-slate-700 italic">
+                        "A return statement terminates execution immediately and delivers the evaluation back to where the function was triggered."
+                    </blockquote>
+                </div>
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 text-amber-800 font-bold text-sm mb-1">
+                        <i class="fa-solid fa-rocket"></i> Interactive Challenge Task
+                    </div>
+                    <p class="text-xs text-amber-900 leading-relaxed">
+                        <strong>Activity:</strong> Write a custom function that accepts two separate parameters, multiplies them together, and explicitly yields the computed product.
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-center">
+                <div class="bg-slate-900 rounded-xl shadow-xl overflow-hidden flex flex-col h-full max-h-[500px]">
+                    <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono flex items-center gap-2">
+                            <span class="w-3 height-3 rounded-full bg-red-500 inline-block w-2 h-2"></span>
+                            <span class="w-3 height-3 rounded-full bg-yellow-500 inline-block w-2 h-2"></span>
+                            <span class="w-3 height-3 rounded-full bg-green-500 inline-block w-2 h-2"></span>
+                            return_val.py
+                        </span>
+                        <span class="text-xs uppercase bg-indigo-600 text-white font-bold px-2 py-0.5 rounded">Execution Sample</span>
+                    </div>
+                    <div class="p-4 flex-grow overflow-auto">
+                        <pre class="language-python"><code class="font-mono">def add_numbers(a, b):
+    # Sends back the addition of parameters to the execution flow
+    return a + b
+
+# The returned assessment is assigned directly to a local variable
+result = add_numbers(5, 7)
+print(result) # Output: 12</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-list-check"></i> Project 1 (15 Minutes)
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Longest String Finder</h2>
+                    <p class="text-slate-600 mb-4 text-sm leading-relaxed">
+                        This architecture isolates linear traversal. We configure an accumulation variable tracking the maximum metric, continuously updating it during sequence inspection.
+                    </p>
+                    <div class="space-y-3 my-4">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                            <p class="text-xs text-slate-600">Initialize a buffer variable <code class="bg-slate-100 px-1 rounded font-mono text-xs">big</code> with an empty sequence structure.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-emerald-100 text-emerald-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
+                            <p class="text-xs text-slate-600">Loop uniformly through collection units assessing structural volume boundaries via <code class="bg-slate-100 px-1 rounded font-mono text-xs">len()</code>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-100 rounded-xl p-4 border border-slate-200">
+                    <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Algorithmic Insight</span>
+                    <p class="text-xs text-slate-600 italic">
+                        By matching with a strict greater-than evaluation (<code class="font-mono">></code>), the loop automatically maintains the first longest element encountered when processing identical scale values.
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-center">
+                <div class="bg-slate-900 rounded-xl shadow-xl overflow-hidden flex flex-col h-full max-h-[500px]">
+                    <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">longest_string.py</span>
+                        <span class="text-xs font-semibold text-emerald-400 font-mono"><i class="fa-solid fa-check-double"></i> Verified</span>
+                    </div>
+                    <div class="p-4 flex-grow overflow-auto">
+                        <pre class="language-python"><code class="font-mono">def longest(words):
+    big = ""
+    for word in words:
+        if len(word) > len(big):
+            big = word
+    return big
+
+# Demonstration Vector Execution
+words = ["hi", "hello", "howdy", "hey"]
+print(longest(words))  # Explicit Standard Output: howdy</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-600 font-bold text-sm uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-chart-line"></i> Project 2
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Favorite Numbers Analyzer</h2>
+                    <p class="text-slate-600 mb-4 text-sm leading-relaxed">
+                        Leveraging standard built-in aggregators simplifies complex statistical operations. This project underscores structural sequence mutation and built-in reduction operations.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-2 my-2">
+                        <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                            <code class="font-mono font-bold text-xs text-indigo-600">max()</code>
+                            <div class="text-[10px] text-slate-500">Peak scale lookup</div>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                            <code class="font-mono font-bold text-xs text-emerald-600">min()</code>
+                            <div class="text-[10px] text-slate-500">Floor scale lookup</div>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                            <code class="font-mono font-bold text-xs text-purple-600">sum()</code>
+                            <div class="text-[10px] text-slate-500">Scalar accumulation</div>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 text-center">
+                            <code class="font-mono font-bold text-xs text-amber-600">.append()</code>
+                            <div class="text-[10px] text-slate-500">Vector appending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-900">
+                    <span class="font-bold block mb-1"><i class="fa-solid fa-circle-info"></i> Contextual Application</span>
+                    Parameters inject deep configuration capacities, letting routines parse data variants cleanly without re-declaring inner logic frames.
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-center">
+                <div class="bg-slate-900 rounded-xl shadow-xl overflow-hidden flex flex-col h-full max-h-[500px]">
+                    <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">numbers_analysis.py</span>
+                        <span class="text-xs text-amber-400 font-mono">Interactive Loop</span>
+                    </div>
+                    <div class="p-4 flex-grow overflow-auto">
+                        <pre class="language-python"><code class="font-mono">numbers = []
+
+# Collect elements safely inside an iterator cycle
+for i in range(5):
+    num = int(input("Enter a number: "))
+    numbers.append(num)
+
+print("List of numbers are:", numbers)
+print("Biggest:", max(numbers))
+print("Smallest:", min(numbers))
+print("Sum:", sum(numbers))</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 text-purple-600 font-bold text-sm uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-calculator"></i> Logic & State Multiplicity
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Multi-Value Evaluation</h2>
+                    <p class="text-slate-600 mb-3 text-sm leading-relaxed">
+                        Python handles complex output matrices implicitly through sequence packing and unpacking structures.
+                    </p>
+                    
+                    <div class="bg-purple-50 rounded-xl p-4 border border-purple-100 text-xs text-slate-700 space-y-2">
+                        <div class="font-bold text-purple-900 text-sm">Tuple Architecture Uncovered</div>
+                        <p>When returning variables separated by commas (<code class="font-mono">return state_a, state_b</code>), Python automatically wraps them into a consolidated <strong>Tuple</strong> payload.</p>
+                        <p>During programmatic lookup, we split these instantly across distinct variables via structured structural unpacking.</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs">
+                    <span class="font-bold text-amber-800 block mb-1"><i class="fa-solid fa-laptop-code"></i> Student Portfolio Core Task</span>
+                    Formulate a standalone Factorial computation pipeline. Extend execution parameters to accept clean console integers derived dynamically via user input frameworks.
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-center">
+                <div class="bg-slate-900 rounded-xl shadow-xl overflow-hidden flex flex-col h-full max-h-[500px]">
+                    <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono">even_odd_counter.py</span>
+                    </div>
+                    <div class="p-4 flex-grow overflow-auto">
+                        <pre class="language-python"><code class="font-mono">def count_even_odd(numbers):
+    even_count = 0
+    odd_count = 0
+
+    for num in numbers:
+        if num % 2 == 0:
+            even_count += 1
+        else:
+            odd_count += 1
+
+    return even_count, odd_count
+
+nums = [10, 3, 7, 8, 12, 5]
+# Destructuring/Unpacking execution payload
+even, odd = count_even_odd(nums)
+
+print("Even numbers:", even)
+print("Odd numbers:", odd)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex flex-col h-full">
+            <div class="mb-4">
+                <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-terminal"></i> Interactive Sandbox Run-time
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">Live Custom Compiler Console</h2>
+                <p class="text-xs text-slate-500">Modify context loops, manipulate input vectors, or finalize task proofs within this live compilation interface.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-grow overflow-hidden min-h-[300px]">
+                <div class="flex flex-col h-full border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-800 text-slate-300 px-4 py-2 text-xs font-mono flex justify-between items-center">
+                        <span>Interactive Input Workspace (Python)</span>
+                        <button id="run-code-btn" disabled class="bg-emerald-600 text-white font-bold px-3 py-1 rounded hover:bg-emerald-700 transition disabled:opacity-50 text-xs flex items-center gap-1">
+                            <i id="run-icon" class="fa-solid fa-spinner fa-spin"></i> <span id="run-text">Loading Env...</span>
+                        </button>
+                    </div>
+                    <textarea id="code-editor" class="w-full flex-grow p-4 font-mono text-sm bg-slate-900 text-slate-100 focus:outline-none resize-none leading-relaxed">def longest(words):
+    big = ""
+    for word in words:
+        if len(word) > len(big):
+            big = word
+    return big
+
+words = ["hi", "hello", "howdy", "hey"]
+print("Longest found string inside array:", longest(words))
+</textarea>
+                </div>
+
+                <div class="flex flex-col h-full border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold uppercase tracking-wider">
+                        Virtual Terminal Console Output
+                    </div>
+                    <div id="code-output" class="w-full flex-grow p-4 font-mono text-sm bg-slate-950 text-emerald-400 overflow-auto whitespace-pre-wrap">Compiler output layer initialization clean... Ready for operations pipeline execution execution loop logs.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex flex-col h-full">
+            <div class="mb-4">
+                <div class="flex items-center gap-2 text-red-600 font-bold text-sm uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-bug"></i> Logic Debug Arena
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">Locate Structural Script Issues</h2>
+                <p class="text-xs text-slate-500">Analyze code sequences visually. Target bad instructions directly to track your debugging analysis metrics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-center">
+                <div class="lg:col-span-7 bg-slate-900 rounded-xl overflow-hidden shadow-xl">
+                    <div class="bg-slate-800 text-xs font-mono text-slate-400 px-4 py-2 border-b border-slate-700">
+                        interactive_bug_tracker.py (Click to catch errors)
+                    </div>
+                    <div class="p-4 font-mono text-sm text-slate-300 space-y-0.5 select-none" id="bug-hunt-container">
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="1" data-bug="false"><span class="text-slate-500 inline-block w-6 text-right mr-3">1</span>def process_numbers(vals):</div>
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="2" data-bug="true"><span class="text-slate-500 inline-block w-6 text-right mr-3">2</span>    result = 0</div>
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="3" data-bug="false"><span class="text-slate-500 inline-block w-6 text-right mr-3">3</span>    for v in vals:</div>
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="4" data-bug="true"><span class="text-slate-500 inline-block w-6 text-right mr-3">4</span>        if v % 2 = 0:</div>
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="5" data-bug="false"><span class="text-slate-500 inline-block w-6 text-right mr-3">5</span>            result += v</div>
+                        <div class="bug-line p-2 rounded bg-slate-900/50" data-line="6" data-bug="false"><span class="text-slate-500 inline-block w-6 text-right mr-3">6</span>    return result</div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-center">
+                        <div class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Bugs Encountered Metrics</div>
+                        <div class="text-4xl font-black text-slate-800 mb-1" id="bug-counter">0 / 2</div>
+                        <p class="text-xs text-slate-500" id="bug-feedback-text">Locate faulty constructs hidden inside execution context logic.</p>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 rounded-xl p-4 text-xs text-red-900">
+                        <span class="font-bold block mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Error Review Guidelines</span>
+                        Check internal counter reset boundaries and track condition assignment evaluation tokens (<code class="font-mono">=</code>) versus relative identity equality checkers (<code class="font-mono">==</code>).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex flex-col h-full max-w-4xl mx-auto justify-center w-full">
+            <div class="mb-4 text-center">
+                <span class="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Knowledge Evaluation</span>
+                <h2 class="text-3xl font-bold text-slate-900 mt-2">Check Your Understanding</h2>
+                <div class="text-xs font-semibold text-slate-400 mt-1" id="mcq-progress-text">Question 1 of 1</div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col min-h-[340px]">
+                <div id="mcq-interactive-card" class="p-6 flex-grow flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-4" id="mcq-question-text">Question Text Placeholder</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="mcq-options-box">
+                            </div>
+                    </div>
+                    
+                    <div id="mcq-feedback-box" class="mt-4 p-3 rounded-lg text-xs font-semibold hidden transition">
+                        Feedback details placeholder text.
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center">
+                    <button id="mcq-prev-btn" class="text-xs font-bold text-slate-500 hover:text-slate-800 disabled:opacity-40 transition py-1.5 px-3 rounded bg-white border border-slate-200">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Back
+                    </button>
+                    <button id="mcq-next-btn" disabled class="text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition py-1.5 px-4 rounded shadow-sm">
+                        Next Question <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress">
+    <div class="progress-inner" id="progress-indicator"></div>
+</div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // --- USER SUBMITTED MULTIPLE CHOICE QUESTIONS DATA ARRAY ---
+    const mcqQuestionsData = [
+        {
+            question: "What does the return statement do in a function?",
+            options: [
+                "It prints the value to the screen.",
+                "It exits the function and sends a value back to the caller.",
+                "It restarts the function from the beginning.",
+                "It deletes the variables inside the function."
+            ],
+            correct: 1,
+            feedback: "Correct! A return statement exits the function immediately and passes the specified value back to where the function was called."
+        },
+        {
+            question: "In Project 1 (longest string finder), why is the variable 'big' initialized to an empty string?",
+            options: [
+                "To crash the program if the list is empty.",
+                "So that any string will have a length greater than or equal to it.",
+                "To convert the list into a single string.",
+                "To clear the computer's memory cache."
+            ],
+            correct: 1,
+            feedback: "Spot on! Initializing to an empty string ensures that any valid string evaluated via len() will be longer, triggering a safe programmatic update."
+        },
+        {
+            question: "What happens when you return multiple values separated by commas in Python?",
+            options: [
+                "Python returns only the first value.",
+                "Python throws a syntax complication exception.",
+                "Python packages them into a single Tuple structural token.",
+                "Python creates multiple copies of the parent function execution block."
+            ],
+            correct: 2,
+            feedback: "Correct! Python packages items automatically into a single, immutable Tuple structure which can then be elegantly unpacked downstream."
+        }
+    ];
+
+    // --- PRESENTATION CONFIG & SLIDE NAVIGATION CONTROLLER ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const slideCounter = document.getElementById('slide-counter');
+    const progressIndicator = document.getElementById('progress-indicator');
+
+    function updatePresentationState() {
+        slides.forEach((slide, idx) => {
+            if (idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Track global counters and indicators dynamically
+        slideCounter.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+        const linearPercentage = ((currentSlideIndex + 1) / slides.length) * 100;
+        progressIndicator.style.width = `${linearPercentage}%`;
+
+        // Retrigger static structural markup rendering highlight
+        Prism.highlightAll();
+    }
+
+    function navigateNext() {
+        if (currentSlideIndex < slides.length - 1) {
+            currentSlideIndex++;
+            updatePresentationState();
+        }
+    }
+
+    function navigatePrev() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentationState();
+        }
+    }
+
+    // Keyboard binding setups
+    window.addEventListener('keydown', (e) => {
+        // Prevent action mapping intercepts if actively interfacing inside data capture targets
+        if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
+            return;
+        }
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateNext();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigatePrev();
+        }
+    });
+
+    // --- INTERACTIVE MCQ ENGINE DESIGN PATTERN ---
+    let activeMcqIdx = 0;
+    let optionChosenState = false;
+
+    const mcqQuestionText = document.getElementById('mcq-question-text');
+    const mcqOptionsBox = document.getElementById('mcq-options-box');
+    const mcqFeedbackBox = document.getElementById('mcq-feedback-box');
+    const mcqProgressText = document.getElementById('mcq-progress-text');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+
+    function paintMcqCardState() {
+        optionChosenState = false;
+        mcqNextBtn.disabled = true;
+        mcqFeedbackBox.classList.add('hidden');
+        
+        const activeData = mcqQuestionsData[activeMcqIdx];
+        mcqQuestionText.textContent = activeData.question;
+        mcqProgressText.textContent = `Question ${activeMcqIdx + 1} of ${mcqQuestionsData.length}`;
+
+        // Empty options tree nodes safely
+        mcqOptionsBox.innerHTML = '';
+
+        activeData.options.forEach((optText, optIdx) => {
+            const optButton = document.createElement('button');
+            optButton.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold hover:bg-slate-100 transition flex items-center gap-2 text-slate-700";
+            optButton.innerHTML = `<span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-500 font-bold shrink-0">${String.fromCharCode(65 + optIdx)}</span> <span class="opt-content-text">${optText}</span>`;
+            
+            optButton.addEventListener('click', () => evalChosenMcqOption(optIdx, optButton));
+            mcqOptionsBox.appendChild(optButton);
+        });
+
+        // Set up completion button configurations dynamically
+        if (activeMcqIdx === mcqQuestionsData.length - 1) {
+            mcqNextBtn.innerHTML = `Finish Quiz <i class="fa-solid fa-flag-checkered ml-1"></i>`;
+        } else {
+            mcqNextBtn.innerHTML = `Next Question <i class="fa-solid fa-arrow-right ml-1"></i>`;
+        }
+
+        mcqPrevBtn.disabled = (activeMcqIdx === 0);
+    }
+
+    function evalChosenMcqOption(chosenIdx, targetElement) {
+        if (optionChosenState) return; // Block double entry mutations
+        optionChosenState = true;
+
+        const targetData = mcqQuestionsData[activeMcqIdx];
+        const configurationButtons = mcqOptionsBox.querySelectorAll('button');
+
+        configurationButtons.forEach((btn, idx) => {
+            if (idx === targetData.correct) {
+                btn.classList.remove('bg-slate-50', 'border-slate-200');
+                btn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                btn.querySelector('span').classList.add('bg-emerald-500', 'text-white');
+            }
+            if (idx === chosenIdx && chosenIdx !== targetData.correct) {
+                btn.classList.remove('bg-slate-50', 'border-slate-200');
+                btn.classList.add('bg-red-50', 'border-red-500', 'text-red-900');
+                btn.querySelector('span').classList.add('bg-red-500', 'text-white');
+            }
+        });
+
+        // Expose structured logic review insights feedback
+        mcqFeedbackBox.className = `mt-4 p-3 rounded-lg text-xs font-semibold block ${chosenIdx === targetData.correct ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'}`;
+        mcqFeedbackBox.textContent = targetData.feedback;
+        
+        mcqNextBtn.disabled = false;
+    }
+
+    mcqNextBtn.addEventListener('click', () => {
+        if (activeMcqIdx < mcqQuestionsData.length - 1) {
+            activeMcqIdx++;
+            paintMcqCardState();
+        } else {
+            // Reached evaluation endpoint bounds safely
+            document.getElementById('mcq-interactive-card').innerHTML = `
+                <div class="text-center py-10 flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl mb-4 shadow-sm animate-bounce">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-1">Knowledge Verification Completed!</h3>
+                    <p class="text-xs text-slate-500 max-w-sm">All core curriculum evaluation blocks passed successfully. Feel free to use the code sandbox to experiment further.</p>
+                </div>
+            `;
+            mcqNextBtn.classList.add('hidden');
+        }
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if (activeMcqIdx > 0) {
+            activeMcqIdx--;
+            paintMcqCardState();
+        }
+    });
+
+
+    // --- INTEGRATIVE LOGIC BUG HUNT ARENA HOOKS ---
+    const bugHuntContainer = document.getElementById('bug-hunt-container');
+    const bugCounterDisplay = document.getElementById('bug-counter');
+    const bugFeedbackText = document.getElementById('bug-feedback-text');
+    
+    const totalActualBugs = 2; 
+    let identifiedBugsCount = 0;
+    let uniquelySelectedLines = new Set();
+
+    bugHuntContainer.querySelectorAll('.bug-line').forEach(lineElement => {
+        lineElement.addEventListener('click', () => {
+            const fileLineIdentifier = lineElement.getAttribute('data-line');
+            if (uniquelySelectedLines.has(fileLineIdentifier)) return;
+
+            const containsBugToken = lineElement.getAttribute('data-bug') === 'true';
+            uniquelySelectedLines.add(fileLineIdentifier);
+
+            if (containsBugToken) {
+                lineElement.classList.add('selected-correct');
+                identifiedBugsCount++;
+                bugCounterDisplay.textContent = `${identifiedBugsCount} / ${totalActualBugs}`;
+                
+                if (fileLineIdentifier === "2") {
+                    bugFeedbackText.textContent = "Great catch! Line 2 resets global accumulation scope tracking state internally within iterations.";
+                    bugFeedbackText.className = "text-xs font-bold text-emerald-600 transition";
+                } else if (fileLineIdentifier === "4") {
+                    bugFeedbackText.textContent = "Excellent execution! Line 4 contains a bad raw variable assignment operator (=) instead of equivalence verification logic tokens (==).";
+                    bugFeedbackText.className = "text-xs font-bold text-emerald-600 transition";
+                }
+            } else {
+                lineElement.classList.add('selected-bug');
+                bugFeedbackText.textContent = `Line ${fileLineIdentifier} is completely clean. Re-evaluate loop instructions carefully.`;
+                bugFeedbackText.className = "text-xs font-bold text-danger transition";
+            }
+
+            if (identifiedBugsCount === totalActualBugs) {
+                bugCounterDisplay.className = "text-4xl font-black text-emerald-600 mb-1";
+                bugFeedbackText.textContent = "Outstanding work! All latent errors within execution stream context elements detected successfully.";
+            }
+        });
+    });
+
+
+    // --- REAL-TIME PYTHON PYODIDE INTEGRATION PIPELINE ---
+    const runCodeBtn = document.getElementById('run-code-btn');
+    const codeEditor = document.getElementById('code-editor');
+    const codeOutput = document.getElementById('code-output');
+    const runIcon = document.getElementById('run-icon');
+    const runText = document.getElementById('run-text');
+
+    let pyodideInstance = null;
+
+    async function initPyodideRuntime() {
+        try {
+            pyodideInstance = await loadPyodide();
+            // Warm up execution stream environment variables maps
+            runIcon.className = "fa-solid fa-play";
+            runText.textContent = "Run Code";
+            runCodeBtn.disabled = false;
+            runCodeBtn.className = "bg-emerald-600 text-white font-bold px-3 py-1 rounded hover:bg-emerald-700 transition text-xs flex items-center gap-1 shadow-sm";
+            codeOutput.textContent = "Python environment ready. Click 'Run Code' to execute your script.";
+        } catch(err) {
+            codeOutput.textContent = `Initialization Error: Unable to instantiate runtime context layer pipeline directly. Logs: ${err}`;
+        }
+    }
+
+    runCodeBtn.addEventListener('click', async () => {
+        if (!pyodideInstance) return;
+
+        codeOutput.textContent = "Executing code in real-time environment...";
+        
+        // Setup internal intercept capture streams for logs management tracking
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            const activeScriptPayload = codeEditor.value;
+            await pyodideInstance.runPythonAsync(activeScriptPayload);
+            
+            const systemStandardOut = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const systemStandardErr = pyodideInstance.runPython("sys.stderr.getvalue()");
+
+            if (systemStandardErr) {
+                codeOutput.textContent = systemStandardErr;
+                codeOutput.className = "w-full flex-grow p-4 font-mono text-sm bg-slate-950 text-rose-400 overflow-auto whitespace-pre-wrap";
+            } else {
+                codeOutput.textContent = systemStandardOut || "Script executed successfully with no console output payloads generated.";
+                codeOutput.className = "w-full flex-grow p-4 font-mono text-sm bg-slate-950 text-emerald-400 overflow-auto whitespace-pre-wrap";
+            }
+        } catch (execError) {
+            codeOutput.textContent = execError.message;
+            codeOutput.className = "w-full flex-grow p-4 font-mono text-sm bg-slate-950 text-rose-400 overflow-auto whitespace-pre-wrap";
+        }
+    });
+
+    // Start initialization processes smoothly on base lifecycle instantiation endpoints
+    initPyodideRuntime();
+    paintMcqCardState();
+    updatePresentationState();
+</script>
+</body>
+</html>

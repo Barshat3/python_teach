@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to SDLC and Planning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-purple: #c084fc;
+            --accent-coral: #fb7185;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, visibility 0.5s;
+            transform: scale(0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        #slide-counter {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--accent-blue);
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            transition: width 0.3s ease-out;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 50;
+        }
+
+        .key-box {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: var(--accent-blue);
+        }
+
+        .stage-card {
+            background: var(--bg-secondary);
+            border-left: 4px solid var(--accent-blue);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stage-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(56, 189, 248, 0.3);
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            display: block;
+        }
+
+        .buggy-line:hover {
+            background-color: rgba(251, 113, 133, 0.1);
+        }
+
+        .buggy-line.selected-bug {
+            background-color: rgba(251, 113, 133, 0.25) !important;
+            border-left: 3px solid var(--accent-coral);
+        }
+
+        .buggy-line.selected-correct {
+            background-color: rgba(52, 211, 153, 0.15) !important;
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .option-btn {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent-blue);
+            transform: translateX(4px);
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        .option-btn.correct {
+            background: rgba(52, 211, 153, 0.15) !important;
+            border-color: var(--accent-green) !important;
+            color: #10b981 !important;
+        }
+
+        .option-btn.incorrect {
+            background: rgba(251, 113, 133, 0.15) !important;
+            border-color: var(--accent-coral) !important;
+            color: #f43f5e !important;
+        }
+
+        /* Console styling */
+        .console-output {
+            background-color: #0b0f19;
+            font-family: 'Fira Code', monospace;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+<div id="presentation-container" class="w-full h-full relative">
+
+    <div class="slide active flex flex-col justify-center items-start max-w-6xl mx-auto">
+        <div class="space-y-4">
+            <span class="text-xs font-bold uppercase tracking-widest text-accent-blue bg-blue-500/10 px-3 py-1.5 rounded-full text-cyan-400 border border-cyan-500/20">
+                <i class="fa-solid fa-graduation-cap mr-2"></i>Software Engineering Fundamentals
+            </span>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mt-2">
+                Introduction to <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-500 to-purple-500">SDLC</span> <br>&amp; Project Planning
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl font-light">
+                Discover the structured roadmap developers use to transform loose ideas into high-quality, production-ready applications.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-12">
+            <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/50 flex items-start gap-4">
+                <div class="p-3 bg-sky-500/10 rounded-lg text-sky-400"><i class="fa-solid fa-clock-rotate-left text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-lg text-slate-200">On-Time Delivery</h3>
+                    <p class="text-sm text-slate-400 mt-1">Structured workflows mitigate unexpected delays.</p>
+                </div>
+            </div>
+            <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/50 flex items-start gap-4">
+                <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400"><i class="fa-solid fa-wallet text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-lg text-slate-200">Within Budget</h3>
+                    <p class="text-sm text-slate-400 mt-1">Resource estimation prevents financial overruns.</p>
+                </div>
+            </div>
+            <div class="p-5 bg-slate-800/50 rounded-xl border border-slate-700/50 flex items-start gap-4">
+                <div class="p-3 bg-purple-500/10 rounded-lg text-purple-400"><i class="fa-solid fa-bullseye text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-lg text-slate-200">User Requirements</h3>
+                    <p class="text-sm text-slate-400 mt-1">Ensures the final product actually matches customer intent.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide max-w-6xl mx-auto">
+        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full inline-block border border-emerald-500/20">
+                    Topic Overview
+                </div>
+                <h2 class="text-4xl font-bold tracking-tight">What is the <span class="text-emerald-400">SDLC</span>?</h2>
+                <p class="text-slate-300 leading-relaxed">
+                    The <strong>Software Development Life Cycle (SDLC)</strong> is a structured architectural framework or process model designed to guide the intentional creation, optimization, and long-term maintenance of software configurations.
+                </p>
+                <div class="p-4 bg-slate-800/40 rounded-xl border border-slate-700/60 text-sm italic text-slate-400 flex gap-3">
+                    <i class="fa-solid fa-lightbulb text-emerald-400 mt-1 text-base flex-shrink-0"></i>
+                    <span><strong>Analogy:</strong> Think of the SDLC as a master blueprint for building a skyscraper. You wouldn't buy steel and pour concrete before drawing schematics and verifying zoning laws. Coding without an SDLC is building without a blueprint!</span>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7 space-y-4 w-full">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-2xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        </div>
+                        <span class="text-xs text-slate-500 font-mono">sdlc_principles.py</span>
+                    </div>
+                    <pre class="m-0"><code class="language-python">def software_development_life_cycle(project_idea):
+    # SDLC acts as a guardrail against common structural anti-patterns
+    high_quality = True
+    meets_requirements = True
+    
+    if standard_process_followed:
+        return "🚀 Scalable, High-Quality Application"
+    else:
+        return "💥 Bugs, Missed Deadlines, Budget Overruns"</code></pre>
+                </div>
+                <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-sm flex gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg mt-0.5 flex-shrink-0"></i>
+                    <div>
+                        <strong class="text-rose-400">Common Pitfall:</strong> Jumping straight into your IDE to type Python logic before formalizing project goals always results in chaotic refactoring loops down the line.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide max-w-6xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <span class="text-xs font-bold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-full inline-block border border-purple-500/20 mb-3">
+                Phase One
+            </span>
+            <h2 class="text-3xl md:text-4xl font-bold">The Upfront Work: Stages 1–3</h2>
+            <p class="text-slate-400 text-sm mt-1">Before writing lines of structural execution, software architects must lay foundations.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 relative flex flex-col justify-between">
+                <div>
+                    <div class="absolute -top-4 left-6 bg-sky-500 text-slate-950 font-extrabold w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm">
+                        01
+                    </div>
+                    <h3 class="text-xl font-bold text-sky-400 mt-2 mb-3 flex items-center gap-2">
+                        Planning
+                    </h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Define project problem state, establish hard parameters, estimate physical resource envelopes, and evaluate operational risks.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/50 text-xs text-sky-400 font-mono">
+                    <i class="fa-solid fa-file-invoice mr-1"></i> Deliverable: Project Charter
+                </div>
+            </div>
+
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 relative flex flex-col justify-between" style="border-left-color: var(--accent-purple);">
+                <div>
+                    <div class="absolute -top-4 left-6 bg-purple-500 text-slate-950 font-extrabold w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm">
+                        02
+                    </div>
+                    <h3 class="text-xl font-bold text-purple-400 mt-2 mb-3 flex items-center gap-2">
+                        Requirement Analysis
+                    </h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Gather explicit criteria. Catalog and document exactly what behavioral actions the final program suite must successfully execute.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/50 text-xs text-purple-400 font-mono">
+                    <i class="fa-solid fa-clipboard-list mr-1"></i> Deliverable: SRS Document
+                </div>
+            </div>
+
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 relative flex flex-col justify-between" style="border-left-color: var(--accent-coral);">
+                <div>
+                    <div class="absolute -top-4 left-6 bg-rose-500 text-slate-950 font-extrabold w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm">
+                        03
+                    </div>
+                    <h3 class="text-xl font-bold text-rose-400 mt-2 mb-3 flex items-center gap-2">
+                        Design
+                    </h3>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Plan architectural strategies, configure structural database topologies, and draft comprehensive User Interface (UI) wireframe states.
+                    </p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/50 text-xs text-rose-400 font-mono">
+                    <i class="fa-solid fa-sitemap mr-1"></i> Deliverable: System Architecture
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full mt-8 bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-wrap gap-6 justify-around text-xs text-slate-400 font-mono">
+            <div><span class="text-sky-400 font-bold">Scope Context:</span> The explicit set of boundaries, feature pools, and operational capabilities assigned to a technical roadmap.</div>
+        </div>
+    </div>
+
+    <div class="slide max-w-6xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full inline-block border border-emerald-500/20 mb-3">
+                Phase Two
+            </span>
+            <h2 class="text-3xl md:text-4xl font-bold">Execution &amp; Optimization: Stages 4–7</h2>
+            <p class="text-slate-400 text-sm mt-1">From code compiler compilation outputs to production runtime management frameworks.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 relative flex flex-col justify-between" style="border-left-color: #38bdf8;">
+                <div>
+                    <div class="text-xs font-bold text-sky-400 font-mono mb-1">STAGE 04</div>
+                    <h4 class="text-lg font-bold text-slate-200 mb-2">Implementation</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Write programmatic scripts, compile functional libraries, and format runtime source codes.</p>
+                </div>
+                <div class="mt-4 text-[11px] text-sky-400/80 font-mono italic">Coding Phase</div>
+            </div>
+
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 relative flex flex-col justify-between" style="border-left-color: #a855f7;">
+                <div>
+                    <div class="text-xs font-bold text-purple-400 font-mono mb-1">STAGE 05</div>
+                    <h4 class="text-lg font-bold text-slate-200 mb-2">Testing</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Exhaustively scan parameters for behavioral execution errors and check against requirement constraints.</p>
+                </div>
+                <div class="mt-4 text-[11px] text-purple-400/80 font-mono italic">Verification</div>
+            </div>
+
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 relative flex flex-col justify-between" style="border-left-color: #34d399;">
+                <div>
+                    <div class="text-xs font-bold text-emerald-400 font-mono mb-1">STAGE 06</div>
+                    <h4 class="text-lg font-bold text-slate-200 mb-2">Deployment</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Release code artifacts out into consumer ecosystems and compile user-facing README document structures.</p>
+                </div>
+                <div class="mt-4 text-[11px] text-emerald-400/80 font-mono italic">Release &amp; Docs</div>
+            </div>
+
+            <div class="stage-card bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 relative flex flex-col justify-between" style="border-left-color: #fb7185;">
+                <div>
+                    <div class="text-xs font-bold text-rose-400 font-mono mb-1">STAGE 07</div>
+                    <h4 class="text-lg font-bold text-slate-200 mb-2">Maintenance</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">Iteratively patch logical exceptions, update base packages, and optimize runtime efficiency targets.</p>
+                </div>
+                <div class="mt-4 text-[11px] text-rose-400/80 font-mono italic">Long-term Lifecycle</div>
+            </div>
+        </div>
+
+        <div class="w-full mt-6 bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs flex items-center justify-between">
+            <span class="text-slate-400"><i class="fa-solid fa-code-merge mr-2 text-purple-400"></i><strong>Course Notice:</strong> The historical <strong>Day 11 To-Do List Application</strong> will serve as our standard blueprint <strong>Reference Project</strong> throughout this active operational cycle.</span>
+        </div>
+    </div>
+
+    <div class="slide max-w-6xl mx-auto">
+        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-[82vh]">
+            <div class="lg:col-span-5 flex flex-col justify-between pr-2">
+                <div class="space-y-4">
+                    <span class="text-xs font-bold uppercase tracking-widest text-sky-400 bg-sky-500/10 px-3 py-1.5 rounded-full inline-block border border-sky-500/20">
+                        Interactive Sandbox
+                    </span>
+                    <h2 class="text-3xl font-bold tracking-tight">Prototyping &amp; Scope</h2>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Experiment with variables representing basic scoping characteristics. Change the list parameters inside the text editor pane to dynamically compute features.
+                    </p>
+                    
+                    <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 text-xs space-y-2">
+                        <div class="font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-sky-400"></i> Sandbox Operational Constraints:
+                        </div>
+                        <ul class="list-disc list-inside space-y-1 text-slate-400">
+                            <li>Add elements into the features list string payload arrays.</li>
+                            <li>Press <strong class="text-sky-400">Execute Script</strong> to observe standard console prints.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mt-4">
+                    <div id="pyodide-loading-indicator" class="flex items-center gap-3 text-amber-400 text-sm">
+                        <i class="fa-solid fa-circle-notch animate-spin text-lg"></i>
+                        <span>Initializing asynchronous Python runtime environment...</span>
+                    </div>
+                    <div id="pyodide-ready-indicator" class="hidden flex items-center justify-between text-emerald-400 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                            <span>Pyodide Runtime Active</span>
+                        </div>
+                        <button id="run-code-btn" disabled class="px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 text-slate-950 font-bold font-sans text-xs rounded-lg transition shadow-lg shadow-sky-500/10 flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Execute Script
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-brands fa-python text-sky-400"></i>
+                        <span class="text-xs text-slate-400 font-mono tracking-wide">live_scope_calculator.py</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-mono">Editable Area</div>
+                </div>
+                
+                <div class="relative flex-1 min-h-[250px] font-mono text-sm">
+                    <textarea id="live-code-editor" class="w-full h-full p-4 bg-slate-950 text-slate-300 font-mono text-sm focus:outline-none resize-none leading-relaxed selection:bg-sky-500/20" spellcheck="false"># Define initial project bounds
+project_scope = {
+    "title": "Day 11 To-Do List Application",
+    "features": ["Create Tasks", "Delete Tasks", "Mark Completed"],
+    "allocated_days": 5
+}
+
+print(f"--- SDLC PLANNING PHASE ---")
+print(f"Project: {project_scope['title']}")
+print(f"Features in Scope: {len(project_scope['features'])}")
+for idx, feature in enumerate(project_scope['features'], 1):
+    print(f"  {idx}. {feature}")
+
+deliverable_ready = len(project_scope['features']) > 0
+print(f"Project Charter Status: {'PASSED' if deliverable_ready else 'FAILED'}")
+</textarea>
+                </div>
+
+                <div class="console-output h-[220px] flex flex-col border-t border-slate-800">
+                    <div class="px-4 py-1.5 bg-slate-900/50 text-[10px] text-slate-500 font-mono uppercase tracking-wider flex items-center justify-between">
+                        <span>Standard Output / Error Console</span>
+                        <i class="fa-solid fa-terminal text-[9px]"></i>
+                    </div>
+                    <div id="console-terminal" class="flex-1 p-4 font-mono text-xs text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-[#070a12]">
+Output will render here when code execution completes...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide max-w-5xl mx-auto">
+        <div class="w-full text-center max-w-2xl mx-auto mb-6">
+            <span class="text-xs font-bold uppercase tracking-widest text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-full inline-block border border-rose-500/20 mb-2">
+                Code Review Interactive Check
+            </span>
+            <h2 class="text-3xl font-bold">Interactive Bug Hunt!</h2>
+            <p class="text-sm text-slate-400">Analyze this Python architecture layout script. Click precisely on the line(s) containing syntax or logic defects!</p>
+        </div>
+
+        <div class="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div class="md:col-span-8 bg-slate-950 border border-slate-800 rounded-xl p-5 font-mono text-sm leading-relaxed relative">
+                <div class="absolute top-3 right-4 text-xs font-mono text-slate-600">click lines to toggle</div>
+                <div class="space-y-1 py-2">
+                    <div class="buggy-line" data-line="1" data-is-bug="false"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">1</span><span class="text-purple-400">def</span> <span class="text-blue-400">initiate_planning_phase</span>(project_scope):</div>
+                    <div class="buggy-line" data-line="2" data-is-bug="false"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">2</span>    <span class="text-slate-400">deliverables</span> = []</div>
+                    <div class="buggy-line" data-line="3" data-is-bug="true"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">3</span>    <span class="text-purple-400">if</span> project_scope == <span class="text-amber-300">"Empty"</span></div>
+                    <div class="buggy-line" data-line="4" data-is-bug="false"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">4</span>        <span class="text-purple-400">return</span> <span class="text-amber-300">"Invalid Scope Configuration"</span></div>
+                    <div class="buggy-line" data-line="5" data-is-bug="false"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">5</span>    deliverables.append(<span class="text-amber-300">"Project Charter Plan"</span>)</div>
+                    <div class="buggy-line" data-line="6" data-is-bug="false"><span class="text-slate-600 mr-4 select-none w-4 inline-block text-right">6</span>    <span class="text-purple-400">return</span> deliverables</div>
+                </div>
+            </div>
+
+            <div class="md:col-span-4 space-y-4">
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 text-center">
+                    <div class="text-xs uppercase font-mono tracking-widest text-slate-400 mb-1">Bugs Found Counter</div>
+                    <div id="bug-tracker-score" class="text-4xl font-extrabold font-mono text-rose-400">0 / 1</div>
+                </div>
+                <div id="bug-hunt-feedback" class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-400 min-h-[100px] flex items-center justify-center text-center">
+                    Review the code statement block carefully. Click on the line with the missing conditional syntax token!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide max-w-4xl mx-auto" id="mcq-slide-container">
+        <div class="w-full flex flex-col justify-between h-[75vh]">
+            
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-full inline-block border border-amber-500/20">
+                        Knowledge Verification Evaluation
+                    </span>
+                    <h2 class="text-3xl font-bold mt-2">Check Your Understanding</h2>
+                </div>
+                <div class="text-right">
+                    <span id="mcq-progress-text" class="text-sm font-mono text-accent-blue font-bold">Question 1 of 10</span>
+                    <div class="w-32 bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
+                        <div id="mcq-internal-progress" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full transition-all duration-300" style="width: 10%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mcq-card" class="my-6 py-4 flex-1 flex flex-col justify-center">
+                <h3 id="mcq-question-text" class="text-xl md:text-2xl font-bold text-slate-100 mb-6 leading-snug">
+                    What does SDLC stand for?
+                </h3>
+                
+                <div id="mcq-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4 flex items-center justify-between">
+                <button id="mcq-prev-btn" class="px-5 py-2.5 rounded-xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none text-slate-300 font-bold transition text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Previous Question
+                </button>
+                
+                <div id="mcq-explanation-box" class="hidden text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 max-w-md mx-4 text-center">
+                    </div>
+
+                <button id="mcq-next-btn" disabled class="px-5 py-2.5 rounded-xl bg-accent-blue text-slate-950 disabled:opacity-40 disabled:pointer-events-none font-black text-sm transition hover:scale-[1.02] flex items-center gap-2">
+                    <span>Next Question</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // --- VERBATIM USER MCQ MATRIX DEFINITION STORAGE BLOCK ---
+    const mcqQuestions = [
+        {
+            question: "What does SDLC stand for?",
+            options: [
+                { key: "a", text: "Simple Data List Cycle" },
+                { key: "b", text: "Software Development Life Cycle" },
+                { key: "c", text: "Standard Design Logic Code" },
+                { key: "d", text: "System Development List Control" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "Which phase involves defining the goal and scope of the project?",
+            options: [
+                { key: "a", text: "Testing" },
+                { key: "b", text: "Development" },
+                { key: "c", text: "Planning" },
+                { key: "d", text: "Documentation" }
+            ],
+            answer: "c"
+        },
+        {
+            question: "Why do developers use SDLC?",
+            options: [
+                { key: "a", text: "To make the code run slower" },
+                { key: "b", text: "To ensure the software is high quality and meets requirements" },
+                { key: "c", text: "To avoid writing comments" },
+                { key: "d", text: "To skip the testing phase" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "In which phase do you actually write the Python code?",
+            options: [
+                { key: "a", text: "Planning" },
+                { key: "b", text: "Design" },
+                { key: "c", text: "Development" },
+                { key: "d", text: "Requirements" }
+            ],
+            answer: "c"
+        },
+        {
+            question: "What is \"Scope\" in project planning?",
+            options: [
+                { key: "a", text: "The size of the font used" },
+                { key: "b", text: "The list of features and boundaries of the project" },
+                { key: "c", text: "The speed of the internet" },
+                { key: "d", text: "The type of computer used" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "Which phase comes immediately after Planning?",
+            options: [
+                { key: "a", text: "Deployment" },
+                { key: "b", text: "Requirements Gathering" },
+                { key: "c", text: "Testing" },
+                { key: "d", text: "Maintenance" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "True or False: You should always start coding before you start planning.",
+            options: [
+                { key: "True", text: "True" },
+                { key: "False", text: "False" }
+            ],
+            answer: "False"
+        },
+        {
+            question: "The Day 11 project (To-Do List) will be used as the __________ for this SDLC cycle.",
+            options: [
+                { key: "a", text: "Final Exam" },
+                { key: "b", text: "Reference Project" },
+                { key: "c", text: "Unused code" },
+                { key: "d", text: "Error log" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "What is the main deliverable of the Planning phase?",
+            options: [
+                { key: "a", text: "A finished program" },
+                { key: "b", text: "A project plan or charter" },
+                { key: "c", text: "A bug report" },
+                { key: "d", text: "A GitHub link" }
+            ],
+            answer: "b"
+        },
+        {
+            question: "Which stage involves writing the \"README\" file?",
+            options: [
+                { key: "a", text: "Planning" },
+                { key: "b", text: "Design" },
+                { key: "c", text: "Deployment & Documentation" },
+                { key: "d", text: "Development" }
+            ],
+            answer: "c"
+        }
+    ];
+
+    // --- PRESENTATION ENGINE VARIABLES STATE CORE TRACKING SYSTEM ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    
+    let currentMcqIndex = 0;
+    let selectedMcqAnswer = null;
+    let mcqStateTracking = new Array(mcqQuestions.length).fill(null);
+
+    // --- INITIALIZATION HOOK INITIAL ACTIVATOR CALLS ---
+    document.addEventListener("DOMContentLoaded", () => {
+        updateGlobalPresentationState();
+        initializeMcqEngineState();
+        initializePyodideRuntimeEngine();
+        initializeBugHuntSystem();
+    });
+
+    // --- SLIDE NAVIGATION CONTROL FUNCTIONS ENGINE ---
+    function updateGlobalPresentationState() {
+        slides.forEach((slide, index) => {
+            if (index === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Sync global metrics interface controls indicators
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+        const linearProgressPct = ((currentSlideIndex + 1) / totalSlides) * 100;
+        document.getElementById('progress').style.width = `${linearProgressPct}%`;
+
+        // Prism code highlights dynamic safety retriggering check
+        Prism.highlightAll();
+    }
+
+    function navigateToNextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updateGlobalPresentationState();
+        }
+    }
+
+    function navigateToPreviousSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updateGlobalPresentationState();
+        }
+    }
+
+    // Keyboard bindings routing systems integration
+    window.addEventListener('keydown', (e) => {
+        if (document.activeElement.id === 'live-code-editor') {
+            return; // Allow native textarea code cursor typing controls
+        }
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateToNextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigateToPreviousSlide();
+        }
+    });
+
+    // --- MCQ SUB-ENGINE ENGINE FUNCTIONAL IMPLEMENTATION ---
+    function initializeMcqEngineState() {
+        const questionData = mcqQuestions[currentMcqIndex];
+        
+        // Render texts properties hooks target elements
+        document.getElementById('mcq-question-text').textContent = questionData.question;
+        document.getElementById('mcq-progress-text').textContent = `Question ${currentMcqIndex + 1} of ${mcqQuestions.length}`;
+        
+        const internalProgressPct = ((currentMcqIndex + 1) / mcqQuestions.length) * 100;
+        document.getElementById('mcq-internal-progress').style.width = `${internalProgressPct}%`;
+
+        const gridContainer = document.getElementById('mcq-options-grid');
+        gridContainer.innerHTML = ''; // Sanitize clean target context
+
+        // Inject question items properties logic mapping layout iterations
+        questionData.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn p-4 rounded-xl flex items-center justify-between font-medium text-slate-300";
+            
+            // Text presentation template parameters layout properties check
+            if(opt.key === "True" || opt.key === "False") {
+                btn.innerHTML = `<span>${opt.text}</span> <i class="fa-solid fa-circle text-xs text-slate-700"></i>`;
+            } else {
+                btn.innerHTML = `<span><strong class="text-accent-blue font-mono uppercase mr-2">${opt.key})</strong> ${opt.text}</span> <i class="fa-solid fa-circle text-xs text-slate-700"></i>`;
+            }
+            
+            btn.onclick = () => selectMcqOptionElement(btn, opt.key, questionData.answer);
+            gridContainer.appendChild(btn);
+        });
+
+        // Sync operational footer control indicators states
+        document.getElementById('mcq-explanation-box').classList.add('hidden');
+        document.getElementById('mcq-prev-btn').disabled = (currentMcqIndex === 0);
+        
+        const forwardBtn = document.getElementById('mcq-next-btn');
+        forwardBtn.disabled = true;
+        if (currentMcqIndex === mcqQuestions.length - 1) {
+            forwardBtn.innerHTML = `<span>Complete Deck</span> <i class="fa-solid fa-flag-checkered"></i>`;
+        } else {
+            forwardBtn.innerHTML = `<span>Next Question</span> <i class="fa-solid fa-arrow-right"></i>`;
+        }
+
+        // Restore state values if index already tracking completed history states parameters metrics
+        if (mcqStateTracking[currentMcqIndex] !== null) {
+            restoreHistoricalMcqState(questionData.answer);
+        }
+    }
+
+    function selectMcqOptionElement(element, selectedKey, correctKey) {
+        if(mcqStateTracking[currentMcqIndex] !== null) return; // Freeze choice selections state bounds parameters
+
+        const optionsGrid = document.getElementById('mcq-options-grid');
+        const totalOptionButtons = optionsGrid.querySelectorAll('.option-btn');
+        const feedbackContainer = document.getElementById('mcq-explanation-box');
+
+        // Apply visual validation colors based on answer accuracy
+        if (selectedKey === correctKey) {
+            element.classList.add('correct');
+            element.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400";
+            feedbackContainer.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Correct Response!</span> Phase tracking parameters match documentation values perfectly.`;
+        } else {
+            element.classList.add('incorrect');
+            element.querySelector('i').className = "fa-solid fa-circle-xmark text-rose-400";
+            feedbackContainer.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Incorrect.</span> Review your core stage order and artifact structural mapping variables.`;
+            
+            // Highlight the correct option dynamically for learner clarity
+            totalOptionButtons.forEach((btn, idx) => {
+                const optKey = mcqQuestions[currentMcqIndex].options[idx].key;
+                if (optKey === correctKey) {
+                    btn.classList.add('correct');
+                    btn.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400";
+                }
+            });
+        }
+
+        feedbackContainer.classList.remove('hidden');
+        mcqStateTracking[currentMcqIndex] = selectedKey;
+        document.getElementById('mcq-next-btn').disabled = false;
+    }
+
+    function restoreHistoricalMcqState(correctKey) {
+        const historicallySelectedKey = mcqStateTracking[currentMcqIndex];
+        const optionsGrid = document.getElementById('mcq-options-grid');
+        const totalOptionButtons = optionsGrid.querySelectorAll('.option-btn');
+        const feedbackContainer = document.getElementById('mcq-explanation-box');
+
+        totalOptionButtons.forEach((btn, idx) => {
+            const optKey = mcqQuestions[currentMcqIndex].options[idx].key;
+            if (optKey === correctKey) {
+                btn.classList.add('correct');
+                btn.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400";
+            }
+            if (optKey === historicallySelectedKey && historicallySelectedKey !== correctKey) {
+                btn.classList.add('incorrect');
+                btn.querySelector('i').className = "fa-solid fa-circle-xmark text-rose-400";
+            }
+        });
+
+        feedbackContainer.innerHTML = `<i class="fa-solid fa-history"></i> Displaying preserved choice selection parameter.`;
+        feedbackContainer.classList.remove('hidden');
+        document.getElementById('mcq-next-btn').disabled = false;
+    }
+
+    // MCQ Navigation Button Handlers
+    document.getElementById('mcq-next-btn').onclick = () => {
+        if (currentMcqIndex < mcqQuestions.length - 1) {
+            currentMcqIndex++;
+            initializeMcqEngineState();
+        } else {
+            // End of MCQ deck flow handling sequence
+            const cardElement = document.getElementById('mcq-card');
+            cardElement.innerHTML = `
+                <div class="text-center space-y-4 py-8">
+                    <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-4xl mx-auto border border-emerald-500/20">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-100">Assessment Complete!</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        You have addressed every lifecycle query provided in the technical review configuration schema successfully.
+                    </p>
+                </div>
+            `;
+            document.getElementById('mcq-explanation-box').classList.add('hidden');
+            document.getElementById('mcq-next-btn').disabled = true;
+        }
+    };
+
+    document.getElementById('mcq-prev-btn').onclick = () => {
+        if (currentMcqIndex > 0) {
+            currentMcqIndex--;
+            initializeMcqEngineState();
+        }
+    };
+
+
+    // --- PYODIDE CORE LIFECYCLE INTERACTION RUNTIME ENVIRONMENT SYSTEM ---
+    let pyodideInstance = null;
+
+    async function initializePyodideRuntimeEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            
+            // Clear layout loading state indicators
+            document.getElementById('pyodide-loading-indicator').classList.add('hidden');
+            const readyIndicator = document.getElementById('pyodide-ready-indicator');
+            readyIndicator.classList.remove('hidden');
+            
+            const actionTriggerBtn = document.getElementById('run-code-btn');
+            actionTriggerBtn.disabled = false;
+
+            // Wire up event processing listeners
+            actionTriggerBtn.onclick = executeInteractivePythonSandboxCode;
+        } catch (err) {
+            document.getElementById('pyodide-loading-indicator').innerHTML = `
+                <span class="text-rose-400 text-xs font-mono"><i class="fa-solid fa-triangle-exclamation"></i> Error hooking asynchronous Pyodide engine wrapper modules: ${err.message}</span>
+            `;
+        }
+    }
+
+    async function executeInteractivePythonSandboxCode() {
+        if (!pyodideInstance) return;
+
+        const terminalOutputContainer = document.getElementById('console-terminal');
+        const codePayloadText = document.getElementById('live-code-editor').value;
+        
+        terminalOutputContainer.textContent = "Executing execution cycles inside context box layers...";
+        terminalOutputContainer.className = "flex-1 p-4 font-mono text-xs text-amber-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-[#070a12]";
+
+        // Configure system output capture wrappers standard intercepts tracking pipelines
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(codePayloadText);
+            
+            const printOutputs = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const errorOutputs = pyodideInstance.runPython("sys.stderr.getvalue()");
+
+            if (errorOutputs.trim().length > 0) {
+                terminalOutputContainer.textContent = errorOutputs;
+                terminalOutputContainer.className = "flex-1 p-4 font-mono text-xs text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-[#070a12]";
+            } else {
+                terminalOutputContainer.textContent = printOutputs || "Script execution concluded cleanly with no output text signals returned.";
+                terminalOutputContainer.className = "flex-1 p-4 font-mono text-xs text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-[#070a12]";
+            }
+        } catch (runtimeException) {
+            terminalOutputContainer.textContent = runtimeException.message;
+            terminalOutputContainer.className = "flex-1 p-4 font-mono text-xs text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-[#070a12]";
+        }
+    }
+
+    // --- BUG HUNT COMPONENT ENGINE OPERATIONAL INTERFACE ---
+    function initializeBugHuntSystem() {
+        const lines = document.querySelectorAll('.buggy-line');
+        let trackerFoundCount = 0;
+        const totalTargetBugs = 1;
+
+        lines.forEach(lineElement => {
+            lineElement.onclick = () => {
+                const lineIndex = lineElement.getAttribute('data-line');
+                const isBuggyStatement = lineElement.getAttribute('data-is-bug') === 'true';
+                const trackerContainer = document.getElementById('bug-tracker-score');
+                const feedbackContainer = document.getElementById('bug-hunt-feedback');
+
+                if (isBuggyStatement) {
+                    if (!lineElement.classList.contains('selected-correct')) {
+                        lineElement.classList.add('selected-correct');
+                        trackerFoundCount++;
+                        trackerContainer.textContent = `${trackerFoundCount} / ${totalTargetBugs}`;
+                        trackerContainer.className = "text-4xl font-extrabold font-mono text-emerald-400";
+                        feedbackContainer.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-double"></i> Bug Isolated!</span> Line 3 is missing a trailing colon (<code class="font-mono bg-slate-950 px-1 text-amber-400">:</code>) on the standard Python evaluation statement expression logic template wrapper blocks structure definition.`;
+                    }
+                } else {
+                    if (!lineElement.classList.contains('selected-bug')) {
+                        lineElement.classList.add('selected-bug');
+                        feedbackContainer.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark"></i> False Positive.</span> Line ${lineIndex} compiles cleanly according to core syntax paradigms. Review the conditional syntax requirements!`;
+                        
+                        setTimeout(() => {
+                            lineElement.classList.remove('selected-bug');
+                        }, 1800);
+                    }
+                }
+            };
+        });
+    }
+</script>
+</body>
+</html>

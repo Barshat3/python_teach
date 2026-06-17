@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Built-In Functions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .slide {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 3rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease-out;
+            z-index: 50;
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 50;
+        }
+        .key-box {
+            background: var(--surface-light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            margin: 0 0.2rem;
+            font-family: monospace;
+        }
+        .code-container pre {
+            margin: 0 !important;
+            border-radius: 0.5rem;
+        }
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            display: block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .buggy-line:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .buggy-line.selected-bug {
+            background: rgba(239, 68, 68, 0.3);
+            border-left: 4px solid #ef4444;
+        }
+        .buggy-line.selected-clean {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 7</div>
+<div id="presentation-container" class="relative w-full h-full">
+
+    <div class="slide active justify-center items-center text-center">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <span class="px-4 py-1.5 bg-indigo-500/10 text-indigo-400 rounded-full text-sm font-semibold uppercase tracking-wider border border-indigo-500/20">Class 8 Computer Science</span>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-400">
+                Built-In Functions in Python
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto font-light">
+                Discover pre-defined power tools that speed up your coding, optimize operations, and simplify computations effortlessly.
+            </p>
+            <div class="pt-8 flex justify-center gap-4">
+                <button onclick="nextSlide()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-lg shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5">
+                    Start Learning <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center gap-3 text-emerald-400">
+                    <i class="fas fa-cubes text-2xl"></i>
+                    <h2 class="text-3xl font-bold">What are Built-In Functions?</h2>
+                </div>
+                <p class="text-lg text-slate-300 leading-relaxed">
+                    Built-In Functions are <span class="text-emerald-400 font-semibold">predefined tools</span> embedded directly inside Python. They are instantly accessible to execute targeted jobs without setting up customized internal workflows.
+                </p>
+                <div class="p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl space-y-2">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Analogy</h4>
+                    <p class="text-sm text-slate-300 italic">
+                        Think of them like a smartphone's built-in calculator or camera app. You don't build them yourself; you just open them up and get right to work!
+                    </p>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-5 bg-slate-800/80 rounded-xl border border-slate-700/60 shadow-xl space-y-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Why Use Them?</h3>
+                    <ul class="space-y-2 text-sm text-slate-400">
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-indigo-400 mt-1"></i> <span><strong>Simplifies Coding:</strong> Avoids rebuilding long, repetitive algorithms from scratch.</span></li>
+                        <li class="flex items-start gap-2"><i class="fas fa-check text-indigo-400 mt-1"></i> <span><strong>High Performance:</strong> Optimized engine mechanics ensure blazing-fast operations.</span></li>
+                    </ul>
+                </div>
+                <div class="p-5 bg-slate-800/80 rounded-xl border border-slate-700/60 shadow-xl space-y-3">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                        <i class="fas fa-toolbox"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">The Core Sandbox</h3>
+                    <p class="text-sm text-slate-400">
+                        Python bundles multiple structural variations out of the box. Today's deep dive focuses on:
+                    </p>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">len()</code>
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">max()</code>
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">min()</code>
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">sum()</code>
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">abs()</code>
+                        <code class="px-2 py-0.5 bg-slate-700 text-amber-300 rounded font-mono text-xs">type()</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-6xl mx-auto w-full space-y-6">
+            <div class="flex items-center gap-3 text-indigo-400">
+                <i class="fas fa-microchip text-2xl"></i>
+                <h2 class="text-3xl font-bold">Key Built-In Functions (1-3)</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md font-mono">01</span>
+                            <code class="text-lg font-bold text-indigo-300 font-mono">len()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Finds the dynamic layout size or structural length of an input list, string, or group container.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">numbers = [10, 20, 30]
+print(len(numbers)) # Output: 3</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md font-mono">02</span>
+                            <code class="text-lg font-bold text-emerald-300 font-mono">max()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Scans through a structured data series to pinpoint and pull out the single maximum element value.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">numbers = [5, 10, 15]
+print(max(numbers)) # Output: 15</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded-md font-mono">03</span>
+                            <code class="text-lg font-bold text-rose-300 font-mono">min()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Scans through an array or item collection to catch and isolate the smallest mathematical variant.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">numbers = [5, 10, 15]
+print(min(numbers)) # Output: 5</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-lg flex items-center gap-3 text-sm">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span><strong>Watch Out:</strong> Passing an empty collection directly to <code>max()</code> or <code>min()</code> without a fallback default parameter throws a <code>ValueError</code>!</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-6xl mx-auto w-full space-y-6">
+            <div class="flex items-center gap-3 text-indigo-400">
+                <i class="fas fa-layer-group text-2xl"></i>
+                <h2 class="text-3xl font-bold">Key Built-In Functions (4-6)</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md font-mono">04</span>
+                            <code class="text-lg font-bold text-indigo-300 font-mono">sum()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Adds together elements inside an iterable array structure to output a unified cumulative valuation block.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">numbers = [1, 2, 3, 4]
+print(sum(numbers)) # Output: 10</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md font-mono">05</span>
+                            <code class="text-lg font-bold text-emerald-300 font-mono">abs()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Calculates absolute data magnitudes. Strips out operational polarity shifts by deleting negative math notation signs.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">num = -10
+print(abs(num)) # Output: 10</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-5 flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded-md font-mono">06</span>
+                            <code class="text-lg font-bold text-rose-300 font-mono">type()</code>
+                        </div>
+                        <p class="text-sm text-slate-400">Interrogates any targeting variable item container to uncover and flag its definitive layout architecture footprint.</p>
+                    </div>
+                    <div class="code-container font-mono text-xs">
+                        <pre><code class="language-python">value = 42
+print(type(value)) # Output: &lt;class 'int'&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 h-full pb-8">
+            <div class="lg:col-span-5 space-y-4">
+                <div class="flex items-center gap-3 text-amber-400">
+                    <i class="fas fa-laptop-code text-2xl"></i>
+                    <h2 class="text-2xl font-bold">Live Execution Arena</h2>
+                </div>
+                <p class="text-sm text-slate-400">
+                    Select a core code scenario blueprint. Alter the variables dynamically inside our live interactive coding layout shell terminal to see immediate outputs.
+                </p>
+                
+                <div class="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                    <button onclick="loadExercise(1)" id="ex-btn-1" class="w-full text-left p-3 rounded-lg bg-indigo-600/20 border border-indigo-500/40 hover:bg-indigo-600/30 transition text-sm flex items-start gap-3">
+                        <span class="bg-indigo-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">1</span>
+                        <div>
+                            <p class="font-bold text-slate-200 text-xs">Length Analysis Pipeline</p>
+                            <p class="text-slate-400 text-xs mt-0.5">Evaluate the size footprint of strings and array variables simultaneously.</p>
+                        </div>
+                    </button>
+                    
+                    <button onclick="loadExercise(2)" id="ex-btn-2" class="w-full text-left p-3 rounded-lg bg-slate-800 border border-slate-700/60 hover:bg-slate-700/50 transition text-sm flex items-start gap-3">
+                        <span class="bg-slate-600 text-slate-300 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">2</span>
+                        <div>
+                            <p class="font-bold text-slate-200 text-xs">Number Sequence Diagnostics</p>
+                            <p class="text-slate-400 text-xs mt-0.5">Uncover sums, boundaries, and composite global averages instantly.</p>
+                        </div>
+                    </button>
+                    
+                    <button onclick="loadExercise(3)" id="ex-btn-3" class="w-full text-left p-3 rounded-lg bg-slate-800 border border-slate-700/60 hover:bg-slate-700/50 transition text-sm flex items-start gap-3">
+                        <span class="bg-slate-600 text-slate-300 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">3</span>
+                        <div>
+                            <p class="font-bold text-slate-200 text-xs">Extreme Discovery Challenge</p>
+                            <p class="text-slate-400 text-xs mt-0.5">Isolate array extrema bounds and filter targeted element subsets.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden shadow-2xl min-h-[380px]">
+                <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                    <span class="text-xs text-slate-400 font-mono flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                        main.py
+                    </span>
+                    <button id="run-btn" onclick="executePythonCode()" disabled class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 font-semibold text-xs rounded transition flex items-center gap-1.5 text-white">
+                        <i id="run-icon" class="fas fa-spinner fa-spin"></i> <span id="run-text">Loading Core Engine...</span>
+                    </button>
+                </div>
+                <div class="flex-grow relative font-mono text-sm p-2 bg-slate-950">
+                    <textarea id="code-editor" class="w-full h-full bg-transparent text-slate-200 outline-none resize-none font-mono p-2 border-0 focus:ring-0" spellcheck="false"># Loading blueprint content...</textarea>
+                </div>
+                <div class="bg-slate-950 border-t border-slate-800 p-3 h-32 flex flex-col font-mono text-xs">
+                    <span class="text-slate-500 uppercase font-bold tracking-wider mb-1 text-[10px]">Output Log Console</span>
+                    <pre id="console-output" class="flex-grow overflow-y-auto text-slate-300 whitespace-pre-wrap">Terminal engine initialization pending structural pipeline load elements.</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-4xl mx-auto w-full space-y-6">
+            <div class="flex items-center gap-3 text-rose-400">
+                <i class="fas fa-bug text-2xl"></i>
+                <h2 class="text-3xl font-bold">Bug Hunt Challenge!</h2>
+            </div>
+            <p class="text-slate-300">
+                A rookie programmer wrote this code block to compute element diagnostics, but it throws unexpected system execution runtime crashes! <strong>Click exactly on the broken lines</strong> to patch the operational logic gaps.
+            </p>
+            
+            <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+                <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                    <span class="text-xs text-slate-400 font-mono"><i class="fas fa-code mr-1"></i> production_patch.py</span>
+                    <span class="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full" id="bug-tracker">Bugs Handled: 0 / 2</span>
+                </div>
+                <div class="p-4 bg-slate-950 font-mono text-sm leading-relaxed text-slate-300" id="bug-code-block">
+                    <span class="buggy-line" data-line="1" data-is-bug="false"><span class="text-slate-600 inline-block w-6 text-right mr-3">1</span>values = [4, -8, 15, -2]</span>
+                    <span class="buggy-line" data-line="2" data-is-bug="true"><span class="text-slate-600 inline-block w-6 text-right mr-3">2</span>print("Size structural value is:", size(values))</span>
+                    <span class="buggy-line" data-line="3" data-is-bug="false"><span class="text-slate-600 inline-block w-6 text-right mr-3">3</span>print("Absolute component:", abs(values[1]))</span>
+                    <span class="buggy-line" data-line="4" data-is-bug="true"><span class="text-slate-600 inline-block w-6 text-right mr-3">4</span>print("Max element reading:", maximum(values))</span>
+                </div>
+            </div>
+            
+            <div id="bug-feedback" class="p-4 rounded-lg bg-slate-800/50 border border-slate-700/50 text-sm hidden min-h-[50px]"></div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-stretch">
+        <div class="max-w-3xl mx-auto w-full space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+                <div class="flex items-center gap-3 text-emerald-400">
+                    <i class="fas fa-clipboard-list text-2xl"></i>
+                    <h2 class="text-3xl font-bold">Check Your Understanding</h2>
+                </div>
+                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20" id="mcq-progress">
+                    Question 1 of 5
+                </span>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 shadow-xl space-y-6 relative overflow-hidden">
+                <div id="mcq-container">
+                    </div>
+                
+                <div id="mcq-feedback-panel" class="p-4 rounded-xl text-sm font-semibold hidden animate-fadeIn flex items-center gap-3"></div>
+                
+                <div class="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                    <button id="mcq-prev-btn" onclick="prevQuestion()" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition text-sm font-medium text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1.5"></i> Previous
+                    </button>
+                    <button id="mcq-next-btn" onclick="nextQuestion()" disabled class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-bold transition flex items-center gap-1.5 text-white">
+                        Next <i class="fas fa-chevron-right ml-1.5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // 1. Core State Properties Initialization Framework
+    let currentSlideIdx = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let pyodideInstance = null;
+
+    // Precompiled Static Exercise Data Matrix Arrays
+    const exercises = {
+        1: `text = "Python"
+print("Length of string text:", len(text))
+
+numbers = [10, 20, 30]
+print("Length of list structures:", len(numbers))`,
+        2: `numbers = [3, 8, 2, 7]
+print("Length configuration:", len(numbers))
+print("Sum output footprint:", sum(numbers))
+print("Max dynamic target element:", max(numbers))
+print("Average value calculation:", sum(numbers) / len(numbers))`,
+        3: `numbers = [14, -5, 22, 0, 9]
+# Find smallest and largest numbers
+print("Min extreme element point:", min(numbers))
+print("Max extreme element point:", max(numbers))
+
+# Calculate sum of positive numbers
+positives = [n for n in numbers if n > 0]
+print("Sum tracking for positive arrays:", sum(positives))`
+    };
+
+    // Verbatim User Provided Multiple Choice Questions Blueprint Payload Matrix
+    const mcqData = [
+        {
+            q: "Which function is used to find the length of a list in Python?",
+            options: ["len()", "size()", "count()", "range()"],
+            ans: 0
+        },
+        {
+            q: "What does the sum() function do in Python?",
+            options: [
+                "Adds all the elements of a list or iterable.",
+                "Counts the number of elements in a list.",
+                "Finds the largest number in a list.",
+                "Finds the smallest number in a list."
+            ],
+            ans: 0
+        },
+        {
+            q: "Which function returns the smallest value in a list?",
+            options: ["max()", "sum()", "min()", "abs()"],
+            ans: 2
+        },
+        {
+            q: "If you want to find the largest number in a list, which function should you use?",
+            options: ["sum()", "max()", "min()", "len()"],
+            ans: 1
+        },
+        {
+            q: "What will len([1, 2, 3, 4]) return?",
+            options: ["3", "4", "5", "Error"],
+            ans: 1
+        }
+    ];
+
+    let currentMcqIdx = 0;
+    let userMcqAnswers = new Array(mcqData.length).fill(null);
+
+    // Bug Hunt Structural Tracking State Variables Map Objects
+    let bugsFoundCount = 0;
+    const totalBugsInSnippet = 2;
+    const lineBugStatus = {
+        2: { found: false, note: "Correct! Python uses <code>len()</code> to verify array volumes, not size()." },
+        4: { found: false, note: "Great catch! The maximum function syntax tracking calls require <code>max()</code> directly instead of maximum()." }
+    };
+
+    // 2. Lifecycle Boot Hook Methods
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentationState();
+        initializePyodideRuntime();
+        renderActiveMcqQuestionBlock();
+        initBugHuntInteractions();
+    });
+
+    // Keyboard Controller Hook Interception Maps
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // 3. Slide Layout Navigation Core Engine Modules
+    function updatePresentationState() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIdx) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        document.getElementById('slide-counter').textContent = `${currentSlideIdx + 1} / ${totalSlides}`;
+        const pct = ((currentSlideIdx + 1) / totalSlides) * 100;
+        document.getElementById('progress').style.width = `${pct}%`;
+        
+        // Dynamic dynamic syntax token highlighting refresh pipeline pass
+        Prism.highlightAll();
+        
+        // Execute focused context tasks depending on view target frame updates
+        if(currentSlideIdx === 4 && !document.getElementById('code-editor').value.trim() || document.getElementById('code-editor').value.startsWith('# Loading')) {
+            loadExercise(1);
+        }
+    }
+
+    function nextSlide() {
+        if (currentSlideIdx < totalSlides - 1) {
+            currentSlideIdx++;
+            updatePresentationState();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updatePresentationState();
+        }
+    }
+
+    // 4. Pyodide Interactive Coding Console Runtime Execution Units
+    async function initializePyodideRuntime() {
+        try {
+            pyodideInstance = await loadPyodide();
+            const btn = document.getElementById('run-btn');
+            btn.disabled = false;
+            document.getElementById('run-icon').className = 'fas fa-play';
+            document.getElementById('run-text').textContent = 'Run Engine Script';
+            document.getElementById('console-output').textContent = 'Python Engine loaded cleanly. Press Run Engine Script to evaluate.';
+        } catch(err) {
+            document.getElementById('console-output').textContent = 'Critical Error assembling Pyodide Sandbox Instance:\n' + err;
+        }
+    }
+
+    function loadExercise(id) {
+        document.getElementById('code-editor').value = exercises[id];
+        [1,2,3].forEach(idx => {
+            const el = document.getElementById(`ex-btn-${idx}`);
+            if(idx === id) {
+                el.classList.add('bg-indigo-600/20', 'border-indigo-500/40');
+                el.classList.remove('bg-slate-800', 'border-slate-700/60');
+            } else {
+                el.classList.remove('bg-indigo-600/20', 'border-indigo-500/40');
+                el.classList.add('bg-slate-800', 'border-slate-700/60');
+            }
+        });
+        document.getElementById('console-output').textContent = 'Blueprint workspace layout modified. Fire up runtime script compilation to check operations.';
+    }
+
+    async function executePythonCode() {
+        if (!pyodideInstance) return;
+        
+        const code = document.getElementById('code-editor').value;
+        const outConsole = document.getElementById('console-output');
+        outConsole.textContent = "Running script calculations inside isolated memory stack standard cells...";
+        
+        // Capture standard text out pipelines directly over memory overrides
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+        
+        try {
+            await pyodideInstance.runPythonAsync(code);
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            let outputs = "";
+            if(stdout) outputs += stdout;
+            if(stderr) outputs += "Execution Errors Encountered:\n" + stderr;
+            if(!stdout && !stderr) outputs = "Process finished execution lifecycle pipeline without generating output context payloads.";
+            
+            outConsole.textContent = outputs;
+        } catch (err) {
+            outConsole.textContent = "Runtime Critical Compilation Crash:\n" + err;
+        }
+    }
+
+    // 5. Bug Hunt Interactions Framework Elements
+    function initBugHuntInteractions() {
+        const lines = document.querySelectorAll('#bug-code-block .buggy-line');
+        lines.forEach(line => {
+            line.addEventListener('click', () => {
+                const lineNum = parseInt(line.getAttribute('data-line'));
+                const isBug = line.getAttribute('data-is-bug') === 'true';
+                const feedbackPanel = document.getElementById('bug-feedback');
+                
+                feedbackPanel.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-400', 'bg-rose-500/10', 'border-rose-500/20', 'text-rose-400', 'bg-amber-500/10', 'border-amber-500/20', 'text-amber-400');
+                
+                if (isBug) {
+                    if (!lineBugStatus[lineNum].found) {
+                        lineBugStatus[lineNum].found = true;
+                        bugsFoundCount++;
+                        line.classList.add('selected-bug');
+                        document.getElementById('bug-tracker').textContent = `Bugs Handled: ${bugsFoundCount} / ${totalBugsInSnippet}`;
+                    }
+                    feedbackPanel.classList.add('bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-400');
+                    feedbackPanel.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${lineBugStatus[lineNum].note}`;
+                    
+                    if (bugsFoundCount === totalBugsInSnippet) {
+                        feedbackPanel.innerHTML += "<br><strong class='block mt-2 text-emerald-300'><i class='fas fa-trophy mr-1'></i> Patch Routine Complete! All syntax structural bugs resolved.</strong>";
+                    }
+                } else {
+                    line.classList.add('selected-clean');
+                    setTimeout(() => line.classList.remove('selected-clean'), 500);
+                    feedbackPanel.classList.add('bg-rose-500/10', 'border-rose-500/20', 'text-rose-400');
+                    feedbackPanel.innerHTML = `<i class="fas fa-times-circle mr-2"></i> Line ${lineNum} is executed perfectly within normal parameter limits. Look closely for explicit call naming bugs!`;
+                }
+            });
+        });
+    }
+
+    // 6. User Verification MCQ Assessment Rendering Framework Interfaces
+    function renderActiveMcqQuestionBlock() {
+        const container = document.getElementById('mcq-container');
+        const feedbackPanel = document.getElementById('mcq-feedback-panel');
+        const nextBtn = document.getElementById('mcq-next-btn');
+        const prevBtn = document.getElementById('mcq-prev-btn');
+        
+        feedbackPanel.classList.add('hidden');
+        
+        if (currentMcqIdx >= mcqData.length) {
+            // Assessment Complete State
+            document.getElementById('mcq-progress').textContent = "Quiz Complete";
+            container.innerHTML = `
+                <div class="text-center py-8 space-y-4">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/20">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-100">Verification Pipeline Finished!</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        You have finished checking your understanding of Python's built-in functions. Review any steps using the navigation modules if required.
+                    </p>
+                    <button onclick="resetMcqQuizTracker()" class="mt-2 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-semibold text-xs transition">
+                        Restart Quiz Verification
+                    </button>
+                </div>
+            `;
+            nextBtn.style.display = 'none';
+            prevBtn.disabled = false;
+            return;
+        }
+
+        // Standard operational lifecycle question rendering loops
+        nextBtn.style.display = 'inline-flex';
+        document.getElementById('mcq-progress').textContent = `Question ${currentMcqIdx + 1} of ${mcqData.length}`;
+        prevBtn.disabled = currentMcqIdx === 0;
+
+        const data = mcqData[currentMcqIdx];
+        const savedAnswer = userMcqAnswers[currentMcqIdx];
+        
+        let htmlStr = `
+            <div class="space-y-4">
+                <p class="text-lg font-semibold text-slate-100">${data.q}</p>
+                <div class="grid grid-cols-1 gap-3">
+        `;
+
+        data.options.forEach((opt, idx) => {
+            let optStyle = "bg-slate-700/40 border-slate-600/50 hover:bg-slate-700/80 text-slate-200";
+            
+            if (savedAnswer !== null) {
+                if (idx === data.ans) {
+                    optStyle = "bg-emerald-600/30 border-emerald-500 text-emerald-300 pointer-events-none font-bold";
+                } else if (idx === savedAnswer) {
+                    optStyle = "bg-rose-600/30 border-rose-500 text-rose-300 pointer-events-none line-through";
+                } else {
+                    optStyle = "bg-slate-800/40 border-slate-700/50 text-slate-500 pointer-events-none";
+                }
+            }
+
+            htmlStr += `
+                <button onclick="evaluateUserSelectedMcqOption(${idx})" class="w-full text-left p-3.5 rounded-xl border text-sm font-medium transition flex items-center justify-between group ${optStyle}">
+                    <span>${opt}</span>
+                    <i class="fas ${savedAnswer !== null && idx === data.ans ? 'fa-check-circle' : (savedAnswer !== null && idx === savedAnswer ? 'fa-times-circle' : 'fa-circle-notch opacity-0 group-hover:opacity-40')} text-xs"></i>
+                </button>
+            `;
+        });
+
+        htmlStr += `</div></div>`;
+        container.innerHTML = htmlStr;
+
+        if (savedAnswer !== null) {
+            displayMcqFeedbackMessage(savedAnswer === data.ans);
+            nextBtn.disabled = false;
+        } else {
+            nextBtn.disabled = true;
+        }
+    }
+
+    function evaluateUserSelectedMcqOption(idx) {
+        if (userMcqAnswers[currentMcqIdx] !== null) return;
+        
+        userMcqAnswers[currentMcqIdx] = idx;
+        const isCorrect = idx === mcqData[currentMcqIdx].ans;
+        
+        displayMcqFeedbackMessage(isCorrect);
+        renderActiveMcqQuestionBlock();
+    }
+
+    function displayMcqFeedbackMessage(isCorrect) {
+        const panel = document.getElementById('mcq-feedback-panel');
+        panel.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-400', 'bg-rose-500/10', 'border-rose-500/20', 'text-rose-400');
+        
+        if (isCorrect) {
+            panel.classList.add('bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-400');
+            panel.innerHTML = `<i class="fas fa-check-circle"></i> <span>Correct! Your understanding of the function signature fits documentation parameters perfectly.</span>`;
+        } else {
+            panel.classList.add('bg-rose-500/10', 'border-rose-500/20', 'text-rose-400');
+            panel.innerHTML = `<i class="fas fa-times-circle"></i> <span>Incorrect. The verified target matching mapping index signature doesn't match standard outputs. Check the correct answer shown above.</span>`;
+        }
+    }
+
+    function nextQuestion() {
+        currentMcqIdx++;
+        renderActiveMcqQuestionBlock();
+    }
+
+    function prevQuestion() {
+        if (currentMcqIdx > 0 || currentMcqIdx == mcqData.length) {
+            currentMcqIdx--;
+            renderActiveMcqQuestionBlock();
+        }
+    }
+
+    function resetMcqQuizTracker() {
+        currentMcqIdx = 0;
+        userMcqAnswers = new Array(mcqData.length).fill(null);
+        renderActiveMcqQuestionBlock();
+    }
+</script>
+</body>
+</html>

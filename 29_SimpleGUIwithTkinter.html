@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple GUI with Tkinter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #06b6d4;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace !important;
+        }
+
+        #presentation-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            height: 75vh;
+            perspective: 1200px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95) translateZ(-50px);
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: var(--surface);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 3rem;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateZ(0);
+            z-index: 10;
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 2rem;
+            right: 3rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(4px);
+            z-index: 40;
+        }
+
+        .key-box {
+            background: var(--surface-hover);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-main);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+        }
+
+        /* Custom Scrollbar for slides */
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Interactive Elements styling */
+        .mcq-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .mcq-option:hover:not(.disabled) {
+            background: var(--surface-hover);
+            border-color: var(--secondary);
+            transform: translateX(4px);
+        }
+        .mcq-option.correct {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--success) !important;
+            color: #a7f3d0;
+        }
+        .mcq-option.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--error) !important;
+            color: #fca5a5;
+        }
+
+        .bug-line {
+            transition: all 0.15s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            background: rgba(239, 68, 68, 0.15);
+            border-left-color: var(--error);
+        }
+        .bug-line.selected-correct {
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: var(--success);
+        }
+
+        /* Prism override to fit nicely */
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 0.75rem !important;
+            background: #0b0f19 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 6</div>
+
+<div id="presentation-container">
+
+    <div class="slide active flex flex-col justify-between" id="slide-0">
+        <div class="flex-grow flex flex-col justify-center items-center text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-semibold text-sm mb-6 uppercase tracking-wider">
+                <i class="fa-solid fa-cubes"></i> Day 29: Graphical User Interfaces
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">
+                Simple GUI with Tkinter
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                Learn how to transform text-based terminal scripts into fully functional, interactive visual windows using Python's standard library.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-slate-800/60">
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-900/40">
+                <div class="p-3 rounded-lg bg-indigo-500/10 text-indigo-400"><i class="fa-solid fa-box-open text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1">Standard Library</h3>
+                    <p class="text-sm text-slate-400">Built completely into Python. Zero external installations needed.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-900/40">
+                <div class="p-3 rounded-lg bg-cyan-500/10 text-cyan-400"><i class="fa-solid fa-bolt text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1">Event-Driven Flow</h3>
+                    <p class="text-sm text-slate-400">Applications that patiently sit waiting for users to press buttons or inputs.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4 p-4 rounded-xl bg-slate-900/40">
+                <div class="p-3 rounded-lg bg-emerald-500/10 text-emerald-400"><i class="fa-solid fa-table-cells text-xl"></i></div>
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-1">Flexible Layouts</h3>
+                    <p class="text-sm text-slate-400">Organize interfaces smoothly using row and column structural grids.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+        <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-3">
+            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-white text-sm">1</span>
+            The Root Application Window
+        </h2>
+        <p class="text-slate-400 mb-6">Every Tkinter GUI application follows a strict startup, configuration, and continuous execution lifecycle.</p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch flex-grow">
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl">
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-2">Step 1: Import Library</span>
+                    <p class="text-slate-300 text-sm leading-relaxed">Bring in <code class="font-mono bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-xs">tkinter</code> aliased standardly as <code class="font-mono bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-xs">tk</code> to save repeated typing later.</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl">
+                    <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest block mb-2">Step 2: Base Initialization</span>
+                    <p class="text-slate-300 text-sm leading-relaxed">Initialize the root engine window container via <code class="font-mono bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded text-xs">tk.Tk()</code>, assigning parameters like geometry sizes and header titles.</p>
+                </div>
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl">
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-2">Step 3: Infinite Mainloop</span>
+                    <p class="text-slate-300 text-sm leading-relaxed">Invoke <code class="font-mono bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded text-xs">root.mainloop()</code> to stop the script from closing out, initiating an active screen loop listening endlessly for interactions.</p>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7 flex flex-col justify-between">
+                <div class="flex-grow flex flex-col">
+                    <div class="bg-slate-950 px-4 py-2 rounded-t-xl border-t border-x border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500/70 inline-block"></span> basic_window.py</span>
+                        <span class="text-xs text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded font-mono">Source</span>
+                    </div>
+                    <pre class="language-python flex-grow !rounded-t-none"><code class="language-python">import tkinter as tk
+
+# Initialize the primary window
+root = tk.Tk()
+root.title("My App")
+root.geometry("300x200")
+
+# Keep the window running and responsive
+root.mainloop()</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-600 text-white text-sm">2</span>
+                    The Primary Core Widgets
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Widgets are the building blocks of an app interface. Try editing and running this complete app layout below live!</p>
+            </div>
+            <div id="pyodide-status" class="text-xs font-mono px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading Python environment...
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-grow min-h-0">
+            <div class="lg:col-span-7 flex flex-col min-h-0">
+                <div class="bg-slate-950 px-4 py-2.5 rounded-t-xl border-t border-x border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-mono text-slate-300 flex items-center gap-2"><i class="fa-solid fa-code text-indigo-400"></i> app_demo.py</span>
+                    <button id="run-code-btn" disabled class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white text-xs font-semibold rounded flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-play"></i> Run Script
+                    </button>
+                </div>
+                <div class="relative flex-grow min-h-0">
+                    <textarea id="code-editor" class="absolute inset-0 w-full h-full bg-slate-950 text-slate-100 font-mono text-sm p-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none border border-slate-800 rounded-b-xl" spellcheck="false"># Let's inspect fundamental Tkinter widgets
+import tkinter as tk
+
+print("[System] Constructing virtual GUI window Elements...")
+
+# 1. Label: Displays static read-only text
+print(" -> Initializing Label widget (text='Score')")
+# label = tk.Label(text="Score")
+
+# 2. Entry: Captures simple interactive strings 
+print(" -> Initializing Entry widget (user text inputs)")
+# entry = tk.Entry()
+
+# 3. Button: Executes code hooks upon user click triggers
+print(" -> Initializing Clickable action triggers")
+
+print("[Success] All widgets structural models ready for layout placing!")</textarea>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 flex-grow overflow-y-auto">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i> Widget Reference Catalog
+                    </h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="p-2.5 rounded bg-slate-950 border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-mono font-bold text-indigo-400 text-sm block">Label</span>
+                                <span class="text-slate-400">Displays read-only text output headers.</span>
+                            </div>
+                            <span class="font-mono px-2 py-0.5 bg-slate-900 border border-slate-700 text-slate-400 rounded">tk.Label()</span>
+                        </div>
+                        <div class="p-2.5 rounded bg-slate-950 border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-mono font-bold text-cyan-400 text-sm block">Entry</span>
+                                <span class="text-slate-400">Accepts or reads textual user typing logs.</span>
+                            </div>
+                            <span class="font-mono px-2 py-0.5 bg-slate-900 border border-slate-700 text-slate-400 rounded">tk.Entry()</span>
+                        </div>
+                        <div class="p-2.5 rounded bg-slate-950 border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-mono font-bold text-emerald-400 text-sm block">Button</span>
+                                <span class="text-slate-400">Triggers standard designated functions.</span>
+                            </div>
+                            <span class="font-mono px-2 py-0.5 bg-slate-900 border border-slate-700 text-slate-400 rounded">tk.Button()</span>
+                        </div>
+                        <div class="p-2.5 rounded bg-slate-950 border border-slate-800 flex justify-between items-center">
+                            <div>
+                                <span class="font-mono font-bold text-amber-400 text-sm block">Frame</span>
+                                <span class="text-slate-400">Invisible bounding boxes to group items.</span>
+                            </div>
+                            <span class="font-mono px-2 py-0.5 bg-slate-900 border border-slate-700 text-slate-400 rounded">tk.Frame()</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-40 bg-slate-950 rounded-xl border border-slate-800 flex flex-col overflow-hidden">
+                    <div class="bg-slate-900 px-3 py-1.5 border-b border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-400"><i class="fa-solid fa-terminal text-emerald-500 mr-1.5"></i> Terminal Output</span>
+                        <button id="clear-console-btn" class="text-[10px] text-slate-500 hover:text-slate-300 font-mono uppercase tracking-tight">Clear</button>
+                    </div>
+                    <div id="console-output" class="p-3 font-mono text-xs text-slate-300 overflow-y-auto flex-grow whitespace-pre-wrap leading-relaxed">Click 'Run Script' above to compile code configuration live...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <h2 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-3">
+            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600 text-white text-sm">3</span>
+            Layout Grids & Event Binding Handlers
+        </h2>
+        <p class="text-slate-400 mb-6">Widgets are invisible elements until arranged on a structural manager. Actions hook widgets directly to standard Python functions.</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch flex-grow">
+            <div class="flex flex-col gap-4 justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-200 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-border-all text-indigo-400"></i> Layout Management Options
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-slate-950 border-l-4 border-indigo-500 rounded-r-xl">
+                            <span class="font-mono font-bold text-indigo-300 text-sm">.pack()</span>
+                            <p class="text-xs text-slate-400 mt-0.5">Stacks individual elements sequentially down on top of one another simply.</p>
+                        </div>
+                        <div class="p-3 bg-slate-950 border-l-4 border-cyan-500 rounded-r-xl">
+                            <span class="font-mono font-bold text-cyan-300 text-sm">.grid(row, column)</span>
+                            <p class="text-xs text-slate-400 mt-0.5">Aligns items inside precise matrix indexing boxes. <strong>Remember: Rows and Columns start at 0!</strong></p>
+                        </div>
+                        <div class="p-3 bg-slate-950 border-l-4 border-amber-500 rounded-r-xl">
+                            <span class="font-mono font-bold text-amber-300 text-sm">.place(x, y)</span>
+                            <p class="text-xs text-slate-400 mt-0.5">Positions widgets via static pixel absolute coordinates manually.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-indigo-950/40 border border-indigo-900/60 rounded-xl">
+                    <h4 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info"></i> How Event Triggering Operates
+                    </h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        To link a button to custom execution blocks, bind your helper method name using the <code class="font-mono text-cyan-300 bg-slate-900 px-1 rounded">command</code> parameter. Omit parentheses <code class="font-mono text-red-400 bg-slate-900 px-1 rounded">()</code> so the operation saves to run on physical click events rather than calling immediately at startup. Use <code class="font-mono text-cyan-300 bg-slate-900 px-1 rounded">entry.get()</code> to scrape value contents dynamic inputs hold!
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <div class="bg-slate-950 px-4 py-2 rounded-t-xl border-t border-x border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-mono text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-file-code text-cyan-400"></i> dynamic_interaction.py</span>
+                    <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono">Example Setup</span>
+                </div>
+                <pre class="language-python flex-grow !rounded-t-none"><code class="language-python">import tkinter as tk
+
+def handle_click():
+    # Read text current inside the entry widget
+    user_input = text_entry.get()
+    print(f"User submitted text: {user_input}")
+
+root = tk.Tk()
+
+# Label placed in Row 0, Column 0
+header = tk.Label(root, text="Enter Name:")
+header.grid(row=0, column=0)
+
+# Entry input element placed in Row 0, Column 1
+text_entry = tk.Entry(root)
+text_entry.grid(row=0, column=1)
+
+# Action button hooked to our command function
+action_btn = tk.Button(root, text="Submit", command=handle_click)
+action_btn.grid(row=1, column=0)
+
+root.mainloop()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <i class="fa-solid fa-bug text-rose-500"></i> Interactive Bug Hunt!
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">A developer wrote this script to launch a window, but hit a major technical mistake. Can you find and click the broken line?</p>
+            </div>
+            <div class="bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 text-right">
+                <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Bugs Identified</span>
+                <span id="bug-counter" class="text-xl font-mono font-bold text-rose-400">0 / 1</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-grow">
+            <div class="lg:col-span-7 flex flex-col">
+                <div class="bg-slate-950 px-4 py-2 rounded-t-xl border-t border-x border-slate-800 text-xs font-mono text-slate-400">
+                    broken_gui.py (Click to catch errors)
+                </div>
+                <div class="bg-slate-950 p-4 rounded-b-xl border border-slate-800 font-mono text-sm space-y-1 flex-grow select-none">
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="1"><span class="inline-block w-6 text-slate-600">1</span>import tkinter as tk</div>
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="2"><span class="inline-block w-6 text-slate-600">2</span>root = tk.Tk()</div>
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="3"><span class="inline-block w-6 text-slate-600">3</span>root.title("App Error Test")</div>
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="4" data-is-bug="true"><span class="inline-block w-6 text-slate-600">4</span>submit_btn = tk.Button(root, text="Save Data", command=save_action())</div>
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="5"><span class="inline-block w-6 text-slate-600">5</span>submit_btn.pack()</div>
+                    <div class="bug-line p-1.5 rounded text-slate-400" data-line="6"><span class="inline-block w-6 text-slate-600">6</span>root.mainloop()</div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5 flex flex-col justify-between bg-slate-900/40 border border-slate-800/80 rounded-xl p-5">
+                <div>
+                    <h3 class="font-bold text-slate-200 mb-2 flex items-center gap-1.5 text-base">
+                        <i class="fa-solid fa-magnifying-glass text-cyan-400"></i> Code Audit Breakdown
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-4">
+                        Review parameter declarations closely. Look closely at how command attributes reference helper methods during assignment rules.
+                    </p>
+                    <div id="bug-feedback" class="p-4 rounded-xl bg-slate-950 text-xs font-mono text-slate-400 min-h-[100px] border border-slate-800 flex items-center justify-center text-center">
+                        Click on lines in the code block to analyze structural elements for bugs...
+                    </div>
+                </div>
+                
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3.5 text-xs text-amber-300">
+                    <strong class="block mb-0.5"><i class="fa-solid fa-triangle-exclamation"></i> Common Pitfall</strong>
+                    Adding parentheses <code class="font-mono bg-slate-950 text-amber-400 px-1 rounded">()</code> inside command hook parameters invokes functions instantly during window building instead of deferring execution for actual mouse-click inputs!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-indigo-400"></i> Check Your Understanding
+                </h2>
+                <p class="text-slate-400 text-sm mt-0.5">Let's verify your knowledge on Python's native Tkinter GUI architecture concepts.</p>
+            </div>
+            <div class="bg-slate-950 px-4 py-1.5 rounded-full border border-slate-800 text-xs font-mono text-slate-400" id="mcq-progress">
+                Question 1 of 10
+            </div>
+        </div>
+
+        <div class="flex-grow flex flex-col justify-between" id="mcq-box">
+            <div class="space-y-6">
+                <h3 id="mcq-question-text" class="text-xl font-bold text-slate-100 leading-snug">
+                    Loading Question Node...
+                </h3>
+                
+                <div id="mcq-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div id="mcq-feedback-text" class="text-sm font-semibold text-slate-400 font-mono min-h-[1.5rem]">
+                    Select an answer to see immediate evaluation.
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button id="mcq-prev-btn" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-bold text-sm text-slate-300 transition-colors flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                        <i class="fa-solid fa-chevron-left"></i> Previous
+                    </button>
+                    <button id="mcq-next-btn" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-bold text-sm text-white transition-colors flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // --- MCQS DATA CONFIGURATION VERBATIM ---
+    const mcqQuestions = [
+        {
+            q: "Which library is built into Python for creating GUIs?",
+            options: ["PyGame", "Tkinter", "Requests", "Math"],
+            correct: 1, // index for b)
+            type: "mcq"
+        },
+        {
+            q: "What function is required to keep the Tkinter window running and responsive?",
+            options: ["root.start()", "root.run()", "root.mainloop()", "root.open()"],
+            correct: 2, // index for c)
+            type: "mcq"
+        },
+        {
+            q: "Which widget is used to take text input from a user in Tkinter?",
+            options: ["Label", "Button", "Entry", "Frame"],
+            correct: 2, // index for c)
+            type: "mcq"
+        },
+        {
+            q: "How do you place a widget in the second row and first column?",
+            options: [".grid(row=2, column=1)", ".grid(row=1, column=0)", ".place(x=2, y=1)", ".pack()"],
+            correct: 1, // index for b)
+            type: "mcq"
+        },
+        {
+            q: "What button parameter is used to link a button to a Python function?",
+            options: ["action", "function", "command", "click"],
+            correct: 2, // index for c)
+            type: "mcq"
+        },
+        {
+            q: "What does the entry.get() method do?",
+            options: [
+                "It deletes the text", 
+                "It changes the color of the text", 
+                "It retrieves the string currently inside the entry widget", 
+                "It closes the window"
+            ],
+            correct: 2, // index for c)
+            type: "mcq"
+        },
+        {
+            q: "Which symbol represents the very first row in a grid layout?",
+            options: ["1", "0", "A", "Start"],
+            correct: 1, // index for b)
+            type: "mcq"
+        },
+        {
+            q: "What will Label(root, text=\"Score\").grid() do?",
+            options: [
+                "Create a button named Score", 
+                "Create text on the screen that says \"Score\"", 
+                "Ask the user for their score", 
+                "Close the program"
+            ],
+            correct: 1, // index for b)
+            type: "mcq"
+        },
+        {
+            q: "True or False: Tkinter is an event-driven library.",
+            options: ["True", "False"],
+            correct: 0, // index for True
+            type: "boolean"
+        },
+        {
+            q: "What is the purpose of the title() method in Tkinter?",
+            options: [
+                "To name a variable", 
+                "To set the text displayed in the window's title bar", 
+                "To write a heading inside the window", 
+                "To save the file"
+            ],
+            correct: 1, // index for b)
+            type: "mcq"
+        }
+    ];
+
+    // --- SLIDE NAVIGATION CORE ENGINE ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressElement = document.getElementById('progress');
+    const counterElement = document.getElementById('slide-counter');
+
+    function updatePresentation() {
+        slides.forEach((slide, index) => {
+            if (index === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Counter text tracking
+        counterElement.innerText = `${currentSlideIndex + 1} / ${totalSlides}`;
+        
+        // Horizontal progress bar math
+        const progressPercentage = ((currentSlideIndex + 1) / totalSlides) * 100;
+        progressElement.style.width = `${progressPercentage}%`;
+
+        // Refresh styles on visible prisms blocks safely
+        Prism.highlightAll();
+    }
+
+    function moveNext() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updatePresentation();
+        }
+    }
+
+    function movePrev() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentation();
+        }
+    }
+
+    // Keyboard bindings configurations
+    window.addEventListener('keydown', (e) => {
+        // Intercept normal browsing actions if components are targeted focus variables
+        if (document.activeElement.id === 'code-editor') return; 
+
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            moveNext();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            movePrev();
+        }
+    });
+
+    // --- INTERACTIVE MCQ ENGINE SYSTEM ---
+    let currentMcqIndex = 0;
+    let selectedAnswersMap = {}; // Tracks stored selections for traversal states
+
+    const mcqQuestionText = document.getElementById('mcq-question-text');
+    const mcqOptionsContainer = document.getElementById('mcq-options-container');
+    const mcqProgress = document.getElementById('mcq-progress');
+    const mcqFeedbackText = document.getElementById('mcq-feedback-text');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+
+    function loadMcqQuestion(index) {
+        if (index >= mcqQuestions.length) {
+            // Render summary final block inside container safely
+            mcqQuestionText.innerText = "🎉 Assessment Sequence Finalized!";
+            mcqOptionsContainer.innerHTML = `
+                <div class="col-span-2 p-6 rounded-xl bg-indigo-950/30 border border-indigo-900/50 text-center">
+                    <p class="text-slate-300 text-base mb-2">You have completed all review modules for the Tkinter introduction session.</p>
+                    <p class="text-xs text-slate-500">Use navigation keys to revisit material slides as needed.</p>
+                </div>
+            `;
+            mcqProgress.innerText = `Complete`;
+            mcqFeedbackText.innerText = "Great work tracking your learning pipeline!";
+            mcqNextBtn.disabled = true;
+            return;
+        }
+
+        const data = mcqQuestions[index];
+        mcqQuestionText.innerText = `${index + 1}. ${data.q}`;
+        mcqProgress.innerText = `Question ${index + 1} of ${mcqQuestions.length}`;
+        mcqOptionsContainer.innerHTML = '';
+        mcqNextBtn.disabled = selectedAnswersMap[index] === undefined;
+        mcqPrevBtn.disabled = index === 0;
+
+        // Reset tracking feedback messages 
+        if (selectedAnswersMap[index] !== undefined) {
+            const savedAns = selectedAnswersMap[index];
+            showMcqFeedback(savedAns === data.correct, data.options[savedAns]);
+        } else {
+            mcqFeedbackText.innerText = "Select an option to evaluate system processing.";
+        }
+
+        data.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = "mcq-option w-full p-4 rounded-xl font-medium text-left text-sm flex items-start gap-3 transition-all";
+            
+            // Add custom uniform naming structures (a, b, c, d) matching user queries
+            const alphabetLabels = ["a", "b", "c", "d"];
+            const prefixLabel = data.type === "mcq" ? `${alphabetLabels[idx]}) ` : "";
+            
+            btn.innerHTML = `<span class="font-mono text-slate-500 font-bold">${prefixLabel}</span><span class="text-slate-200">${opt}</span>`;
+            
+            // Apply contextual color tags back if re-visiting compiled states
+            if (selectedAnswersMap[index] !== undefined) {
+                btn.classList.add('disabled');
+                if (idx === data.correct) btn.classList.add('correct');
+                if (idx === selectedAnswersMap[index] && idx !== data.correct) btn.classList.add('incorrect');
+            } else {
+                btn.addEventListener('click', () => handleMcqSelection(index, idx, btn));
+            }
+            
+            mcqOptionsContainer.appendChild(btn);
+        });
+    }
+
+    function handleMcqSelection(qIdx, optIdx, element) {
+        const data = mcqQuestions[qIdx];
+        selectedAnswersMap[qIdx] = optIdx;
+        
+        // Disable choices dynamically on immediate interaction
+        const allOptions = mcqOptionsContainer.querySelectorAll('.mcq-option');
+        allOptions.forEach(opt => opt.classList.add('disabled'));
+
+        const isCorrect = optIdx === data.correct;
+        if (isCorrect) {
+            element.classList.add('correct');
+        } else {
+            element.classList.add('incorrect');
+            // Flash correct selection helper visually
+            allOptions[data.correct].classList.add('correct');
+        }
+
+        showMcqFeedback(isCorrect, data.options[optIdx]);
+        mcqNextBtn.disabled = false;
+    }
+
+    function showMcqFeedback(isCorrect, labelText) {
+        if (isCorrect) {
+            mcqFeedbackText.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Correct!</span> Verified concept match.`;
+        } else {
+            mcqFeedbackText.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark"></i> Incorrect.</span> Review layout requirements.`;
+        }
+    }
+
+    mcqNextBtn.addEventListener('click', () => {
+        currentMcqIndex++;
+        loadMcqQuestion(currentMcqIndex);
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if (currentMcqIndex > 0) {
+            currentMcqIndex--;
+            loadMcqQuestion(currentMcqIndex);
+        }
+    });
+
+
+    // --- CODE BUG HUNT ENGINE MECHANISM ---
+    let bugIdentified = false;
+    const bugCounter = document.getElementById('bug-counter');
+    const bugFeedback = document.getElementById('bug-feedback');
+    const bugLines = document.querySelectorAll('.bug-line');
+
+    bugLines.forEach(line => {
+        line.addEventListener('click', () => {
+            if (bugIdentified) return; // Sequence already answered cleanly
+            
+            const isBug = line.getAttribute('data-is-bug') === 'true';
+            if (isBug) {
+                line.classList.add('selected-correct');
+                bugCounter.innerText = "1 / 1";
+                bugCounter.classList.remove('text-rose-400');
+                bugCounter.classList.add('text-emerald-400');
+                bugFeedback.innerHTML = `
+                    <div class="text-left w-full">
+                        <span class="text-emerald-400 font-bold block mb-1">🎯 Bug Caught! (Line 4)</span>
+                        <p class="text-slate-300">By appending <code>save_action()</code> with parentheses, Python executes that behavior instantly during compile phases. Passing the uninvoked reference identifier <code>save_action</code> directly guarantees it fires only when clicked!</p>
+                    </div>
+                `;
+                bugIdentified = true;
+            } else {
+                line.classList.add('selected-bug');
+                bugFeedback.innerHTML = `
+                    <div class="text-left w-full text-rose-400">
+                        <span><i class="fa-solid fa-triangle-exclamation"></i> Clean Line Selected:</span>
+                        <p class="text-slate-400 text-[11px] mt-1">Line ${line.getAttribute('data-line')} follows correct syntax configurations standardly. Look closer at parameters within structural calls!</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    if (!bugIdentified) line.classList.remove('selected-bug');
+                }, 1200);
+            }
+        });
+    });
+
+
+    // --- LIVE PYODIDE EXECUTION ENGINE ---
+    const runBtn = document.getElementById('run-code-btn');
+    const consoleOutput = document.getElementById('console-output');
+    const statusLabel = document.getElementById('pyodide-status');
+    const clearConsoleBtn = document.getElementById('clear-console-btn');
+    let pyodideInstance = null;
+
+    async function initPyodideEnvironment() {
+        try {
+            pyodideInstance = await loadPyodide();
+            statusLabel.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span> Python Runtime Ready`;
+            statusLabel.classList.remove('bg-amber-500/10', 'text-amber-400', 'border-amber-500/20');
+            statusLabel.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+            runBtn.disabled = false;
+        } catch (err) {
+            statusLabel.innerText = "⚠️ Execution environment offline";
+            console.error(err);
+        }
+    }
+
+    runBtn.addEventListener('click', async () => {
+        if (!pyodideInstance) return;
+        
+        const rawCode = document.getElementById('code-editor').value;
+        consoleOutput.innerText = "[Executing Script Pipeline...]\n";
+        
+        // Intercept standard streams to pipe prints right into layout terminal
+        pyodideInstance.setStdout({ batched: (str) => { consoleOutput.innerText += str + "\n"; } });
+        pyodideInstance.setStderr({ batched: (str) => { consoleOutput.innerText += `[Error] ${str}\n`; } });
+
+        try {
+            await pyodideInstance.runPythonAsync(rawCode);
+        } catch (err) {
+            consoleOutput.innerText += `\n[Runtime Exception Raised]:\n${err.message}`;
+        }
+    });
+
+    clearConsoleBtn.addEventListener('click', () => {
+        consoleOutput.innerText = "Console buffer cleared. Ready for execution run logs...";
+    });
+
+
+    // --- INITIALIZATION ORCHESTRATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentation();
+        loadMcqQuestion(0);
+        initPyodideEnvironment();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Error Handling — Exceptional Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --brand-primary: #4F46E5;
+            --brand-secondary: #06B6D4;
+            --bg-dark: #0F172A;
+            --card-dark: #1E293B;
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent-green: #10B981;
+            --accent-red: #EF4444;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Nunito', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slide-container {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 3rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    /* ADD THIS LINE BELOW TO PREVENT TRANSPARENCY BLEED-THROUGH */
+    background-color: var(--bg-dark); 
+}
+
+        .slide-container.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: var(--font-display);
+        }
+
+        .font-mono {
+            font-family: var(--font-mono) !important;
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: var(--font-display);
+            font-weight: 700;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        .key-box {
+            background: var(--card-dark);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+            color: var(--text-main);
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(79, 70, 229, 0.2);
+        }
+
+        .option-card {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .option-card:hover {
+            transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .pyodide-loader {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Customize scrollbars for content overflowing slides */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-dark);
+            border-radius: 4px;
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .buggy-line:hover {
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+        .buggy-line.selected-bug {
+            background: rgba(239, 68, 68, 0.3) !important;
+            border-left: 4px solid var(--accent-red) !important;
+        }
+    </style>
+</head>
+<body class="bg-[#0F172A] text-slate-100 antialiased">
+
+<div id="slide-counter">1 / 1</div>
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint hidden md:block">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<div id="pyodide-status-banner" class="fixed top-4 left-6 z-50 flex items-center gap-2 bg-slate-800/80 backdrop-blur-md border border-slate-700 px-4 py-1.5 rounded-full text-xs">
+    <span class="relative flex h-2 w-2">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" id="status-pulse-ping"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500" id="status-pulse-core"></span>
+    </span>
+    <span id="pyodide-status-text" class="text-slate-300 font-medium">Loading Python environment...</span>
+</div>
+
+<main id="presentation-container" class="relative w-full h-full">
+
+    <section class="slide-container active flex items-center justify-center text-center">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 px-4 py-1.5 rounded-full text-indigo-400 text-sm font-semibold tracking-wide uppercase">
+                <i class="fa-solid fa-graduation-cap"></i> Core Computer Science Lecture
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 py-2">
+                Error Handling in Python
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                Anticipating disasters, managing exceptions, and building resilient software that doesn't collapse under pressure.
+            </p>
+            <div class="pt-8 flex justify-center gap-4">
+                <button onclick="nextSlide()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 flex items-center gap-2 glow-effect">
+                    Start Presentation <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full">
+            <div class="lg:col-span-5 space-y-5">
+                <h2 class="text-4xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-shield-halved text-indigo-400"></i> What is Error Handling?
+                </h2>
+                <p class="text-slate-300 text-base leading-relaxed">
+                    Error handling in Python is a disciplined way of <strong>anticipating and managing runtime anomalies</strong> during program execution.
+                </p>
+                <div class="bg-slate-800/60 border border-slate-700/80 p-4 rounded-xl space-y-3">
+                    <h3 class="text-indigo-400 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-nodes"></i> The Defensive Armor
+                    </h3>
+                    <p class="text-sm text-slate-400">
+                        By strategically placing <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">try</code>, <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">except</code>, and <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">finally</code> blocks, you intercept crashes before they strike your end users.
+                    </p>
+                </div>
+                <blockquote class="border-l-4 border-cyan-500 bg-cyan-950/20 p-3 rounded-r-xl text-sm text-cyan-200">
+                    <i class="fa-solid fa-quote-left mr-1 opacity-50"></i> Real software doesn't just work perfectly under ideal conditions; it fails gracefully when conditions break down.
+                </blockquote>
+            </div>
+            
+            <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-xl space-y-2">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-lg mb-2">1</div>
+                    <h3 class="text-white font-semibold">Anticipate Faults</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Map out vulnerable workflows such as user input, external networks, file operations, and geometric operations.</p>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-xl space-y-2">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold text-lg mb-2">2</div>
+                    <h3 class="text-white font-semibold">Prevent Crashes</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Catch incoming exceptions instantly, avoiding rough default terminal tracebacks and unorderly shutdowns.</p>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-xl space-y-2">
+                    <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold text-lg mb-2">3</div>
+                    <h3 class="text-white font-semibold">User Feedback</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Transform cold engineering error dumps into actionable, polished diagnostic instructions for downstream operators.</p>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-xl space-y-2">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-lg mb-2">4</div>
+                    <h3 class="text-white font-semibold">Resource Integrity</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">Force systemic updates and memory reclamation tasks to commit completely, keeping state channels cleanly closed.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-6xl mx-auto space-y-6">
+            <div class="space-y-1">
+                <h2 class="text-4xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> The Taxonomy of Errors
+                </h2>
+                <p class="text-slate-400 max-w-2xl text-sm">Not all errors are born equal. Python segregates bugs into three distinct structural archetypes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-24 h-24 bg-rose-500/5 rounded-full blur-xl"></div>
+                    <div class="space-y-3">
+                        <span class="px-3 py-1 text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full">Compile Time</span>
+                        <h3 class="text-xl font-bold text-white">1. Syntax Errors</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Occur when Python's interpreter cannot successfully parse your source code due to violations of grammatical syntax constraints.
+                        </p>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-900 rounded-xl font-mono text-xs text-rose-300 border border-rose-950/40">
+                        <span class="text-slate-500"># System cannot run:</span><br>
+                        <span class="text-rose-400">if x == 5</span><br>
+                        <span class="text-rose-500 font-bold">^ SyntaxError: expected ':'</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-24 h-24 bg-amber-500/5 rounded-full blur-xl"></div>
+                    <div class="space-y-3">
+                        <span class="px-3 py-1 text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">Runtime State</span>
+                        <h3 class="text-xl font-bold text-white">2. Runtime Errors</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Triggered dynamically while the script executes. The syntax is flawless, but an invalid operation is demanded of the runtime engine.
+                        </p>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-900 rounded-xl font-mono text-xs text-amber-300 border border-amber-950/40">
+                        <span class="text-slate-500"># Invalid action at runtime:</span><br>
+                        result = 10 / 0<br>
+                        <span class="text-amber-500 font-bold">-> ZeroDivisionError</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-6 space-y-4 relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-24 h-24 bg-cyan-500/5 rounded-full blur-xl"></div>
+                    <div class="space-y-3">
+                        <span class="px-3 py-1 text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full">Human Logic</span>
+                        <h3 class="text-xl font-bold text-white">3. Logical Errors</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            The script runs silently without raising exceptions or crashing, yet delivers flawed outputs due to conceptual flaws within code design.
+                        </p>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-900 rounded-xl font-mono text-xs text-cyan-300 border border-cyan-950/40">
+                        <span class="text-slate-500"># Calculates area wrong:</span><br>
+                        area = width + height<br>
+                        <span class="text-cyan-400 font-bold"># Silent flaw: should be *</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-5 space-y-5">
+                <div class="space-y-1">
+                    <h2 class="text-4xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-code-branch text-emerald-400"></i> Try & Except Syntax
+                    </h2>
+                    <p class="text-slate-400 text-sm">The foundational structural elements of defensive Python execution units.</p>
+                </div>
+                
+                <div class="space-y-4 text-sm text-slate-300">
+                    <div class="flex gap-3 items-start bg-slate-800/40 p-3 rounded-xl border border-slate-700/60">
+                        <span class="bg-indigo-500/20 text-indigo-300 font-mono text-xs px-2 py-1 rounded mt-0.5">try:</span>
+                        <div>
+                            <strong class="text-white block mb-0.5">The Testing Arena</strong>
+                            Isolates risk. Python tracks executions here carefully; if an anomaly bursts out, native cascading stops immediately.
+                        </div>
+                    </div>
+                    <div class="flex gap-3 items-start bg-slate-800/40 p-3 rounded-xl border border-slate-700/60">
+                        <span class="bg-emerald-500/20 text-emerald-300 font-mono text-xs px-2 py-1 rounded mt-0.5">except:</span>
+                        <div>
+                            <strong class="text-white block mb-0.5">The Safety Contingency</strong>
+                            Instantly steps forward if a matching specific error subclass triggers, shifting control away from a standard hardware abort loop.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl flex gap-3 text-xs">
+                    <i class="fa-solid fa-circle-exclamation text-base mt-0.5 flex-shrink-0"></i>
+                    <div>
+                        <strong>Best Practice Warning:</strong> Avoid writing broad <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-amber-400">except:</code> blocks lacking specific Exception subclasses. Blindly capturing unspecified errors will silently camouflage complex engineering faults.
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 space-y-3">
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+                    <div class="bg-slate-800/80 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <span class="text-xs text-slate-400 ml-2 font-mono">structural_blueprint.py</span>
+                        </div>
+                        <span class="text-xs text-slate-500 uppercase font-bold tracking-wider">Syntax Paradigm</span>
+                    </div>
+                    <div class="p-4">
+                        <pre><code class="language-python">try:
+    # Code that might raise an error
+    protected_payload = open_secure_connection()
+    process_data(protected_payload)
+
+except SomeSpecificException:
+    # Code to handle the error safely
+    trigger_fallback_subsystem()
+    print("Handled an isolated exception successfully.")</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-6xl mx-auto flex flex-col h-full space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-terminal text-cyan-400"></i> Interactive Execution: ZeroDivisionError
+                    </h2>
+                    <p class="text-slate-400 text-xs">Modify the values below dynamically to evaluate how Python responds when calculations hit unexpected mathematical limits.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 font-mono">Environment: Real-time Pyodide Engine</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
+                <div class="lg:col-span-7 flex flex-col bg-slate-900 border border-slate-700/60 rounded-2xl overflow-hidden">
+                    <div class="bg-slate-800 px-4 py-2.5 flex justify-between items-center border-b border-slate-700">
+                        <span class="text-xs font-mono text-slate-300">live_experiment.py</span>
+                        <button id="run-btn-1" onclick="runPythonSandbox(1)" disabled class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold text-xs px-4 py-1.5 rounded-lg transition duration-150 flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Execute Code
+                        </button>
+                    </div>
+                    <div class="relative flex-grow p-1 bg-slate-950">
+                        <textarea id="code-editor-1" class="w-full h-48 lg:h-64 bg-transparent text-slate-200 font-mono text-sm p-3 focus:outline-none focus:ring-0 resize-none" spellcheck="false">try:
+    numerator = 10
+    denominator = 0 # Try altering this to 2 to watch the try block finish smoothly
+    
+    print(f"Dividing {numerator} by {denominator}...")
+    result = numerator / denominator
+    print(f"Success! Math Result: {result}")
+
+except ZeroDivisionError:
+    print("Intercepted Error: You cannot divide a real value by zero!")</textarea>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden font-mono text-xs">
+                    <div class="bg-slate-900 px-4 py-3 border-b border-slate-800 text-slate-400 font-bold tracking-wide uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span> Virtual Console Output
+                    </div>
+                    <div id="console-output-1" class="p-4 flex-grow text-slate-300 space-y-1 overflow-y-auto min-h-[150px] whitespace-pre-wrap">Click "Execute Code" above to pass data strings into the isolated runtime kernel.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-5 space-y-5">
+                <div class="space-y-1">
+                    <h2 class="text-4xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-lock text-cyan-400"></i> The Finally Clause
+                    </h2>
+                    <p class="text-slate-400 text-sm">Deterministic cleanup operations, guarding system health against unexpected execution pathways.</p>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    The <code class="font-mono bg-slate-800 text-cyan-400 px-1 py-0.5 rounded">finally</code> block executes <strong>unconditionally</strong>, whether or not an exception was raised, caught, or completely missed inside previous scopes.
+                </p>
+                <div class="bg-indigo-950/30 border border-indigo-900/60 p-4 rounded-xl space-y-2">
+                    <h3 class="text-indigo-400 font-semibold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-broom"></i> Guaranteed Cleanups
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Essential for ensuring critical housekeeping steps take place—like flushing internal operational pipes, returning active database connections back to global pools, or releasing local persistent locks.
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 space-y-4">
+                <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                    <div class="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <span class="text-xs text-slate-300 font-mono">persistent_io.py</span>
+                        <button id="run-btn-2" onclick="runPythonSandbox(2)" disabled class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold text-xs px-3 py-1 rounded-md transition">
+                            <i class="fa-solid fa-play mr-1"></i> Simulate Flow
+                        </button>
+                    </div>
+                    <div class="p-2 bg-slate-950">
+                        <textarea id="code-editor-2" class="w-full h-44 bg-transparent text-slate-200 font-mono text-xs p-2 focus:outline-none resize-none" spellcheck="false">try:
+    print("1. Initializing critical disk subsystem data channels...")
+    # Intentionally trigger an exception to observe the control flow path
+    raise FileNotFoundError("Missing target sector metadata record.")
+except FileNotFoundError as err:
+    print(f"2. Error Handled: {err}")
+finally:
+    print("3. Finally Block: Connection safely disconnected and released.")</textarea>
+                    </div>
+                    <div id="console-output-2" class="bg-slate-900 p-3 border-t border-slate-800 text-slate-400 font-mono text-xs whitespace-pre-wrap min-h-[60px]">Console waiting for simulation triggers...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-5xl mx-auto space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-4xl font-bold text-rose-400 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-bug-slash"></i> Interactive Bug Hunt!
+                </h2>
+                <p class="text-slate-400 text-sm max-w-xl mx-auto">
+                    Analyze the broken segment below. Identify and click on the specific line(s) causing compile or execution breakdowns.
+                </p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden max-w-3xl mx-auto shadow-2xl">
+                <div class="bg-slate-800/80 px-4 py-3 flex items-center justify-between border-b border-slate-700">
+                    <div class="flex items-center gap-2 text-xs font-mono text-slate-400">
+                        <i class="fa-solid fa-terminal text-rose-400"></i> syntax_anomaly.py
+                    </div>
+                    <div class="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full font-bold">
+                        <span id="bug-tracker-count">0</span> of 1 Bug Identified
+                    </div>
+                </div>
+                
+                <div class="p-6 font-mono text-sm md:text-base space-y-1 bg-slate-950 text-slate-300">
+                    <div onclick="selectBugLine(1, false)" id="bug-line-1" class="buggy-line p-2 rounded flex items-center gap-4">
+                        <span class="text-slate-600 select-none text-xs w-4">1</span>
+                        <span>try:</span>
+                    </div>
+                    <div onclick="selectBugLine(2, false)" id="bug-line-2" class="buggy-line p-2 rounded flex items-center gap-4">
+                        <span class="text-slate-600 select-none text-xs w-4">2</span>
+                        <span class="pl-4">value = int("42")</span>
+                    </div>
+                    <div onclick="selectBugLine(3, true)" id="bug-line-3" class="buggy-line p-2 rounded flex items-center gap-4">
+                        <span class="text-slate-600 select-none text-xs w-4">3</span>
+                        <span class="pl-0 text-rose-300 font-semibold">except ValueException</span>
+                    </div>
+                    <div onclick="selectBugLine(4, false)" id="bug-line-4" class="buggy-line p-2 rounded flex items-center gap-4">
+                        <span class="text-slate-600 select-none text-xs w-4">4</span>
+                        <span class="pl-4">print("Invalid formatting configuration parameters.")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bug-hunt-feedback" class="text-center min-h-[24px] text-sm font-semibold tracking-wide"></div>
+        </div>
+    </section>
+
+    <section class="slide-container">
+        <div class="max-w-4xl mx-auto space-y-6 flex flex-col justify-between h-full">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-clipboard-question text-emerald-400"></i> Check Your Understanding
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">Verify your operational knowledge against target architectural requirements.</p>
+                </div>
+                <div class="bg-slate-800 px-3 py-1 rounded-full text-xs font-mono font-bold text-indigo-400 border border-slate-700" id="mcq-progress-indicator">
+                    Question 1 of 5
+                </div>
+            </div>
+
+            <div id="mcq-playground" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 min-h-[340px] flex flex-col justify-center space-y-4">
+                <div id="mcq-question-text" class="text-lg font-medium text-slate-100 leading-relaxed"></div>
+                <div id="mcq-code-block-container" class="hidden">
+                    <pre class="rounded-xl !bg-slate-950 !my-2"><code id="mcq-code-display" class="language-python"></code></pre>
+                </div>
+                <div id="mcq-options-container" class="grid grid-cols-1 gap-3 pt-2"></div>
+                <div id="mcq-feedback-output" class="text-sm min-h-[20px] font-medium pt-1"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+                <button id="mcq-prev-btn" onclick="prevMcqQuestion()" class="px-5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:text-white transition flex items-center gap-2 disabled:opacity-30 disabled:pointer-events-none">
+                    <i class="fa-solid fa-chevron-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" onclick="nextMcqQuestion()" disabled class="px-6 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed transition flex items-center gap-2 text-white shadow-lg shadow-indigo-600/10">
+                    Next Question <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    // System Global State Metrics
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide-container');
+    const totalSlidesCount = slides.length;
+    let pyodideInstance = null;
+
+    // Raw Immutable Array Storage mapping user-supplied verification metrics verbatim
+    const userMcqDataset = [
+        {
+            question: "What is the purpose of the try block in Python?",
+            options: [
+                "To execute code only if an exception occurs.",
+                "To write error-free code.",
+                "To test a block of code that might raise an exception.",
+                "To avoid writing error messages."
+            ],
+            answer: "C",
+            hasCode: false,
+            code: ""
+        },
+        {
+            question: "Which of the following exceptions is raised when trying to divide by zero?",
+            options: [
+                "ValueError",
+                "TypeError",
+                "ZeroDivisionError",
+                "FileNotFoundError"
+            ],
+            answer: "C",
+            hasCode: false,
+            code: ""
+        },
+        {
+            question: "What does the finally block do in Python error handling?",
+            options: [
+                "Runs only if an exception occurs.",
+                "Ensures code runs after try and except blocks, regardless of exceptions.",
+                "Skips the try block and directly runs exception-handling code.",
+                "Ends the program if an error is found."
+            ],
+            answer: "B",
+            hasCode: false,
+            code: ""
+        },
+        {
+            question: "What happens if an exception is raised but no matching except block is provided?",
+            options: [
+                "The program continues running.",
+                "The exception is ignored.",
+                "The program crashes and shows an error message.",
+                "Python automatically handles the exception."
+            ],
+            answer: "C",
+            hasCode: false,
+            code: ""
+        },
+        {
+            question: "Which of the following is the correct way to handle a FileNotFoundError?",
+            options: [
+                "try:\n    file = open(\"data.txt\", \"r\")\n    content = file.read()\nexcept:\n    print(\"An error occurred.\")",
+                "try:\n    file = open(\"data.txt\", \"r\")\n    content = file.read()\nexcept FileNotFoundError:\n    print(\"File not found.\")",
+                "try:\n    file = open(\"data.txt\", \"r\")\n    content = file.read()\nfinally:\n    print(\"File closed.\")",
+                "try:\n    file = open(\"data.txt\", \"r\")\n    content = file.read()\nexcept ZeroDivisionError:\n    print(\"File not found.\")"
+            ],
+            answer: "B",
+            hasCode: false,
+            code: ""
+        }
+    ];
+
+    let currentMcqIndex = 0;
+    let selectedMcqAnswer = null;
+
+    // Asynchronous Setup hook linking runtime targets
+    async function initializePyodideEngine() {
+        const statusBanner = document.getElementById('pyodide-status-banner');
+        const statusText = document.getElementById('pyodide-status-text');
+        const pingPulse = document.getElementById('status-pulse-ping');
+        const corePulse = document.getElementById('status-pulse-core');
+
+        try {
+            pyodideInstance = await loadPyodide();
+            
+            // Reconfigure visual interface indicators upon operational readiness
+            statusText.textContent = "Python Engine Ready";
+            statusText.classList.replace('text-slate-300', 'text-emerald-400');
+            pingPulse.classList.replace('bg-amber-400', 'bg-emerald-400');
+            corePulse.classList.replace('bg-amber-500', 'bg-emerald-500');
+            
+            // Enable execution actions safely
+            document.getElementById('run-btn-1').removeAttribute('disabled');
+            document.getElementById('run-btn-2').removeAttribute('disabled');
+            
+            setTimeout(() => {
+                statusBanner.style.opacity = '0';
+                setTimeout(() => statusBanner.remove(), 300);
+            }, 3000);
+        } catch (error) {
+            statusText.textContent = "Engine Failed to Load";
+            statusText.classList.replace('text-slate-300', 'text-rose-400');
+            pingPulse.classList.replace('bg-amber-400', 'bg-rose-400');
+            corePulse.classList.replace('bg-amber-500', 'bg-rose-500');
+            console.error("Pyodide bootstrap failure sequence:", error);
+        }
+    }
+
+    // Dynamic Safe Script Sandboxing Routine
+    async function runPythonSandbox(idIndex) {
+        const consoleDisplay = document.getElementById(`console-output-${idIndex}`);
+        const codePayload = document.getElementById(`code-editor-1`).value;
+        const fallbackPayload = document.getElementById(`code-editor-2`).value;
+        const executingCode = idIndex === 1 ? codePayload : fallbackPayload;
+
+        if (!pyodideInstance) {
+            consoleDisplay.textContent = "System Error: The evaluation subsystem is not loaded yet.";
+            return;
+        }
+
+        consoleDisplay.textContent = "Executing instruction payload...";
+        
+        // Capture standard out structures natively
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(executingCode);
+            const standardOut = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const standardErr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            consoleDisplay.textContent = standardOut + (standardErr ? "\n" + standardErr : "");
+            if (!standardOut && !standardErr) {
+                consoleDisplay.textContent = "Execution completed cleanly with empty stdout channels.";
+            }
+        } catch (runtimeFault) {
+            consoleDisplay.textContent = `Python Runtime Crash Traceback:\n${runtimeFault.message}`;
+        }
+    }
+
+    // Deck Navigation Mechanics
+    function updateSlideLayoutView() {
+        slides.forEach((slide, idx) => {
+            if (idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Sync auxiliary metrics components
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${totalSlidesCount}`;
+        const linearProgressPct = ((currentSlideIndex + 1) / totalSlidesCount) * 100;
+        document.getElementById('progress').style.width = `${linearProgressPct}%`;
+
+        // Enforce Prism token evaluation loops across visible modules
+        setTimeout(() => {
+            Prism.highlightAll();
+        }, 50);
+    }
+
+    function nextSlide() {
+        if (currentSlideIndex < totalSlidesCount - 1) {
+            currentSlideIndex++;
+            updateSlideLayoutView();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updateSlideLayoutView();
+        }
+    }
+
+    // Key binding hooks
+    window.addEventListener('keydown', (event) => {
+        if (event.target.tagName === 'TEXTAREA' || event.target.tagName === 'INPUT') return;
+        
+        if (event.key === 'ArrowRight' || event.key === ' ') {
+            event.preventDefault();
+            nextSlide();
+        } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // Interactive Bug Hunt Tracking Rules
+    let bugIdentifiedState = false;
+    function selectBugLine(lineNumber, isActualBug) {
+        // Clear all highlight states first
+        for(let i=1; i<=4; i++) {
+            document.getElementById(`bug-line-${i}`).classList.remove('selected-bug');
+        }
+
+        const targetRow = document.getElementById(`bug-line-${lineNumber}`);
+        const feedbackContainer = document.getElementById('bug-hunt-feedback');
+        targetRow.classList.add('selected-bug');
+
+        if (isActualBug) {
+            bugIdentifiedState = true;
+            document.getElementById('bug-tracker-count').textContent = "1";
+            feedbackContainer.textContent = "🎯 Correct! 'ValueException' is invalid. Python implements 'ValueError' as standard built-in naming rules.";
+            feedbackContainer.className = "text-center min-h-[24px] text-sm font-semibold tracking-wide text-emerald-400";
+        } else {
+            feedbackContainer.textContent = "❌ That line runs cleanly. Look closely at the standard naming syntax structure rules of the Exception class.";
+            feedbackContainer.className = "text-center min-h-[24px] text-sm font-semibold tracking-wide text-rose-400";
+        }
+    }
+
+    // Core Assessment Engine Logic (User-Provided MCQs)
+    function renderMcqQuestionState() {
+        const questionData = userMcqDataset[currentMcqIndex];
+        selectedMcqAnswer = null;
+
+        // Reset control states
+        document.getElementById('mcq-next-btn').setAttribute('disabled', 'true');
+        document.getElementById('mcq-feedback-output').textContent = "";
+        document.getElementById('mcq-progress-indicator').textContent = `Question ${currentMcqIndex + 1} of ${userMcqDataset.length}`;
+        document.getElementById('mcq-question-text').textContent = questionData.question;
+
+        // Evaluate code component requirements
+        const codeWrapper = document.getElementById('mcq-code-block-container');
+        if (questionData.hasCode) {
+            codeWrapper.classList.remove('hidden');
+            const targetDisplay = document.getElementById('mcq-code-display');
+            targetDisplay.textContent = questionData.code;
+            Prism.highlightElement(targetDisplay);
+        } else {
+            codeWrapper.classList.add('hidden');
+        }
+
+        // Render options list layout
+        const optionBox = document.getElementById('mcq-options-container');
+        optionBox.innerHTML = "";
+
+        // Simple lookup maps for indices to characters
+        const alphabeticalKeys = ["A", "B", "C", "D"];
+
+        questionData.options.forEach((optionString, optionIdx) => {
+            const letterMarker = alphabeticalKeys[optionIdx];
+            
+            const cardElement = document.createElement('div');
+            cardElement.className = "option-card flex items-start gap-3 bg-slate-800/40 border border-slate-700/70 p-3 rounded-xl text-sm text-slate-300";
+            cardElement.id = `mcq-opt-${letterMarker}`;
+            cardElement.onclick = () => evaluateMcqChoice(letterMarker, questionData.answer);
+
+            // Determine rendering strategy (plain text vs code strings)
+            const isOptionCodeForm = optionString.includes('\n') || optionString.includes('try:');
+            
+            if (isOptionCodeForm) {
+                cardElement.innerHTML = `
+                    <span class="w-6 h-6 flex-shrink-0 rounded-lg bg-slate-700 text-slate-200 font-bold flex items-center justify-center text-xs mt-1">${letterMarker}</span>
+                    <div class="flex-grow font-mono text-xs whitespace-pre bg-slate-950 p-2.5 rounded-lg border border-slate-800 overflow-x-auto">${optionString}</div>
+                `;
+            } else {
+                cardElement.innerHTML = `
+                    <span class="w-6 h-6 flex-shrink-0 rounded-lg bg-slate-700 text-slate-200 font-bold flex items-center justify-center text-xs">${letterMarker}</span>
+                    <span class="flex-grow pt-0.5">${optionString}</span>
+                `;
+            }
+
+            optionBox.appendChild(cardElement);
+        });
+
+        // Configure back buttons state safely
+        const prevButton = document.getElementById('mcq-prev-btn');
+        if (currentMcqIndex === 0) {
+            prevButton.setAttribute('disabled', 'true');
+        } else {
+            prevButton.removeAttribute('disabled');
+        }
+
+        // Standardize labels dynamically on terminal questions
+        const nextButton = document.getElementById('mcq-next-btn');
+        if (currentMcqIndex === userMcqDataset.length - 1) {
+            nextButton.innerHTML = `Finish Quiz <i class="fa-solid fa-flag-checkered"></i>`;
+        } else {
+            nextButton.innerHTML = `Next Question <i class="fa-solid fa-chevron-right"></i>`;
+        }
+    }
+
+    function evaluateMcqChoice(chosenLetter, trueAnswer) {
+        if (selectedMcqAnswer !== null) return; // Freeze selection upon initial commitment
+        selectedMcqAnswer = chosenLetter;
+
+        const targetCard = document.getElementById(`mcq-opt-${chosenLetter}`);
+        const feedbackLine = document.getElementById('mcq-feedback-output');
+
+        if (chosenLetter === trueAnswer) {
+            targetCard.className = "option-card flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/50 p-3 rounded-xl text-sm text-emerald-200";
+            feedbackLine.textContent = "🎯 Correct response! Your theoretical alignment parameters are completely accurate.";
+            feedbackLine.className = "text-sm min-h-[20px] font-medium pt-1 text-emerald-400";
+        } else {
+            targetCard.className = "option-card flex items-start gap-3 bg-rose-500/10 border border-rose-500/50 p-3 rounded-xl text-sm text-rose-200";
+            const trueCard = document.getElementById(`mcq-opt-${trueAnswer}`);
+            trueCard.className = "option-card flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-sm text-emerald-300";
+            
+            feedbackLine.textContent = `❌ Incorrect option selected. The structurally valid target was answer option (${trueAnswer}).`;
+            feedbackLine.className = "text-sm min-h-[20px] font-medium pt-1 text-rose-400";
+        }
+
+        document.getElementById('mcq-next-btn').removeAttribute('disabled');
+    }
+
+    function nextMcqQuestion() {
+        if (currentMcqIndex < userMcqDataset.length - 1) {
+            currentMcqIndex++;
+            renderMcqQuestionState();
+        } else {
+            // Assessment flow is completely finalized
+            const playgroundSection = document.getElementById('mcq-playground');
+            playgroundSection.innerHTML = `
+                <div class="text-center space-y-4 py-8">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-emerald-500/20 shadow-xl shadow-emerald-500/5">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-2xl font-bold text-white">Review Module Completed!</h3>
+                        <p class="text-sm text-slate-400 max-w-sm mx-auto">You have successfully evaluated all automated exception management criteria check questions accurately.</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('mcq-next-btn').setAttribute('disabled', 'true');
+            document.getElementById('mcq-prev-btn').setAttribute('disabled', 'true');
+        }
+    }
+
+    function prevMcqQuestion() {
+        if (currentMcqIndex > 0) {
+            currentMcqIndex--;
+            renderMcqQuestionState();
+        }
+    }
+
+    // Main Engine Bootstrap Sequence
+    window.addEventListener('DOMContentLoaded', () => {
+        updateSlideLayoutView();
+        initializePyodideEngine();
+        renderMcqQuestionState();
+    });
+</script>
+
+</body>
+</html>

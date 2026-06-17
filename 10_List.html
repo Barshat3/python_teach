@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Lists - Fundamentals & Practical Operations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --surface-light: #334155;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 3rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease-out;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .key-box {
+            background: var(--surface-light);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            margin: 0 0.2rem;
+            font-family: monospace;
+            color: var(--text-main);
+        }
+
+        .code-container {
+            background-color: #1d1f21 !important;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .buggy-line:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .buggy-line.selected-bug {
+            background: rgba(239, 68, 68, 0.2);
+            border-left-color: var(--danger);
+        }
+
+        /* Custom scrollbar for slides */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface-light);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 1</div>
+<div id="presentation-container" class="w-full h-full relative">
+
+    <div class="slide active justify-center items-center text-center bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <div class="max-w-4xl px-4">
+            <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-sm uppercase tracking-widest font-bold px-4 py-1.5 rounded-full mb-6 inline-block">
+                Python Core Data Structures
+            </span>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-indigo-300 mb-6 tracking-tight">
+                Mastering Lists in Python
+            </h1>
+            <p class="text-lg md:text-2xl text-slate-400 font-normal max-w-2xl mx-auto leading-relaxed mb-12">
+                An interactive journey into creating, manipulating, and optimizing ordered collections in Python.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4 text-sm text-slate-400">
+                <div class="flex items-center gap-2 bg-slate-800/60 px-4 py-2 rounded-xl border border-slate-700/50">
+                    <i class="fa-solid fa-layer-group text-indigo-400"></i> Mutable Structures
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/60 px-4 py-2 rounded-xl border border-slate-700/50">
+                    <i class="fa-solid fa-terminal text-emerald-400"></i> Interactive Live Editor
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/60 px-4 py-2 rounded-xl border border-slate-700/50">
+                    <i class="fa-solid fa-list-check text-amber-400"></i> Self Assessment
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto">
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                        <i class="fa-solid fa-cubes text-lg"></i>
+                    </div>
+                    <span class="text-sm font-bold uppercase tracking-wider text-indigo-400">Core Architecture</span>
+                </div>
+                <h2 class="text-4xl font-bold mb-6 text-white tracking-tight">What is a Python List?</h2>
+                <p class="text-slate-300 leading-relaxed mb-6 text-lg">
+                    A list is a dynamic, built-in sequential storage mechanism designed to hold heterogeneous items or elements in a specified structural order.
+                </p>
+                <div class="p-4 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl text-slate-300 text-sm">
+                    <strong class="text-amber-400 block mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Dynamic Memory Note</strong>
+                    Unlike traditional arrays, Python lists resize dynamically behind the scenes and comfortably accept elements of completely non-matching types.
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="text-2xl mb-3"><i class="fa-solid fa-arrow-down-1-9 text-emerald-400"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Ordered Nature</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Elements preserve their exact insertion sequence explicitly. Every item is anchored firmly to an index tracking back to absolute positioning.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="text-2xl mb-3"><i class="fa-solid fa-pen-to-square text-indigo-400"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Mutable Collection</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Lists can be updated directly in-place. You are free to modify values, append extensions, or swap indices post-creation without re-allocating full variables.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="text-2xl mb-3"><i class="fa-solid fa-clone text-amber-400"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Allows Duplicates</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Identical values can occupy different indices seamlessly. The presence of one element never invalidates or overwrites matching values at other markers.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 border border-slate-700/60 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="text-2xl mb-3"><i class="fa-solid fa-shuffle text-rose-400"></i></div>
+                        <h3 class="text-xl font-bold text-white mb-2">Mixed Data Types</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            A single container can simultaneously mix complex nested object instances, strings, floating points, booleans, and distinct integers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-6xl w-full mx-auto my-auto space-y-8">
+            <div>
+                <h2 class="text-4xl font-bold text-white tracking-tight mb-2">Declaration & Spatial Indexing</h2>
+                <p class="text-slate-400">Declaring variables wrapped in matching brackets constructs explicit indices.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50">
+                        <span class="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-2">Syntax Rule</span>
+                        <pre class="font-mono text-indigo-300 text-lg">list_name = [element1, element2, element3]</pre>
+                    </div>
+                    <div class="code-container p-4">
+                        <span class="text-xs uppercase tracking-wider text-slate-500 font-bold block mb-2">Initialization & Selection</span>
+                        <pre class="line-numbers"><code class="language-python"># Creating a structured list
+fruits = ["apple", "banana", "cherry"]
+
+# Accessing elements using indices
+print(fruits[0])   # Output: apple
+print(fruits[-1])  # Output: cherry (last element offset)</code></pre>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/40 p-6 rounded-2xl border border-slate-700/50 flex flex-col justify-center">
+                    <h3 class="text-lg font-bold text-slate-200 mb-4"><i class="fa-solid fa-map-pin text-indigo-400 mr-2"></i>Double-Ended Index Map Matrix</h3>
+                    
+                    <div class="grid grid-cols-3 gap-3 text-center font-mono">
+                        <div class="text-emerald-400 text-sm">Index: 0</div>
+                        <div class="text-emerald-400 text-sm">Index: 1</div>
+                        <div class="text-emerald-400 text-sm">Index: 2</div>
+
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl font-bold text-white text-lg">"apple"</div>
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl font-bold text-white text-lg">"banana"</div>
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl font-bold text-white text-lg">"cherry"</div>
+
+                        <div class="text-rose-400 text-sm">Index: -3</div>
+                        <div class="text-rose-400 text-sm">Index: -2</div>
+                        <div class="text-rose-400 text-sm">Index: -1</div>
+                    </div>
+
+                    <div class="mt-6 space-y-2 text-sm text-slate-400">
+                        <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-400"></div> Forward indices map left-to-right starting from absolute zero.</div>
+                        <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-rose-400"></div> Negative indices traverse reverse right-to-left starting from -1.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-6xl w-full mx-auto my-auto space-y-6">
+            <div>
+                <h2 class="text-4xl font-bold text-white tracking-tight mb-2">Standard Data Mutation Engine</h2>
+                <p class="text-slate-400">Python features optimized structural methods for explicit list transformation manipulation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <code class="text-indigo-400 font-bold text-base bg-indigo-500/10 px-2.5 py-1 rounded-md">.append(item)</code>
+                            <span class="text-xs text-slate-500 font-bold uppercase">Mutator</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4">Appends an element exactly onto the current linear tail termination.</p>
+                    </div>
+                    <pre class="p-2.5 bg-slate-900/60 rounded-xl text-xs font-mono text-slate-300">fruits.append("orange")
+# Tail termination extended</pre>
+                </div>
+
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <code class="text-indigo-400 font-bold text-base bg-indigo-500/10 px-2.5 py-1 rounded-md">.insert(idx, item)</code>
+                            <span class="text-xs text-slate-500 font-bold uppercase">Splicer</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4">Forces insertion at a designated index, dynamically shifting structural anchors rightward.</p>
+                    </div>
+                    <pre class="p-2.5 bg-slate-900/60 rounded-xl text-xs font-mono text-slate-300">fruits.insert(1, "kiwi")
+# Structural shifts occur</pre>
+                </div>
+
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <code class="text-rose-400 font-bold text-base bg-rose-500/10 px-2.5 py-1 rounded-md">.remove(val)</code>
+                            <span class="text-xs text-slate-500 font-bold uppercase">Pruner</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4">Searches and drops the <strong>first exact instance matching</strong> that specific value.</p>
+                    </div>
+                    <pre class="p-2.5 bg-slate-900/60 rounded-xl text-xs font-mono text-slate-300">fruits.remove("kiwi")
+# Drops matching entry</pre>
+                </div>
+
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <code class="text-rose-400 font-bold text-base bg-rose-500/10 px-2.5 py-1 rounded-md">.pop(idx)</code>
+                            <span class="text-xs text-slate-500 font-bold uppercase">Extractor</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4">Extracts and returns the element at index. Defaults to structural tail termination if omitted.</p>
+                    </div>
+                    <pre class="p-2.5 bg-slate-900/60 rounded-xl text-xs font-mono text-slate-300">fruits.pop(2)
+# Extracts specific position</pre>
+                </div>
+
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between md:col-span-2 lg:col-span-1">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <code class="text-emerald-400 font-bold text-base bg-emerald-500/10 px-2.5 py-1 rounded-md">len(list)</code>
+                            <span class="text-xs text-slate-500 font-bold uppercase">Inspector</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mb-4">Returns the exact structural balance element count currently within the collection container block.</p>
+                    </div>
+                    <pre class="p-2.5 bg-slate-900/60 rounded-xl text-xs font-mono text-slate-300">print(len(fruits))
+# Outputs current volume</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-6xl w-full mx-auto h-full flex flex-col justify-between pb-8">
+            <div>
+                <div class="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Dynamic Sandbox Sandbox
+                </div>
+                <h2 class="text-3xl font-bold text-white tracking-tight">Interactive Python Environment</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto items-stretch h-[72%]">
+                <div class="lg:col-span-7 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden relative">
+                    <div class="bg-slate-800/80 px-4 py-2 flex items-center justify-between border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400">sandbox_workspace.py</span>
+                        <div class="flex gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-500/40"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500/40"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/40"></span>
+                        </div>
+                    </div>
+                    <textarea id="python-code-input" class="w-full flex-grow bg-slate-950 font-mono text-sm p-4 text-indigo-200 outline-none resize-none leading-relaxed focus:ring-1 focus:ring-indigo-500" spellcheck="false"># Dynamic Sandbox Workshop Environment
+fruits = ["apple", "banana", "cherry"]
+fruits.append("mango")
+fruits.insert(1, "orange") 
+fruits.remove("banana") 
+fruits.pop(2) 
+
+print("Mutated Outcome List Structure:", fruits)
+print("Total Container Scale Metric:", len(fruits))</textarea>
+                    
+                    <div class="p-3 bg-slate-900/90 border-t border-slate-800 flex justify-between items-center">
+                        <span id="pyodide-status" class="text-xs text-amber-400 font-mono flex items-center gap-2">
+                            <i class="fa-solid fa-circle-notch animate-spin"></i> Instantiating Pyodide Runtime Engine...
+                        </span>
+                        <button id="run-code-btn" disabled class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold px-5 py-2 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2 shadow-indigo-600/10">
+                            <i class="fa-solid fa-play"></i> Compile & Run Code
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
+                    <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-terminal text-slate-500 text-xs"></i>
+                        <span class="text-xs font-mono text-slate-400">Terminal Process Console</span>
+                    </div>
+                    <div id="terminal-stdout" class="flex-grow p-4 font-mono text-sm text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-black/40">
+                        Process stdout stream pipeline ready. Click compile above to run operations...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-4xl w-full mx-auto my-auto space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-rose-400 font-bold block mb-1">Interactive Diagnostic Challenge</span>
+                    <h2 class="text-4xl font-bold text-white tracking-tight">Structural Code Bug Hunt!</h2>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-center">
+                    <div class="text-xs text-slate-400 uppercase font-bold">Identified Faults</div>
+                    <div class="text-2xl font-mono font-bold text-rose-400" id="bug-tracker-ui">0 / 2</div>
+                </div>
+            </div>
+
+            <p class="text-slate-300">
+                Analyze the following block of logic. Locate and click directly on the two lines containing explicit logical syntax vulnerabilities or semantic invalidation.
+            </p>
+
+            <div class="bg-[#1d1f21] rounded-2xl border border-slate-800 overflow-hidden font-mono text-sm leading-relaxed shadow-2xl">
+                <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800 text-xs text-slate-500">buggy_manipulation.py</div>
+                <div class="p-4 bg-slate-950 text-slate-300">
+                    <div class="buggy-line py-1 px-2 rounded" data-is-bug="false" data-line="1"><span class="inline-block w-6 text-slate-600 select-none">1</span> items = ["laptop", "smartphone", "tablet"]</div>
+                    <div class="buggy-line py-1 px-2 rounded" data-is-bug="true" data-line="2"><span class="inline-block w-6 text-slate-600 select-none">2</span> items.add("smartwatch")</div>
+                    <div class="buggy-line py-1 px-2 rounded" data-is-bug="false" data-line="3"><span class="inline-block w-6 text-slate-600 select-none">3</span> items.insert(0, "monitor")</div>
+                    <div class="buggy-line py-1 px-2 rounded" data-is-bug="true" data-line="4"><span class="inline-block w-6 text-slate-600 select-none">4</span> items.delete(2)</div>
+                    <div class="buggy-line py-1 px-2 rounded" data-is-bug="false" data-line="5"><span class="inline-block w-6 text-slate-600 select-none">5</span> print("Current structural matrix context balances:", items)</div>
+                </div>
+            </div>
+
+            <div id="bug-feedback-box" class="min-h-[50px] p-4 rounded-xl font-medium text-sm transition-all opacity-0 bg-slate-800 text-slate-300 flex items-center gap-3">
+                </div>
+        </div>
+    </div>
+
+    <div class="slide justify-start items-start">
+        <div class="max-w-4xl w-full mx-auto my-auto space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-emerald-400 font-bold block mb-1">Knowledge Verification Evaluation</span>
+                    <h2 class="text-4xl font-bold text-white tracking-tight">Check Your Understanding</h2>
+                </div>
+                <div class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-mono text-sm px-3 py-1.5 rounded-lg" id="mcq-progress-indicator">
+                    Question 1 of 5
+                </div>
+            </div>
+
+            <div id="mcq-questions-wrapper" class="space-y-6">
+                </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <button id="mcq-prev-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                    <i class="fa-solid fa-arrow-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-2">
+                    Next Question <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // Explicit MCQ Object Registry Map Structure Array Matrix Source
+    const mcqDataset = [
+        {
+            id: 1,
+            question: "How do you add an element to the end of a list?",
+            options: [
+                { key: "A", text: "list.add()" },
+                { key: "B", text: "list.insert()" },
+                { key: "C", text: "list.append()" },
+                { key: "D", text: "list.extend()" }
+            ],
+            correct: "C",
+            explanation: "The append() method appends an element exactly onto the current linear tail termination of a list in-place."
+        },
+        {
+            id: 2,
+            question: "Which of the following removes an element at a specific index?",
+            options: [
+                { key: "A", text: "list.remove(value)" },
+                { key: "B", text: "list.pop(index)" },
+                { key: "C", text: "list.clear()" },
+                { key: "D", text: "list.delete(index)" }
+            ],
+            correct: "B",
+            explanation: "The pop(index) method extracts and removes the element at that designated index position, whereas remove() targets matching absolute values."
+        },
+        {
+            id: 3,
+            question: "What does list[1:4] return?",
+            options: [
+                { key: "A", text: "The entire list." },
+                { key: "B", text: "A sublist from index 1 to index 4." },
+                { key: "C", text: "A sublist from index 1 to index 3." },
+                { key: "D", text: "A reversed list." }
+            ],
+            correct: "C",
+            explanation: "Python slicing is start-inclusive and end-exclusive. Hence, [1:4] slices indices 1, 2, and 3 cleanly."
+        },
+        {
+            id: 4,
+            question: "What happens if you try to access an index that doesn’t exist in a list?",
+            options: [
+                { key: "A", text: "The program skips the operation." },
+                { key: "B", text: "It raises an IndexError." },
+                { key: "C", text: "The program adds a new element to the list." },
+                { key: "D", text: "It removes the last element." }
+            ],
+            correct: "B",
+            explanation: "Accessing an out-of-bounds pointer indicator outside the structural allocation index domain throws an absolute explicit IndexError."
+        },
+        {
+            id: 5,
+            question: "What does the following code do?\n\nmy_list = [\"apple\", \"banana\", \"cherry\"]\nmy_list.insert(1, \"orange\")\nprint(my_list)",
+            options: [
+                { key: "A", text: "Adds \"orange\" at the end of the list." },
+                { key: "B", text: "Adds \"orange\" at index 1, shifting other elements." },
+                { key: "C", text: "Replaces \"banana\" with \"orange\"." },
+                { key: "D", text: "Removes \"apple\" and adds \"orange\"." }
+            ],
+            correct: "B",
+            explanation: "The insert(1, \"orange\") operator pushes \"orange\" directly into index 1, sliding \"banana\" and \"cherry\" rightward."
+        }
+    ];
+
+    // Slide Engine State Registry Allocation Matrix Coordinates
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlidesCount = slides.length;
+    
+    let currentMcqQuestionIndex = 0;
+    const userQuizSelections = {}; // Tracks structural quiz options chosen index markers
+    let totalTargetBugsIdentifiedCount = 0;
+    const verifiedBuggyLineIndexMap = { 2: false, 4: false }; // Tracks distinct state flags
+
+    // Pyodide Core Variable Definition Context Hooks
+    let pyodideInstance = null;
+
+    // Initialization Routing Pipeline Loop Sequences
+    function initializationEngineSequence() {
+        renderDynamicSlideCounterUI();
+        refreshGlobalProgressBarUI();
+        buildInteractiveMcqEngineDOM();
+        asyncLoadPyodideEnvironment();
+        attachCoreSystemEventHooks();
+    }
+
+    // Navigation Processing Logic Handlers
+    function navigateToSlidePosition(targetIndexPosition) {
+        if (targetIndexPosition >= 0 && targetIndexPosition < totalSlidesCount) {
+            slides[currentSlideIndex].classList.remove('active');
+            currentSlideIndex = targetIndexPosition;
+            slides[currentSlideIndex].classList.add('active');
+            
+            renderDynamicSlideCounterUI();
+            refreshGlobalProgressBarUI();
+            
+            // Re-trigger static layouts layout mapping rendering engines
+            Prism.highlightAll();
+        }
+    }
+
+    function renderDynamicSlideCounterUI() {
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${totalSlidesCount}`;
+    }
+
+    function refreshGlobalProgressBarUI() {
+        const calculatedWidthMetricPercentage = ((currentSlideIndex + 1) / totalSlidesCount) * 100;
+        document.getElementById('progress').style.width = `${calculatedWidthMetricPercentage}%`;
+    }
+
+    // MCQ Interactive Engine Dynamic Render Component Architecture
+    function buildInteractiveMcqEngineDOM() {
+        const targetWrapperNode = document.getElementById('mcq-questions-wrapper');
+        targetWrapperNode.innerHTML = ''; // Sanitize framework references safely
+
+        mcqDataset.forEach((questionContextItem, loopIndexIdx) => {
+            const containerNodeQuestionBlock = document.createElement('div');
+            containerNodeQuestionBlock.id = `mcq-block-node-id-${loopIndexIdx}`;
+            containerNodeQuestionBlock.className = `mcq-question-card-block class-state-node ${loopIndexIdx === currentMcqQuestionIndex ? 'block' : 'hidden'} space-y-4`;
+
+            // Setup internal question metadata parsing layout systems
+            const textHeaderQuestionElement = document.createElement('h3');
+            textHeaderQuestionElement.className = "text-xl font-bold text-slate-100 whitespace-pre-wrap font-sans bg-slate-800/20 p-4 rounded-xl border border-slate-800";
+            textHeaderQuestionElement.textContent = questionContextItem.question;
+            containerNodeQuestionBlock.appendChild(textHeaderQuestionElement);
+
+            // Container block elements setup routing structures
+            const optionsGroupGridBox = document.createElement('div');
+            optionsGroupGridBox.className = "grid grid-cols-1 md:grid-cols-2 gap-3";
+
+            questionContextItem.options.forEach(optionElementVariant => {
+                const actionButtonSelectionItem = document.createElement('button');
+                actionButtonSelectionItem.className = `option-selection-node-btn border border-slate-700/80 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-600 text-left p-4 rounded-xl font-medium transition-all flex items-center gap-3 text-slate-300`;
+                actionButtonSelectionItem.dataset.questionIdx = loopIndexIdx;
+                actionButtonSelectionItem.dataset.optionKeyId = optionElementVariant.key;
+                
+                actionButtonSelectionItem.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 group-hover:bg-indigo-600 transition-colors font-mono select-none">${optionElementVariant.key}</span>
+                    <span class="flex-grow">${optionElementVariant.text}</span>
+                `;
+
+                actionButtonSelectionItem.addEventListener('click', () => handleQuizOptionSelectionClick(loopIndexIdx, optionElementVariant.key));
+                optionsGroupGridBox.appendChild(actionButtonSelectionItem);
+            });
+
+            containerNodeQuestionBlock.appendChild(optionsGroupGridBox);
+
+            // Append specific descriptive explanation placeholder boxes
+            const expansionExplanationBoxNode = document.createElement('div');
+            expansionExplanationBoxNode.id = `explanation-card-box-idx-${loopIndexIdx}`;
+            expansionExplanationBoxNode.className = "p-4 rounded-xl text-sm leading-relaxed hidden transition-all border";
+            containerNodeQuestionBlock.appendChild(expansionExplanationBoxNode);
+
+            targetWrapperNode.appendChild(containerNodeQuestionBlock);
+        });
+
+        updateMcqNavigationConsoleStatus();
+    }
+
+    function handleQuizOptionSelectionClick(targetQuestionIdx, chosenOptionKeyId) {
+        // Halt operations if question answer context already explicitly exists in storage mapping balances
+        if (userQuizSelections[targetQuestionIdx] !== undefined) return;
+
+        userQuizSelections[targetQuestionIdx] = chosenOptionKeyId;
+        const currentQuestionContextData = mcqDataset[targetQuestionIdx];
+        const processingBlockNode = document.getElementById(`mcq-block-node-id-${targetQuestionIdx}`);
+        const allOptionButtonsArray = processingBlockNode.querySelectorAll('.option-selection-node-btn');
+        const feedbackCardBoxNode = document.getElementById(`explanation-card-box-idx-${targetQuestionIdx}`);
+
+        allOptionButtonsArray.forEach(buttonElement => {
+            const iterationKey = buttonElement.dataset.optionKeyId;
+            if (iterationKey === currentQuestionContextData.correct) {
+                // Style exact matching metrics matching indices cleanly green
+                buttonElement.className = "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 text-left p-4 rounded-xl font-medium flex items-center gap-3 w-full";
+                buttonElement.querySelector('span').className = "w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-bold font-mono";
+            } else if (iterationKey === chosenOptionKeyId) {
+                // Style user faults red
+                buttonElement.className = "border-rose-500/50 bg-rose-500/10 text-rose-400 text-left p-4 rounded-xl font-medium flex items-center gap-3 w-full";
+                buttonElement.querySelector('span').className = "w-7 h-7 rounded-lg bg-rose-500 text-slate-950 flex items-center justify-center text-xs font-bold font-mono";
+            } else {
+                buttonElement.style.opacity = "0.4";
+            }
+        });
+
+        // Trigger descriptive validation framework strings inside box node visibility metrics safely
+        feedbackCardBoxNode.classList.remove('hidden');
+        if (chosenOptionKeyId === currentQuestionContextData.correct) {
+            feedbackCardBoxNode.className = "p-4 rounded-xl text-sm leading-relaxed bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+            feedbackCardBoxNode.innerHTML = `<strong><i class="fa-solid fa-circle-check"></i> Analysis Validation Correct:</strong> ${currentQuestionContextData.explanation}`;
+        } else {
+            feedbackCardBoxNode.className = "p-4 rounded-xl text-sm leading-relaxed bg-rose-500/10 border-rose-500/30 text-rose-300";
+            feedbackCardBoxNode.innerHTML = `<strong><i class="fa-solid fa-circle-xmark"></i> Verification Variance:</strong> Incorrect selection. ${currentQuestionContextData.explanation}`;
+        }
+    }
+
+    function updateMcqNavigationConsoleStatus() {
+        // Sync header metrics mapping tracks
+        document.getElementById('mcq-progress-indicator').textContent = `Question ${currentMcqQuestionIndex + 1} of ${mcqDataset.length}`;
+
+        // Cycle through DOM components displaying targets safely
+        mcqDataset.forEach((_, elementMappingIndexKey) => {
+            const blockElementTarget = document.getElementById(`mcq-block-node-id-${elementMappingIndexKey}`);
+            if (elementMappingIndexKey === currentMcqQuestionIndex) {
+                blockElementTarget.classList.remove('hidden');
+                blockElementTarget.classList.add('block');
+            } else {
+                blockElementTarget.classList.remove('block');
+                blockElementTarget.classList.add('hidden');
+            }
+        });
+
+        // Evaluate backward disabled tracking flags
+        const backBtnElement = document.getElementById('mcq-prev-btn');
+        if (currentMcqQuestionIndex === 0) {
+            backBtnElement.disabled = true;
+            backBtnElement.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            backBtnElement.disabled = false;
+            backBtnElement.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Evaluate validation metrics targeting terminal boundary endpoints
+        const forwardBtnElement = document.getElementById('mcq-next-btn');
+        if (currentMcqQuestionIndex === mcqDataset.length - 1) {
+            forwardBtnElement.innerHTML = `Finish Assessment <i class="fa-solid fa-flag-checkered"></i>`;
+        } else {
+            forwardBtnElement.innerHTML = `Next Question <i class="fa-solid fa-arrow-right"></i>`;
+        }
+    }
+
+    // Bug Hunt Mechanism Event Interface Processing Blocks
+    function attachBugHuntEngineInteractionFramework() {
+        const structuralBugLinesArray = document.querySelectorAll('.buggy-line');
+        const feedbackContainerPanel = document.getElementById('bug-feedback-box');
+
+        structuralBugLinesArray.forEach(interactiveLineItemNode => {
+            interactiveLineItemNode.addEventListener('click', () => {
+                const targetingLineIdxKey = parseInt(interactiveLineItemNode.dataset.line);
+                const isTargetBuggedFlag = interactiveLineItemNode.dataset.isBug === "true";
+
+                if (interactiveLineItemNode.classList.contains('selected-bug')) return; // Avoid duplicate selection logic completely
+
+                if (isTargetBuggedFlag) {
+                    interactiveLineItemNode.classList.add('selected-bug');
+                    if (verifiedBuggyLineIndexMap[targetingLineIdxKey] === false) {
+                        verifiedBuggyLineIndexMap[targetingLineIdxKey] = true;
+                        totalTargetBugsIdentifiedCount++;
+                        document.getElementById('bug-tracker-ui').textContent = `${totalTargetBugsIdentifiedCount} / 2`;
+                    }
+
+                    feedbackContainerPanel.className = "min-h-[50px] p-4 rounded-xl font-medium text-sm transition-all opacity-100 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center gap-3";
+                    if (targetingLineIdxKey === 2) {
+                        feedbackContainerPanel.innerHTML = `<i class="fa-solid fa-check text-lg"></i> <span><strong>Bug found at Line 2!</strong> Lists do not contain an <code>.add()</code> method. To add single values to the tail execution, use <code>.append()</code>.</span>`;
+                    } else if (targetingLineIdxKey === 4) {
+                        feedbackContainerPanel.innerHTML = `<i class="fa-solid fa-check text-lg"></i> <span><strong>Bug found at Line 4!</strong> There is no standard array method matching <code>.delete()</code> in Python. Use <code>.pop(index)</code> or <code>.remove(value)</code> instead.</span>`;
+                    }
+
+                    if (totalTargetBugsIdentifiedCount === 2) {
+                        setTimeout(() => {
+                            feedbackContainerPanel.className = "min-h-[50px] p-4 rounded-xl font-medium text-sm transition-all opacity-100 bg-indigo-600 text-white flex items-center gap-3 shadow-xl";
+                            feedbackContainerPanel.innerHTML = `<i class="fa-solid fa-trophy text-xl animate-bounce"></i> <span><strong>Excellent Code Analysis Diagnostic Complete!</strong> You have successfully localized and mitigated all structural syntax vulnerabilities within this script framework matrix.</span>`;
+                        }, 1200);
+                    }
+
+                } else {
+                    feedbackContainerPanel.className = "min-h-[50px] p-4 rounded-xl font-medium text-sm transition-all opacity-100 bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center gap-3";
+                    feedbackContainerPanel.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i> <span>Line ${targetingLineIdxKey} is structurally sound and executing valid Python operations. Inspect alternative allocation arrays.</span>`;
+                }
+            });
+        });
+    }
+
+    // Pyodide Core System Async Asynchronous Engine Connection Pipelines
+    async function asyncLoadPyodideEnvironment() {
+        const textStatusReporterNode = document.getElementById('pyodide-status');
+        const triggerExecutionBtn = document.getElementById('run-code-btn');
+
+        try {
+            pyodideInstance = await loadPyodide();
+            textStatusReporterNode.className = "text-xs text-emerald-400 font-mono flex items-center gap-2";
+            textStatusReporterNode.innerHTML = `<i class="fa-solid fa-circle-check"></i> Python 3.x Runtime Engine Context Active`;
+            triggerExecutionBtn.disabled = false;
+        } catch (initializationPipelineFailureError) {
+            textStatusReporterNode.className = "text-xs text-rose-400 font-mono flex items-center gap-2";
+            textStatusReporterNode.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Host Runtime Failure Initialization Engine Error`;
+            console.error(initializationPipelineFailureError);
+        }
+    }
+
+    async function executePythonSandboxWorkspace() {
+        const terminalStdoutStreamOutputNode = document.getElementById('terminal-stdout');
+        const plainRawTextInputCodeContent = document.getElementById('python-code-input').value;
+
+        terminalStdoutStreamOutputNode.textContent = "Processing process stream pipelines...";
+        
+        if (!pyodideInstance) {
+            terminalStdoutStreamOutputNode.textContent = "Critical System Error: Execution context missing pipeline connection markers.";
+            return;
+        }
+
+        // Setup standard virtualization output logging stream channels
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(plainRawTextInputCodeContent);
+            const standardSystemStdoutCapturedLog = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const standardSystemStderrCapturedLog = pyodideInstance.runPython("sys.stderr.getvalue()");
+
+            if (standardSystemStderrCapturedLog.trim().length > 0) {
+                terminalStdoutStreamOutputNode.className = "flex-grow p-4 font-mono text-sm text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-black/40";
+                terminalStdoutStreamOutputNode.textContent = standardSystemStderrCapturedLog;
+            } else {
+                terminalStdoutStreamOutputNode.className = "flex-grow p-4 font-mono text-sm text-emerald-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-black/40";
+                terminalStdoutStreamOutputNode.textContent = standardSystemStdoutCapturedLog || "Script executed perfectly with zero return outputs.";
+            }
+        } catch (runtimeSyntaxOrSemanticCompilationException) {
+            terminalStdoutStreamOutputNode.className = "flex-grow p-4 font-mono text-sm text-rose-400 overflow-y-auto whitespace-pre-wrap leading-relaxed bg-black/40";
+            terminalStdoutStreamOutputNode.textContent = runtimeSyntaxOrSemanticCompilationException.message;
+        }
+    }
+
+    // Attach Interactivity Control Key Event Bindings Handlers Setup Routing
+    function attachCoreSystemEventHooks() {
+        // Slide Keyboard Tracking Matrix Hooks
+        document.addEventListener('keydown', (systemUIKeyboardEvent) => {
+            if (systemUIKeyboardEvent.target.tagName === 'TEXTAREA' || systemUIKeyboardEvent.target.tagName === 'INPUT') {
+                return; // Suppress switching cascades when working inside code spaces
+            }
+
+            if (systemUIKeyboardEvent.key === 'ArrowRight' || systemUIKeyboardEvent.key === ' ') {
+                systemUIKeyboardEvent.preventDefault();
+                navigateToSlidePosition(currentSlideIndex + 1);
+            } else if (systemUIKeyboardEvent.key === 'ArrowLeft') {
+                systemUIKeyboardEvent.preventDefault();
+                navigateToSlidePosition(currentSlideIndex - 1);
+            }
+        });
+
+        // MCQ Interactive Trigger Interactivity Subsystem Action Routing
+        document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+            if (currentMcqQuestionIndex > 0) {
+                currentMcqQuestionIndex--;
+                updateMcqNavigationConsoleStatus();
+            }
+        });
+
+        document.getElementById('mcq-next-btn').addEventListener('click', () => {
+            if (currentMcqQuestionIndex < mcqDataset.length - 1) {
+                currentMcqQuestionIndex++;
+                updateMcqNavigationConsoleStatus();
+            } else {
+                alert("Assessment analysis successfully validated! Use standard horizontal rules navigation arrows to finalize this session module.");
+            }
+        });
+
+        // Pyodide Run Sandbox Compiler Button Setup
+        document.getElementById('run-code-btn').addEventListener('click', executePythonSandboxWorkspace);
+
+        // Bind interactive target modules
+        attachBugHuntEngineInteractionFramework();
+    }
+
+    // Kickstart System Architecture Layout Lifecycle Loops
+    window.addEventListener('DOMContentLoaded', initializationEngineSequence);
+</script>
+</body>
+</html>

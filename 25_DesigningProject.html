@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designing the Project - SDLC Foundations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --secondary: #06B6D4;
+            --background: #0F172A;
+            --surface: #1E293B;
+            --surface-hover: #334155;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent-green: #10B981;
+            --accent-red: #EF4444;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 700px;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 3rem;
+            position: relative;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            color: var(--primary-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            z-index: 50;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .key-box {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 0 4px;
+            font-family: monospace;
+        }
+
+        .flowchart-shape {
+            transition: all 0.2s ease;
+        }
+        .flowchart-shape:hover {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+        }
+
+        /* Customize scrollbars inside slides */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Bug hunt line selectors */
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            border-left-color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+        .bug-line.selected-clean {
+            border-left-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        /* MCQ option styling */
+        .mcq-option {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+
+<div id="presentation-container">
+    
+    <div class="slide active" id="slide-1">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-600/20 p-4 rounded-2xl text-indigo-400">
+                    <i class="fa-solid fa-compass-drafting text-4xl"></i>
+                </div>
+                <div>
+                    <span class="text-sm font-semibold tracking-wider text-cyan-400 uppercase">Day 25 — Software Architecture</span>
+                    <h1 class="text-4xl font-bold tracking-tight text-white mt-1">Designing the Project</h1>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+                <div class="space-y-4">
+                    <p class="text-lg text-slate-300 leading-relaxed">
+                        Before laying down a single line of actual code, architectural planning charts the direction. Designing a project guarantees that each asset and process meshes correctly before implementation.
+                    </p>
+                    <blockquote class="border-l-4 border-indigo-500 bg-indigo-950/30 p-4 rounded-r-xl italic text-slate-300">
+                        "Good design makes the software easier to understand, extend, and maintain."
+                    </blockquote>
+                </div>
+                
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col justify-center space-y-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sitemap text-cyan-400"></i> Essential Milestones
+                    </h3>
+                    <ul class="space-y-3 text-slate-400">
+                        <li class="flex items-start gap-3"><span class="text-indigo-400 font-bold">01.</span> Logic Mapping (Flowcharts & Pseudocode)</li>
+                        <li class="flex items-start gap-3"><span class="text-indigo-400 font-bold">02.</span> File Architecture & Modular Isolation</li>
+                        <li class="flex items-start gap-3"><span class="text-indigo-400 font-bold">03.</span> Scalability Profiles & Interface Pipelines</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-xs text-slate-500 text-right">
+                Press Right Arrow Key <span class="key-box">&rarr;</span> to advance
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-code-fork text-indigo-400"></i> Structural Foundations: Logic Mapping
+                </h2>
+                <span class="px-3 py-1 text-xs bg-slate-800 rounded-full text-slate-400 font-mono">Concept 1</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto">
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/30">
+                        <h3 class="text-lg font-bold text-cyan-400 mb-2"><i class="fa-solid fa-paragraph mr-2"></i>Pseudocode</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Informal, highly-readable programmatic notes describing execution logic in plain language. Eliminates syntax constraints to validate core algorithmic steps.
+                        </p>
+                    </div>
+                    <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700/30">
+                        <h3 class="text-lg font-bold text-indigo-400 mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>The Dead-End Danger</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            An architectural flaw where logic hits an unhandled branch, stranding the operation with no executable path forward.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-slate-950 p-6 rounded-2xl border border-slate-800">
+                    <h4 class="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">Flowchart Symbolic Syntax</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flowchart-shape bg-emerald-950/40 border border-emerald-500/30 p-3 rounded-xl flex items-center gap-3">
+                            <div class="w-12 h-7 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-xs font-mono font-bold text-emerald-300">Oval</div>
+                            <div>
+                                <p class="text-sm font-bold text-white">Start / End</p>
+                                <p class="text-xs text-slate-400">Boundary states</p>
+                            </div>
+                        </div>
+                        <div class="flowchart-shape bg-amber-950/40 border border-amber-500/30 p-3 rounded-xl flex items-center gap-3">
+                            <div class="w-12 h-7 bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-xs font-mono font-bold text-amber-300 -skew-x-12">Para</div>
+                            <div>
+                                <p class="text-sm font-bold text-white">Input / Output</p>
+                                <p class="text-xs text-slate-400">Data IO mutations</p>
+                            </div>
+                        </div>
+                        <div class="flowchart-shape bg-blue-950/40 border border-blue-500/30 p-3 rounded-xl flex items-center gap-3">
+                            <div class="w-12 h-7 bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center text-xs font-mono font-bold text-blue-300">Rect</div>
+                            <div>
+                                <p class="text-sm font-bold text-white">Process / Action</p>
+                                <p class="text-xs text-slate-400">Assignments, appends</p>
+                            </div>
+                        </div>
+                        <div class="flowchart-shape bg-purple-950/40 border border-purple-500/30 p-3 rounded-xl flex items-center gap-3">
+                            <div class="w-8 h-8 rotate-45 bg-purple-500/20 border-2 border-purple-400 flex items-center justify-center text-[10px] font-mono font-bold text-purple-300 transform origin-center"><span class="-rotate-45">Dia</span></div>
+                            <div class="ml-2">
+                                <p class="text-sm font-bold text-white">Decision Branch</p>
+                                <p class="text-xs text-slate-400">Conditional evaluations</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-cyan-400"></i>
+                        <span><strong>Application Map:</strong> A To-Do tracker shifts from <em>Add Task</em> &rarr; <em>Render Array</em> &rarr; <em>Evaluate Interactivity</em> &rarr; <em>Flush complete items</em>.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="h-2"></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-cubes text-cyan-400"></i> Structuring the Codebase
+                </h2>
+                <span class="px-3 py-1 text-xs bg-slate-800 rounded-full text-slate-400 font-mono">Concept 2</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-white">Isolate System Layers</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        Avoid monolithic scripting. Structural efficiency relies on strict separation between pure logic boundaries, persistent application state records, and user interfaces.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-slate-900/40 border border-slate-800 rounded-xl">
+                            <i class="fa-solid fa-folder-tree text-amber-400 text-lg w-6 text-center"></i>
+                            <div>
+                                <p class="text-sm font-bold text-slate-200">Modular Partitioning</p>
+                                <p class="text-xs text-slate-400">Segment files and processing threads based on unique functionality layers.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-slate-900/40 border border-slate-800 rounded-xl">
+                            <i class="fa-solid fa-arrows-spin text-emerald-400 text-lg w-6 text-center"></i>
+                            <div>
+                                <p class="text-sm font-bold text-slate-200">Functional Reusability</p>
+                                <p class="text-xs text-slate-400">Define logic sequences precisely once. Invoke consistently across different processes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                    <span class="text-xs font-mono text-slate-500 uppercase tracking-wider block mb-2">Theoretical Architecture Target Blueprint:</span>
+                    <div class="font-mono text-xs text-slate-300 space-y-1 bg-slate-900 p-4 rounded-xl border border-slate-800/80">
+                        <div class="text-amber-400 font-bold"><i class="fa-regular fa-folder-open"></i> todo_project/</div>
+                        <div>├── <span class="text-emerald-400">main.py</span> <span class="text-slate-500"># Application bootstrap portal</span></div>
+                        <div>├── <span class="text-emerald-400">core_logic.py</span> <span class="text-slate-500"># Pure operations arrays logic</span></div>
+                        <div>├── <span class="text-emerald-400">storage_engine.py</span> <span class="text-slate-500"># Non-volatile disk writing IO</span></div>
+                        <div>└── <span class="text-emerald-400">interface.py</span> <span class="text-slate-500"># High level UI terminal renderer</span></div>
+                    </div>
+                    <div class="mt-4 p-3 bg-indigo-950/40 border border-indigo-900/50 rounded-xl text-xs text-indigo-300">
+                        <strong>Rule of Thumb:</strong> Explicit variable structures combined with descriptive namespace schemas streamline continuous operational expansion without requiring foundational ground-up code refactoring.
+                    </div>
+                </div>
+            </div>
+            <div class="h-2"></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-3">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-laptop-code text-emerald-400"></i> Interactive Lab: Architecture Execution
+                </h2>
+                <div id="pyodide-status" class="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+                    <i class="fa-solid fa-spinner animate-spin mr-1"></i> Bootstrapping Python VM...
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-auto items-stretch mt-4">
+                <div class="flex flex-col space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-mono text-slate-400 uppercase tracking-wider">Editable Python Source Engine:</label>
+                        <button onclick="runPythonCode()" id="run-btn" disabled class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg text-xs font-bold font-heading transition flex items-center gap-1">
+                            <i class="fa-solid fa-play"></i> Compute Environment
+                        </button>
+                    </div>
+                    <div class="relative flex-1 min-h-[220px] rounded-xl overflow-hidden border border-slate-700">
+                        <textarea id="python-editor" class="w-full h-full bg-slate-950 p-4 font-mono text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none" spellcheck="false"># Designing Modular Actions: Separating logic tracking profiles
+tasks_db = []
+
+def append_task(db_reference, detail_string):
+    """Encapsulated pure logic mutations"""
+    if not detail_string.strip():
+        return "Operational Error: Empty labels rejected."
+    db_reference.append({"id": len(db_reference) + 1, "task": detail_string, "status": "Pending"})
+    return f"Success: Node '{detail_string}' integrated into structural records."
+
+# Execute modular interactions
+status_log = append_task(tasks_db, "Complete SDLC Architectural Layout Map")
+print(status_log)
+print("Updated Repository State:", tasks_db)</textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Standard Output Console Stream:</span>
+                    <div class="flex-1 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs flex flex-col justify-between min-h-[220px]">
+                        <pre id="console-output" class="text-slate-400 whitespace-pre-wrap select-all">System runtime output tracking maps will populate here upon running execution...</pre>
+                        <div class="text-[10px] text-slate-600 border-t border-slate-900 pt-2 mt-2">
+                            Pyodide Engine Core v0.25.0 virtual isolation execution workspace env.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="h-2"></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-bug text-rose-400"></i> Structural Quality Control: Logical Bug Hunt
+                </h2>
+                <div class="px-3 py-1 bg-rose-950/40 border border-rose-900/50 rounded-full text-rose-400 font-mono text-xs">
+                    Target Defect Issues Found: <span id="bug-score" class="font-bold">0 / 2</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 my-auto items-center">
+                <div class="md:col-span-5 space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        Analyze this module snippet meant to display pending structures safely. Two structural flaws cause logical errors, indefinite loop dead-ends, or type crashes.
+                    </p>
+                    <p class="text-xs text-amber-400 font-medium">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> Interactive Matrix: Trace the code lines below to target and flag code defects instantly!
+                    </p>
+                    <div id="bug-feedback" class="p-3 rounded-xl min-h-[50px] bg-slate-900 text-xs flex items-center gap-2 border border-slate-800">
+                        <i class="fa-solid fa-circle-question text-slate-500"></i>
+                        <span class="text-slate-400">Select target lines containing logical defects to isolate issues...</span>
+                    </div>
+                </div>
+
+                <div class="md:col-span-7 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs shadow-inner">
+                    <div class="bug-line p-2 text-slate-400" data-line="1" data-is-bug="false"><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">1</span>def process_todo_queue(task_list):</div>
+                    <div class="bug-line p-2 text-slate-400" data-line="2" data-is-bug="false"><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">2</span>    index = 0</div>
+                    <div class="bug-line p-2 text-slate-400" data-line="3" data-is-bug="true" data-msg="Infinite Branch Loop: Condition locks execution pathway when handling elements because index variable state tracking is completely static within this scope layer block."><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">3</span>    while index &lt; len(task_list):</div>
+                    <div class="bug-line p-2 text-slate-400" data-line="4" data-is-bug="false"><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">4</span>        current = task_list[index]</div>
+                    <div class="bug-line p-2 text-slate-400" data-line="5" data-is-bug="true" data-msg="Type Conflict Assignment Crash: Mutating dynamic lists directly into scalar string elements completely invalidates safe structural manipulation schemas."><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">5</span>        current.append("Processed Record Marker")</div>
+                    <div class="bug-line p-2 text-slate-400" data-line="6" data-is-bug="false"><span class="text-slate-600 inline-block w-6 select-none text-right mr-3">6</span>        print(f"Node verified: {current}")</div>
+                </div>
+            </div>
+            <div class="h-2"></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="flex flex-col justify-between h-full">
+            <div class="flex justify-between items-center border-b border-slate-700/50 pb-4">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-question text-indigo-400"></i> Check Your Understanding
+                </h2>
+                <span id="mcq-progress" class="px-3 py-1 bg-slate-800 rounded-full text-xs font-mono text-indigo-400 border border-slate-700">Question 1 of 10</span>
+            </div>
+
+            <div id="mcq-dynamic-wrapper" class="my-auto max-w-3xl mx-auto w-full space-y-6">
+                <div id="q-box-content" class="space-y-4">
+                    <h3 id="mcq-question-text" class="text-xl font-medium text-slate-100 leading-snug">
+                        Question text content will dynamically populate here...
+                    </h3>
+                    
+                    <div id="mcq-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        </div>
+                </div>
+
+                <div id="mcq-feedback-panel" class="hidden p-4 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-200">
+                    </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-4">
+                <button id="mcq-prev-btn" onclick="prevQuestion()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 rounded-xl text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" onclick="nextQuestion()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-xl text-sm font-bold tracking-wide transition flex items-center gap-2">
+                    Next Question <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // --- VERBATIM MCQ DATA DIRECTIVE SCHEMA CORRELATION ---
+    const mcqQuestions = [
+        {
+            q: "What is the purpose of the Design phase in SDLC?",
+            options: {
+                a: "To write the final code",
+                b: "To create a visual map of how the program will work",
+                c: "To sell the software to users",
+                d: "To find syntax errors"
+            },
+            ans: "b"
+        },
+        {
+            q: "Which flowchart symbol represents a decision (like an if-statement)?",
+            options: {
+                a: "Rectangle",
+                b: "Oval",
+                c: "Diamond",
+                d: "Parallelogram"
+            },
+            ans: "c"
+        },
+        {
+            q: "What does a parallelogram represent in a flowchart?",
+            options: {
+                a: "Starting the program",
+                b: "Adding an item to a list",
+                c: "User input or program output",
+                d: "Ending the program"
+            },
+            ans: "c"
+        },
+        {
+            q: "In the To-Do app design, what happens after the user adds a task?",
+            options: {
+                a: "The program ends",
+                b: "The program returns to the main menu",
+                c: "The list is deleted",
+                d: "The computer restarts"
+            },
+            ans: "b"
+        },
+        {
+            q: "What is a \"dead end\" in a flowchart?",
+            options: {
+                a: "A point where the user exits the program safely",
+                b: "A logical error where the program stops without a way to continue",
+                c: "The color of the lines",
+                d: "The end of the paper"
+            },
+            ans: "b"
+        },
+        {
+            q: "Which shape would you use for the instruction \"tasks.append(new_item)\"?",
+            options: {
+                a: "Diamond",
+                b: "Oval",
+                c: "Rectangle",
+                d: "Triangle"
+            },
+            ans: "c"
+        },
+        {
+            q: "True or False: Design comes after Development in the SDLC.",
+            options: {
+                a: "True",
+                b: "False"
+            },
+            ans: "b"
+        },
+        {
+            q: "What is the benefit of designing a flowchart?",
+            options: {
+                a: "It makes the code run faster",
+                b: "It helps identify logical errors early",
+                c: "It removes the need for Python",
+                d: "It automatically writes the code"
+            },
+            ans: "b"
+        },
+        {
+            q: "Which symbol is used at the very beginning and very end of a flowchart?",
+            options: {
+                a: "Rectangle",
+                b: "Diamond",
+                c: "Oval",
+                d: "Circle"
+            },
+            ans: "c"
+        },
+        {
+            q: "What is \"Pseudocode\"?",
+            options: {
+                a: "A type of virus",
+                b: "Informal notes that describe code logic in plain English",
+                c: "A coding language for diamonds",
+                d: "The final version of the code"
+            },
+            ans: "b"
+        }
+    ];
+
+    // Slide Core Lifecycle State Registry
+    let currentSlideIndex = 1;
+    const totalSlidesCount = document.querySelectorAll('.slide').length;
+    
+    // MCQ Management Memory Map Trace Index Registry
+    let mcqActivePointer = 0;
+    let selectedAnswersMap = {}; // Tracks indices historical selections
+
+    // --- DECK INTERACTIVE ENGINE NAVIGATION MECHANICS ---
+    function initializeDeckControls() {
+        updateDeckLayoutState();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigateDeck(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateDeck(-1);
+            }
+        });
+    }
+
+    function navigateDeck(directionOffset) {
+        const targetIdx = currentSlideIndex + directionOffset;
+        if (targetIdx >= 1 && targetIdx <= totalSlidesCount) {
+            document.getElementById(`slide-${currentSlideIndex}`).classList.remove('active');
+            currentSlideIndex = targetIdx;
+            document.getElementById(`slide-${currentSlideIndex}`).classList.add('active');
+            updateDeckLayoutState();
+            
+            // Re-execute Prism highlights code blocks safely
+            Prism.highlightAll();
+        }
+    }
+
+    function updateDeckLayoutState() {
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex} / ${totalSlidesCount}`;
+        const linearPercentage = ((currentSlideIndex - 1) / (totalSlidesCount - 1)) * 100;
+        document.getElementById('progress').style.width = `${linearPercentage}%`;
+    }
+
+    // --- ASYNCHRONOUS RUNTIME PYODIDE INTEGRATION WORKSPACE ---
+    let pyodideInstance = null;
+    async function setupPyodideEnvironment() {
+        const statusNode = document.getElementById('pyodide-status');
+        const executeButton = document.getElementById('run-btn');
+        try {
+            pyodideInstance = await loadPyodide();
+            statusNode.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono";
+            statusNode.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Engine Online';
+            executeButton.removeAttribute('disabled');
+        } catch (runtimeError) {
+            statusNode.className = "text-xs px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono";
+            statusNode.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Environment Error';
+            console.error(runtimeError);
+        }
+    }
+
+    async function runPythonCode() {
+        if (!pyodideInstance) return;
+        const terminalOut = document.getElementById('console-output');
+        const scriptSource = document.getElementById('python-editor').value;
+        terminalOut.textContent = "Executing sequence instructions inside virtual memory architecture matrix...\n";
+        
+        // Setup capture buffers redirect outputs hooks
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(scriptSource);
+            const standardStdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const standardStderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            terminalOut.textContent = standardStdout + (standardStderr ? `\nRuntime Exception logs:\n${standardStderr}` : "");
+            if (!standardStdout && !standardStderr) {
+                terminalOut.textContent = "Script execution successfully finalized with empty stdout parameters buffers output streams.";
+            }
+        } catch (execError) {
+            terminalOut.textContent = `Compilation / Execution Interface Error Exception:\n${execError.message}`;
+        }
+    }
+
+    // --- QUALITY VERIFICATION BUG HUNT MATRIX ENGINE ---
+    let discoveredBugsKeys = [];
+    function setupBugHuntInteraction() {
+        const bugLines = document.querySelectorAll('.bug-line');
+        const feedbackNode = document.getElementById('bug-feedback');
+        const totalBugsTargetCount = 2;
+
+        bugLines.forEach(lineItem => {
+            lineItem.addEventListener('click', () => {
+                const lineIndex = lineItem.getAttribute('data-line');
+                const isTargetBug = lineItem.getAttribute('data-is-bug') === 'true';
+                const defectExplanation = lineItem.getAttribute('data-msg');
+
+                if (isTargetBug) {
+                    if (!discoveredBugsKeys.includes(lineIndex)) {
+                        discoveredBugsKeys.push(lineIndex);
+                        lineItem.classList.add('selected-bug');
+                        document.getElementById('bug-score').textContent = `${discoveredBugsKeys.length} / ${totalBugsTargetCount}`;
+                    }
+                    feedbackNode.className = "p-3 rounded-xl min-h-[50px] bg-rose-950/40 border border-rose-900/50 text-xs flex items-center gap-2 text-rose-300";
+                    feedbackNode.innerHTML = `<i class="fa-solid fa-bug text-rose-400 text-lg"></i> <span><strong>Defect Identified! Line ${lineIndex}:</strong> ${defectExplanation}</span>`;
+                    
+                    if (discoveredBugsKeys.length === totalBugsTargetCount) {
+                        feedbackNode.className = "p-3 rounded-xl min-h-[50px] bg-emerald-950/40 border border-emerald-900/50 text-xs flex items-center gap-2 text-emerald-300";
+                        feedbackNode.innerHTML = `<i class="fa-solid fa-trophy text-emerald-400 text-lg animate-bounce"></i> <span><strong>Excellent Code Review!</strong> All logic system faults have been cleanly isolated and mapped.</span>`;
+                    }
+                } else {
+                    lineItem.classList.add('selected-clean');
+                    feedbackNode.className = "p-3 rounded-xl min-h-[50px] bg-slate-800 border border-slate-700 text-xs flex items-center gap-2 text-slate-300";
+                    feedbackNode.innerHTML = `<i class="fa-solid fa-shield text-cyan-400"></i> <span>Line ${lineIndex} compiles cleanly. Dynamic properties and loop invariants maintain stable parameters here.</span>`;
+                    setTimeout(() => lineItem.classList.remove('selected-clean'), 1200);
+                }
+            });
+        });
+    }
+
+    // --- MULTI-STAGE VERBATIM ASSESSMENT MATRIX MANAGEMENT ---
+    function renderCurrentMcqState() {
+        const currentData = mcqQuestions[mcqActivePointer];
+        document.getElementById('mcq-progress').textContent = `Question ${mcqActivePointer + 1} of ${mcqQuestions.length}`;
+        
+        const qTextNode = document.getElementById('mcq-question-text');
+        qTextNode.textContent = currentData.q;
+
+        const gridAnchor = document.getElementById('mcq-options-grid');
+        gridAnchor.innerHTML = ""; // Wipe dynamic previous content buffers
+
+        const feedbackPanel = document.getElementById('mcq-feedback-panel');
+        feedbackPanel.className = "hidden p-4 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-200";
+
+        // Generate options elements bindings
+        Object.entries(currentData.options).forEach(([keyToken, optStringValue]) => {
+            const optButton = document.createElement('button');
+            optButton.className = "mcq-option w-full p-4 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-left rounded-xl transition flex items-center gap-3 text-slate-300 text-sm";
+            optButton.innerHTML = `<span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs uppercase text-indigo-400">${keyToken}</span> <span class="flex-1">${optStringValue}</span>`;
+            
+            optButton.onclick = () => evaluateMcqChoice(keyToken, optButton);
+            gridAnchor.appendChild(optButton);
+        });
+
+        // Retain selection historical context maps state across backwards transitions
+        if (selectedAnswersMap[mcqActivePointer] !== undefined) {
+            restoreHistoricalMcqState(selectedAnswersMap[mcqActivePointer]);
+        }
+
+        // Configure boundary limits for backward routing
+        document.getElementById('mcq-prev-btn').disabled = (mcqActivePointer === 0);
+        
+        // Mutate label configuration on final target steps
+        const boundaryNextBtn = document.getElementById('mcq-next-btn');
+        if (mcqActivePointer === mcqQuestions.length - 1) {
+            boundaryNextBtn.innerHTML = `Finish Assessment <i class="fa-solid fa-flag-checkered"></i>`;
+        } else {
+            boundaryNextBtn.innerHTML = `Next Question <i class="fa-solid fa-arrow-right"></i>`;
+        }
+    }
+
+    function evaluateMcqChoice(selectedKey, clickedElementDom) {
+        if (selectedAnswersMap[mcqActivePointer] !== undefined) return; // Prevent selection mutations re-evals
+        
+        const currentData = mcqQuestions[mcqActivePointer];
+        selectedAnswersMap[mcqActivePointer] = selectedKey;
+        
+        const feedbackPanel = document.getElementById('mcq-feedback-panel');
+        feedbackPanel.classList.remove('hidden');
+
+        const allOptionsButtons = document.querySelectorAll('.mcq-option');
+
+        if (selectedKey === currentData.ans) {
+            clickedElementDom.className = "mcq-option w-full p-4 bg-emerald-950/40 border-2 border-emerald-500 text-left rounded-xl transition flex items-center gap-3 text-emerald-200 text-sm";
+            clickedElementDom.querySelector('span').className = "w-7 h-7 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center font-mono font-bold text-xs uppercase";
+            
+            feedbackPanel.className = "p-4 rounded-xl text-sm font-semibold flex items-center gap-3 bg-emerald-950/30 text-emerald-400 border border-emerald-900/50";
+            feedbackPanel.innerHTML = `<i class="fa-solid fa-circle-check text-xl"></i> <span><strong>Correct!</strong> Verbatim verification sequence passed standard specification rules perfectly.</span>`;
+        } else {
+            clickedElementDom.className = "mcq-option w-full p-4 bg-rose-950/40 border-2 border-rose-500 text-left rounded-xl transition flex items-center gap-3 text-rose-200 text-sm";
+            clickedElementDom.querySelector('span').className = "w-7 h-7 rounded-lg bg-rose-500 text-slate-950 flex items-center justify-center font-mono font-bold text-xs uppercase";
+            
+            feedbackPanel.className = "p-4 rounded-xl text-sm font-semibold flex items-center gap-3 bg-rose-950/30 text-rose-400 border border-rose-900/50";
+            feedbackPanel.innerHTML = `<i class="fa-solid fa-circle-xmark text-xl"></i> <span><strong>Incorrect.</strong> Core architectural system checks failed matching validation schema requirements.</span>`;
+            
+            // Highlight the proper answer node visually for context clear education mapping rules
+            highlightCorrectMcqTarget(currentData.ans);
+        }
+    }
+
+    function highlightCorrectMcqTarget(correctKeyToken) {
+        const allOptionsButtons = document.querySelectorAll('.mcq-option');
+        allOptionsButtons.forEach(btn => {
+            const badgeText = btn.querySelector('span').textContent.trim().toLowerCase();
+            if (badgeText === correctKeyToken.toLowerCase()) {
+                btn.className = "mcq-option w-full p-4 bg-slate-900 border-2 border-emerald-600/60 text-left rounded-xl transition flex items-center gap-3 text-slate-300 text-sm";
+                btn.querySelector('span').className = "w-7 h-7 rounded-lg bg-emerald-600/20 border border-emerald-500 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs uppercase";
+            }
+        });
+    }
+
+    function restoreHistoricalMcqState(historicalSavedKey) {
+        const currentData = mcqQuestions[mcqActivePointer];
+        const allOptionsButtons = document.querySelectorAll('.mcq-option');
+        const feedbackPanel = document.getElementById('mcq-feedback-panel');
+        feedbackPanel.classList.remove('hidden');
+
+        allOptionsButtons.forEach(btn => {
+            const badgeText = btn.querySelector('span').textContent.trim().toLowerCase();
+            if (badgeText === historicalSavedKey.toLowerCase()) {
+                if (historicalSavedKey === currentData.ans) {
+                    btn.className = "mcq-option w-full p-4 bg-emerald-950/40 border-2 border-emerald-500 text-left rounded-xl transition flex items-center gap-3 text-emerald-200 text-sm";
+                    feedbackPanel.className = "p-4 rounded-xl text-sm font-semibold flex items-center gap-3 bg-emerald-950/30 text-emerald-400 border border-emerald-900/50";
+                    feedbackPanel.innerHTML = `<i class="fa-solid fa-circle-check text-xl"></i> <span>Historical parameter verification checked out true previously.</span>`;
+                } else {
+                    btn.className = "mcq-option w-full p-4 bg-rose-950/40 border-2 border-rose-500 text-left rounded-xl transition flex items-center gap-3 text-rose-200 text-sm";
+                    feedbackPanel.className = "p-4 rounded-xl text-sm font-semibold flex items-center gap-3 bg-rose-950/30 text-rose-400 border border-rose-900/50";
+                    feedbackPanel.innerHTML = `<i class="fa-solid fa-circle-xmark text-xl"></i> <span>Incorrect historical operational validation record locked.</span>`;
+                }
+            }
+        });
+        highlightCorrectMcqTarget(currentData.ans);
+    }
+
+    function nextQuestion() {
+        if (mcqActivePointer < mcqQuestions.length - 1) {
+            mcqActivePointer++;
+            renderCurrentMcqState();
+        } else {
+            // Trigger completion display sequence inside local dynamic assessment node boundaries
+            const dynamicQuizBox = document.getElementById('mcq-dynamic-wrapper');
+            dynamicQuizBox.className = "my-auto text-center py-8 space-y-4 max-w-md mx-auto";
+            
+            let accumulatedScore = 0;
+            mcqQuestions.forEach((qObj, index) => {
+                if (selectedAnswersMap[index] === qObj.ans) accumulatedScore++;
+            });
+
+            dynamicQuizBox.innerHTML = `
+                <div class="inline-flex p-5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-4xl mb-2 animate-bounce">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white">System Assessment Complete!</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    You have successfully finalized all verbatim engineering test components matching SDLC design blueprints.
+                </p>
+                <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl font-mono text-lg text-emerald-400">
+                    Final Metrics: ${accumulatedScore} / ${mcqQuestions.length} Correct Matches
+                </div>
+                <p class="text-xs text-slate-500">Use presentation arrows to review baseline content files loops safely.</p>
+            `;
+            
+            document.getElementById('mcq-next-btn').style.display = "none";
+            document.getElementById('mcq-prev-btn').style.display = "none";
+        }
+    }
+
+    function prevQuestion() {
+        if (mcqActivePointer > 0) {
+            mcqActivePointer--;
+            renderCurrentMcqState();
+        }
+    }
+
+    // --- EXECUTION INITIALIZATION CONTEXT LIFECYCLE ---
+    window.addEventListener('DOMContentLoaded', () => {
+        initializeDeckControls();
+        setupPyodideEnvironment();
+        setupBugHuntInteraction();
+        renderCurrentMcqState();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 7 – Introduction to Functions in Python</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --color-bg-dark: #0f172a;
+            --color-slide-bg: #1e293b;
+            --color-accent-primary: #38bdf8;
+            --color-accent-secondary: #c084fc;
+            --color-success: #4ade80;
+            --color-error: #f87171;
+            --color-text-main: #f8fafc;
+            --color-text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+
+        #presentation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 90%;
+            max-width: 1200px;
+            height: 80%;
+            max-height: 750px;
+            background-color: var(--color-slide-bg);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(100px) scale(0.95);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) scale(1);
+            z-index: 10;
+        }
+
+        .slide.exit {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-100px) scale(0.95);
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 24px;
+            right: 32px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-accent-primary);
+            background: rgba(30, 41, 59, 0.7);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
+            width: 0%;
+            transition: width 0.4s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 32px;
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 3px;
+            font-family: monospace;
+        }
+
+        /* Slide Control Floating Buttons */
+        .slide-nav-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 32px;
+            display: flex;
+            gap: 12px;
+            z-index: 50;
+        }
+        .nav-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--color-text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: var(--color-accent-primary);
+            color: var(--color-bg-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Custom scrollbar for slides */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Prism override */
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* MCQ Options */
+        .mcq-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .mcq-option:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--color-accent-primary);
+            transform: translateX(4px);
+        }
+
+        /* Bug Hunt Lines */
+        .bh-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .bh-line:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Python Console Styles */
+        .console-output {
+            background: #090d16;
+            font-family: 'Fira Code', monospace;
+            min-height: 60px;
+            max-height: 120px;
+            overflow-y: auto;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 7</div>
+
+<div class="slide-nav-btn">
+    <button class="nav-btn" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+    <button class="nav-btn" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+</div>
+
+<div id="presentation-container">
+
+    <div class="slide active" id="slide-1">
+        <div class="flex flex-col justify-center items-center h-full text-center space-y-6">
+            <div class="inline-flex items-center space-x-2 bg-sky-500/10 text-sky-400 px-4 py-1.5 rounded-full text-sm font-semibold tracking-wide uppercase border border-sky-500/20">
+                <i class="fas fa-code"></i> <span>Python Programming - Class 7</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                Introduction to Functions
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+                Unlock the power of modular code. Learn how to package tasks into clean, organized, and reusable blocks to make your programs shorter, smarter, and scalable!
+            </p>
+            <div class="grid grid-cols-3 gap-6 w-full max-w-3xl mt-8 pt-8 border-t border-slate-700/50">
+                <div class="p-4 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                    <div class="text-sky-400 text-2xl mb-1"><i class="fas fa-recycle"></i></div>
+                    <div class="font-bold text-sm">Code Reuse</div>
+                </div>
+                <div class="p-4 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                    <div class="text-purple-400 text-2xl mb-1"><i class="fas fa-cubes"></i></div>
+                    <div class="font-bold text-sm">Modular Design</div>
+                </div>
+                <div class="p-4 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                    <div class="text-emerald-400 text-2xl mb-1"><i class="fas fa-bolt"></i></div>
+                    <div class="font-bold text-sm">Easy Debugging</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <h2 class="text-3xl font-bold text-sky-400 flex items-center gap-3 border-b border-slate-700/50 pb-4 mb-6">
+            <i class="fas fa-lightbulb"></i> What is a Function?
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-auto">
+            <div class="space-y-4">
+                <div class="bg-indigo-500/10 border border-indigo-500/20 p-5 rounded-xl">
+                    <h3 class="text-xl font-bold text-indigo-400 mb-2">The Real-World Analogy: A Juicer Machine</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        Think of a function like a kitchen juice extractor. You put in **raw inputs** (fruits like oranges), the machine runs its **pre-defined process** (squeezing and filtering), and it delivers a **specific output** (fresh orange juice). You don't rebuild the machine every time; you just push the button!
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-slate-200">Core Purpose:</h3>
+                    <ul class="space-y-2 text-slate-300 text-sm">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle text-emerald-400 mt-1 text-xs"></i>
+                            <span><strong>Perform a Specific Task:</strong> Wraps up a specific sequence of logic cleanly.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle text-emerald-400 mt-1 text-xs"></i>
+                            <span><strong>Enable Code Reuse:</strong> Write once, use infinite times instead of copy-pasting codeblocks.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle text-emerald-400 mt-1 text-xs"></i>
+                            <span><strong>Cleaner Structures:</strong> Minimizes clutter and isolates logic chunks seamlessly.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-slate-900/60 p-6 rounded-xl border border-slate-800 flex flex-col justify-center h-full">
+                <div class="text-xs uppercase text-slate-500 font-bold tracking-wider mb-2">The Abstract Mechanics Diagram</div>
+                <div class="flex flex-col items-center justify-center space-y-3 p-4 bg-slate-950/40 rounded-lg border border-slate-800">
+                    <div class="px-4 py-1.5 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 font-mono text-xs">Inputs / Parameters</div>
+                    <div class="text-slate-500 text-sm"><i class="fas fa-arrow-down"></i></div>
+                    <div class="w-full text-center px-4 py-4 bg-sky-500/10 border-2 border-dashed border-sky-400/50 rounded-lg">
+                        <div class="font-mono text-sm font-bold text-sky-400">def function_name():</div>
+                        <div class="text-xs text-slate-400 mt-1">Isolates & Processes Statement Block</div>
+                    </div>
+                    <div class="text-slate-500 text-sm"><i class="fas fa-arrow-down"></i></div>
+                    <div class="px-4 py-1.5 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30 font-mono text-xs">Output / Return Value</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <h2 class="text-3xl font-bold text-purple-400 flex items-center gap-3 border-b border-slate-700/50 pb-4 mb-4">
+            <i class="fas fa-vial"></i> Anatomy of a Function
+        </h2>
+        <p class="text-sm text-slate-300 mb-4">
+            Python uses the <code class="bg-slate-800 text-purple-300 font-mono px-1.5 py-0.5 rounded text-xs">def</code> keyword to tell the interpreter that a fresh recipe block is being defined. Take a close look at the anatomy:
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+            <div class="space-y-3">
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                    <pre class="language-python"><code class="language-python">def greet():
+    print("Hello, World!")
+
+# Calling the function
+greet()</code></pre>
+                </div>
+                <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wide block mb-1"><i class="fas fa-exclamation-triangle"></i> Common Beginner Mistake:</span>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Defining a function <strong>does not run it!</strong> The statements inside are only stored away. You must explicitly execute it by writing its name followed by parentheses: <code class="font-mono text-amber-300 bg-slate-950/40 px-1 py-0.5 rounded">greet()</code>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-base font-bold text-slate-200">Step-by-Step Breakdown</h3>
+                <ol class="space-y-2 text-xs text-slate-300">
+                    <li class="bg-slate-800/50 p-2 rounded border border-slate-700/40">
+                        <b class="text-purple-400 font-mono text-sm">1. def</b> — The declaration keyword that unlocks function initialization.
+                    </li>
+                    <li class="bg-slate-800/50 p-2 rounded border border-slate-700/40">
+                        <b class="text-sky-400 font-mono text-sm">2. function_name()</b> — Describing what the block does, immediately followed by matching parentheses.
+                    </li>
+                    <li class="bg-slate-800/50 p-2 rounded border border-slate-700/40">
+                        <b class="text-amber-400 font-mono text-sm">3. Colon (:)</b> — Signals the start of the nested executable structural block.
+                    </li>
+                    <li class="bg-slate-800/50 p-2 rounded border border-slate-700/40">
+                        <b class="text-emerald-400 font-mono text-sm">4. Indentation (4 spaces)</b> — Keeps statements safely scoped underneath the definition umbrella.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <h2 class="text-3xl font-bold text-emerald-400 flex items-center gap-3 border-b border-slate-700/50 pb-4 mb-4">
+            <i class="fas fa-play-circle"></i> Interactive Code Lab
+        </h2>
+        <p class="text-sm text-slate-300 mb-3">
+            Modify the code window below. Click the execution button to instantly observe how your outputs stream out.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 min-h-0">
+            <div class="md:col-span-7 flex flex-col h-full">
+                <div class="flex items-center justify-between px-4 py-2 bg-slate-900 border-t border-x border-slate-700 rounded-t-xl">
+                    <span class="text-xs font-mono text-slate-400 flex items-center gap-2"><i class="fab fa-python text-sky-400"></i> main.py</span>
+                    <button class="py-1 px-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 text-slate-950 rounded font-bold text-xs flex items-center gap-1.5 transition-colors run-btn" onclick="runSandboxCode(this)" disabled>
+                        <i class="fas fa-spinner fa-spin pyodide-loading-icon"></i> <span>Loading Environment...</span>
+                    </button>
+                </div>
+                <textarea id="sandbox-code-editor" class="w-full flex-1 p-4 bg-slate-950 text-slate-200 font-mono text-sm border border-slate-700 rounded-b-xl focus:outline-none focus:border-emerald-500 resize-none">def greet(name):
+    print(f"Hello, {name}!")
+    print("Welcome to Python Functions Class.")
+
+# Executing our function block with an input string
+greet("Alex")
+</textarea>
+            </div>
+
+            <div class="md:col-span-5 flex flex-col h-full">
+                <div class="px-4 py-2 bg-slate-900 border-t border-x border-slate-700 rounded-t-xl text-xs font-mono text-slate-400 flex items-center gap-2">
+                    <i class="fas fa-terminal"></i> Live Console Window
+                </div>
+                <div id="sandbox-console-output" class="console-output flex-1 bg-slate-950 border border-slate-700 text-emerald-400 p-4 font-mono text-xs overflow-y-auto rounded-b-xl whitespace-pre-wrap">Console outputs stream here when executed...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <h2 class="text-3xl font-bold text-amber-400 flex items-center gap-3 border-b border-slate-700/50 pb-4 mb-4">
+            <i class="fas fa-exchange-alt"></i> Parameters vs Return Values
+        </h2>
+        <p class="text-sm text-slate-300 mb-4">
+            Functions can adapt seamlessly. They may accept variables to work on (parameters) or ship values back explicitly (returns).
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 font-mono text-xs font-bold rounded">Concept 1</span>
+                        <h3 class="text-base font-bold text-slate-200">Parameters (Inputs)</h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+                        Place variables inside the parenthesis to capture context values passed during downstream calls.
+                    </p>
+                    <pre class="language-python"><code class="language-python">def greet(name):
+    print(f"Hello, {name}!") # Retains no exportable data</code></pre>
+                </div>
+                <div class="mt-3 p-2 bg-slate-950/50 text-slate-400 font-sans text-xs rounded border border-slate-800">
+                    <i class="fas fa-info-circle text-sky-400 mr-1"></i> A function can dynamically operate with **no parameters and no return value** whatsoever!
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 font-mono text-xs font-bold rounded">Concept 2</span>
+                        <h3 class="text-base font-bold text-slate-200">The return Statement (Outputs)</h3>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3 leading-relaxed">
+                        Sends computation values back to your caller thread. **If missing, functions default to return None.**
+                    </p>
+                    <pre class="language-python"><code class="language-python">def add(a, b):
+    return a + b # Ships total sum outward
+
+result = add(4, 5) # result holds 9</code></pre>
+                </div>
+                <div class="mt-3 p-2 bg-red-500/10 text-red-300 font-sans text-xs rounded border border-red-500/20">
+                    <i class="fas fa-times-circle text-red-400 mr-1"></i> <strong>Beware:</strong> Any statements placed below a <code class="font-mono text-xs bg-black/40 px-1 py-0.5 rounded">return</code> trigger inside that function scope will remain unreachable!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <h2 class="text-3xl font-bold text-rose-400 flex items-center gap-3 border-b border-slate-700/50 pb-4 mb-3">
+            <i class="fas fa-bug"></i> Interactive Bug Hunt!
+        </h2>
+        <p class="text-sm text-slate-300 mb-3">
+            A developer attempted to construct a small value return mechanism but execution broke! Click on the specific line(s) containing syntax/logical errors to patch the block:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 my-auto items-stretch">
+            <div class="md:col-span-7 bg-slate-950 rounded-xl p-4 border border-slate-800 flex flex-col justify-center font-mono text-sm leading-relaxed">
+                <div id="bh-line-1" class="bh-line p-2.5 rounded border border-transparent font-mono" onclick="toggleBugLine(1, true)">
+                    <span class="text-slate-600 mr-4 select-none">1</span><span class="text-purple-400">def</span> <span class="text-sky-400">multiply_numbers</span>(x, y)
+                </div>
+                <div id="bh-line-2" class="bh-line p-2.5 rounded border border-transparent font-mono" onclick="toggleBugLine(2, false)">
+                    <span class="text-slate-600 mr-4 select-none">2</span>&nbsp;&nbsp;&nbsp;&nbsp;product = x * y
+                </div>
+                <div id="bh-line-3" class="bh-line p-2.5 rounded border border-transparent font-mono" onclick="toggleBugLine(3, true)">
+                    <span class="text-slate-600 mr-4 select-none">3</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-purple-400">print</span>(product)
+                </div>
+                <div id="bh-line-4" class="bh-line p-2.5 rounded border border-transparent font-mono" onclick="toggleBugLine(4, false)">
+                    <span class="text-slate-600 mr-4 select-none">4</span><span class="text-slate-400">val = multiply_numbers(3, 4)</span>
+                </div>
+            </div>
+
+            <div class="md:col-span-5 flex flex-col justify-between bg-slate-900/40 p-5 rounded-xl border border-slate-800">
+                <div>
+                    <h3 class="text-base font-bold text-slate-200 mb-2">Hunt Briefing</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        We intend for <code class="font-mono text-xs bg-slate-950 px-1 py-0.5 rounded text-rose-300">val</code> to capture and hold the arithmetic multiplication result so it can be evaluated downstream. Track down the code faults!
+                    </p>
+                </div>
+                
+                <div class="my-4 p-4 bg-slate-950/60 rounded-xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Bugs Spotted</div>
+                    <div class="text-3xl font-extrabold text-rose-400" id="bug-hunt-counter">0 / 2</div>
+                </div>
+
+                <div id="bug-hunt-feedback" class="text-xs font-medium text-slate-400 text-center h-8">
+                    Click the lines above to spot errors...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <div class="flex items-center justify-between border-b border-slate-700/50 pb-3 mb-4">
+            <h2 class="text-3xl font-bold text-sky-400 flex items-center gap-3">
+                <i class="fas fa-user-check"></i> Check Your Understanding
+            </h2>
+            <span id="mcq-progress-indicator" class="text-xs font-mono font-bold bg-slate-800 text-sky-400 px-3 py-1 rounded-full border border-slate-700">
+                Question 1 of 7
+            </span>
+        </div>
+
+        <div id="mcq-wizard-body" class="flex-1 flex flex-col justify-center max-w-4xl mx-auto w-full space-y-4">
+            <div id="mcq-question-text" class="text-base md:text-lg font-semibold text-slate-200 leading-relaxed">
+                Loading assessment queries...
+            </div>
+
+            <div id="mcq-code-container" class="hidden mb-2">
+                <pre class="language-python"><code id="mcq-code-snippet" class="language-python"></code></pre>
+            </div>
+
+            <div id="mcq-options-container" class="grid grid-cols-1 gap-2.5">
+                </div>
+
+            <div id="mcq-feedback-box" class="min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold invisible">
+                Feedback messages appear here.
+            </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <button id="mcq-prev-btn" class="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-xs font-bold rounded-lg transition-all flex items-center gap-2" onclick="navigateMcq(-1)">
+                    <i class="fas fa-arrow-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" class="px-5 py-2 bg-sky-500 text-slate-950 hover:bg-sky-400 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold rounded-lg transition-all flex items-center gap-2" onclick="navigateMcq(1)" disabled>
+                    Next Question <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // Presenter Slides Mechanics Configuration Tracker
+    let currentSlideIndex = 1;
+    const totalSlidesCount = 7;
+    let pyodideInstance = null;
+
+    // User-Supplied Verbatim MCQ dataset structures
+    const mcqData = [
+        {
+            question: "1. What is the purpose of a function in Python?",
+            options: [
+                "A. To store multiple values in one variable.",
+                "B. To repeat a block of code multiple times.",
+                "C. To perform a specific task and enable code reuse.",
+                "D. To format strings dynamically."
+            ],
+            answer: 2, // Choice C
+            feedback: "Correct! Functions gather distinct logic blocks, simplifying complex software through systematic reuse.",
+            code: ""
+        },
+        {
+            question: "2. What keyword is used to define a function in Python?",
+            options: [
+                "A. function",
+                "B. def",
+                "C. lambda",
+                "D. return"
+            ],
+            answer: 1, // Choice B
+            feedback: "Spot on! The 'def' statement signals function definition parameters to Python's compiler.",
+            code: ""
+        },
+        {
+            question: "3. What will the following code print?",
+            options: [
+                "A. Nothing will be printed.",
+                "B. Hello, World!",
+                "C. An error will occur because no arguments were passed.",
+                "D. greet"
+            ],
+            answer: 1, // Choice B
+            feedback: "Correct. Declaring the call statement explicitly executes the enclosed nested printing directives.",
+            code: "def greet():\n    print(\"Hello, World!\")\n\ngreet()"
+        },
+        {
+            question: "4. Which of the following statements is true about functions in Python?",
+            options: [
+                "A. A function must always have parameters.",
+                "B. A function must always return a value.",
+                "C. A function can be called before it is defined.",
+                "D. A function can have no parameters and no return value."
+            ],
+            answer: 3, // Choice D
+            feedback: "Correct! Python functions can cleanly run purely as parameterless tasks returning implicit None.",
+            code: ""
+        },
+        {
+            question: "5. What will the following function return?",
+            options: [
+                "A. None",
+                "B. 9",
+                "C. An error, because add is not a built-in function.",
+                "D. 4, 5"
+            ],
+            answer: 1, // Choice B
+            feedback: "Exactly! 4 + 5 calculates to 9, which gets delivered back to the main thread call execution layer.",
+            code: "def add(a, b):\n    return a + b\n\nresult = add(4, 5)\nprint(result)"
+        },
+        {
+            question: "6. What happens if a function doesn’t include a return statement?",
+            options: [
+                "A. The function will throw an error.",
+                "B. The function will return None.",
+                "C. The function will automatically return 0.",
+                "D. The function cannot be called without a return."
+            ],
+            answer: 1, // Choice B
+            feedback: "Correct! Missing explicit return statements default automatically to delivering 'None' objects internally.",
+            code: ""
+        },
+        {
+            question: "7. Which is an example of a function with parameters but no return value?",
+            options: [
+                "A. def greet():\n    print(\"Hello!\")",
+                "B. def greet(name):\n    print(f\"Hello, {name}!\")",
+                "C. def greet(name):\n    return f\"Hello, {name}!\"",
+                "D. None of the above."
+            ],
+            answer: 1, // Choice B
+            feedback: "Brilliant! Option B declares the dynamic input identifier 'name' but has no return keyword statement.",
+            code: ""
+        }
+    ];
+
+    let currentMcqIndex = 0;
+    let selectedMcqAnswers = {}; // track state of answers across index steps
+
+    // Bug Hunt Slide Tracker States 
+    const bugHuntAnswers = {
+        1: { detected: false, isBug: true, msg: "Nice! Line 1 is missing its trailing syntax colon (:)." },
+        2: { detected: false, isBug: false, msg: "Line 2 is perfectly fine; indentation and math are valid." },
+        3: { detected: false, isBug: true, msg: "Excellent! Line 3 uses print inside, meaning no variable payload is returned externally." },
+        4: { detected: false, isBug: false, msg: "Line 4 properly evokes the call context." }
+    };
+    let correctlyIdentifiedBugs = 0;
+    const totalBugsInSnippet = 2;
+
+    // Slide Deck Core Engine Logic
+    function updatePresentationView() {
+        document.querySelectorAll('.slide').forEach((slide, idx) => {
+            slide.classList.remove('active', 'exit');
+            if (idx + 1 === currentSlideIndex) {
+                slide.classList.add('active');
+            } else if (idx + 1 < currentSlideIndex) {
+                slide.classList.add('exit');
+            }
+        });
+
+        // Counter UI rendering updates
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex} / ${totalSlidesCount}`;
+        
+        // Horizontal progress mapping calculations
+        const percentageProgress = ((currentSlideIndex - 1) / (totalSlidesCount - 1)) * 100;
+        document.getElementById('progress').style.width = `${percentageProgress}%`;
+
+        // Safe Re-instantiation of syntax highlighting contexts
+        setTimeout(() => {
+            Prism.highlightAll();
+        }, 50);
+    }
+
+    function nextSlide() {
+        if (currentSlideIndex < totalSlidesCount) {
+            currentSlideIndex++;
+            updatePresentationView();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlideIndex > 1) {
+            currentSlideIndex--;
+            updatePresentationView();
+        }
+    }
+
+    // Capture Global User Keypress Vectors
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; // clear editor conflict vectors
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // Pyodide Runtime Engine Pipeline Integration
+    async function loadPyodideRuntime() {
+        try {
+            pyodideInstance = await loadPyodide();
+            const runButtons = document.querySelectorAll('.run-btn');
+            runButtons.forEach(btn => {
+                btn.removeAttribute('disabled');
+                btn.innerHTML = `<i class="fas fa-play"></i> <span>Execute Code</span>`;
+                btn.className = btn.className.replace('bg-slate-700', 'bg-emerald-500 hover:bg-emerald-600');
+            });
+        } catch (err) {
+            console.error("Pyodide loading fault: ", err);
+        }
+    }
+
+    async function runSandboxCode(buttonElement) {
+        if (!pyodideInstance) return;
+        
+        const editorTextarea = document.getElementById('sandbox-code-editor');
+        const outputConsole = document.getElementById('sandbox-console-output');
+        
+        outputConsole.textContent = "Executing execution thread logs...\n";
+        buttonElement.setAttribute('disabled', 'true');
+        buttonElement.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Evaluating...</span>`;
+
+        // Clear and prepare execution vectors capturing stdout/stderr context redirects
+        pyodideInstance.runPython(`
+import sys
+import io
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+`);
+
+        try {
+            const rawPythonCode = editorTextarea.value;
+            await pyodideInstance.runPythonAsync(rawPythonCode);
+            
+            const standardOut = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const standardErr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if (standardErr) {
+                outputConsole.textContent = standardErr;
+                outputConsole.style.color = "#f87171"; // Red text for syntax/logical traces
+            } else {
+                outputConsole.textContent = standardOut || "Execution finished successfully with empty stdout context logs.";
+                outputConsole.style.color = "#4ade80"; // Revert terminal green accent color state
+            }
+        } catch (evalError) {
+            outputConsole.textContent = evalError.message;
+            outputConsole.style.color = "#f87171";
+        } finally {
+            buttonElement.removeAttribute('disabled');
+            buttonElement.innerHTML = `<i class="fas fa-play"></i> <span>Execute Code</span>`;
+        }
+    }
+
+    // Bug Hunt Interactive Logic Subcomponents
+    function toggleBugLine(lineNumber, isActualBug) {
+        const lineDomElement = document.getElementById(`bh-line-${lineNumber}`);
+        const trackContext = bugHuntAnswers[lineNumber];
+        const displayFeedbackElement = document.getElementById('bug-hunt-feedback');
+
+        if (trackContext.detected) return; // Prevent double point accumulation metrics
+
+        trackContext.detected = true;
+        if (isActualBug) {
+            lineDomElement.style.borderColor = "var(--color-success)";
+            lineDomElement.style.background = "rgba(74, 222, 128, 0.1)";
+            correctlyIdentifiedBugs++;
+            document.getElementById('bug-hunt-counter').textContent = `${correctlyIdentifiedBugs} / ${totalBugsInSnippet}`;
+            displayFeedbackElement.textContent = trackContext.msg;
+            displayFeedbackElement.style.color = "var(--color-success)";
+        } else {
+            lineDomElement.style.borderColor = "var(--color-error)";
+            lineDomElement.style.background = "rgba(248, 113, 113, 0.1)";
+            displayFeedbackElement.textContent = trackContext.msg;
+            displayFeedbackElement.style.color = "var(--color-error)";
+        }
+
+        if (correctlyIdentifiedBugs === totalBugsInSnippet) {
+            displayFeedbackElement.textContent = "Awesome! You spotted all structural layout bugs! Python code functions require trailing colons and explicit 'return' expressions.";
+            displayFeedbackElement.style.color = "var(--color-accent-primary)";
+        }
+    }
+
+    // MCQ Assessment Wizard Setup Contexts
+    function renderMcqWizardLayout() {
+        const targetQuestionData = mcqData[currentMcqIndex];
+        
+        // Progress text mapping updates
+        document.getElementById('mcq-progress-indicator').textContent = `Question ${currentMcqIndex + 1} of ${mcqData.length}`;
+        document.getElementById('mcq-question-text').textContent = targetQuestionData.question;
+
+        // Conditional display configurations for embedded code blocks inside choices
+        const codeBlockContainer = document.getElementById('mcq-code-container');
+        if (targetQuestionData.code) {
+            codeBlockContainer.classList.remove('hidden');
+            const innerSnippetDom = document.getElementById('mcq-code-snippet');
+            innerSnippetDom.textContent = targetQuestionData.code;
+            Prism.highlightElement(innerSnippetDom);
+        } else {
+            codeBlockContainer.classList.add('hidden');
+        }
+
+        // Clean out previous nodes
+        const layoutOptionsContainer = document.getElementById('mcq-options-container');
+        layoutOptionsContainer.innerHTML = '';
+
+        const feedbackElement = document.getElementById('mcq-feedback-box');
+        feedbackElement.classList.add('invisible');
+
+        // Loop options to dynamically construct interactive interface items
+        targetQuestionData.options.forEach((optionString, currentOptionIndex) => {
+            const rowButton = document.createElement('button');
+            rowButton.className = "mcq-option w-full text-left p-3.5 rounded-xl text-xs md:text-sm font-medium transition-all duration-150 border flex items-center justify-between whitespace-pre-wrap";
+            
+            // Re-render choices code styles manually safely for Option lines
+            if (optionString.includes('\n')) {
+                rowButton.innerHTML = `<div><pre class="bg-transparent p-0 m-0 text-slate-200 font-mono text-xs"><code>${optionString}</code></pre></div>`;
+            } else {
+                rowButton.textContent = optionString;
+            }
+
+            // Restore selection snapshot states if user steps back into tracked views
+            if (selectedMcqAnswers[currentMcqIndex] !== undefined) {
+                rowButton.classList.add('disabled', 'pointer-events-none');
+                if (currentOptionIndex === targetQuestionData.answer) {
+                    rowButton.style.borderColor = "var(--color-success)";
+                    rowButton.style.background = "rgba(74, 222, 128, 0.1)";
+                    rowButton.innerHTML += ` <i class="fas fa-check-circle text-emerald-400"></i>`;
+                } else if (currentOptionIndex === selectedMcqAnswers[currentMcqIndex]) {
+                    rowButton.style.borderColor = "var(--color-error)";
+                    rowButton.style.background = "rgba(248, 113, 113, 0.1)";
+                    rowButton.innerHTML += ` <i class="fas fa-times-circle text-red-400"></i>`;
+                }
+                
+                // Keep history feedback displays functional
+                feedbackElement.classList.remove('invisible');
+                if (selectedMcqAnswers[currentMcqIndex] === targetQuestionData.answer) {
+                    feedbackElement.textContent = targetQuestionData.feedback;
+                    feedbackElement.className = "min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                } else {
+                    feedbackElement.textContent = "Incorrect choice. Review parameter declaration concepts and attempt structural flows again!";
+                    feedbackElement.className = "min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20";
+                }
+            } else {
+                // Attach executable evaluation triggers
+                rowButton.onclick = () => checkMcqAnswer(currentOptionIndex, rowButton);
+            }
+
+            layoutOptionsContainer.appendChild(rowButton);
+        });
+
+        // Wizard navigation limits setup operations
+        document.getElementById('mcq-prev-btn').disabled = (currentMcqIndex === 0);
+        
+        const nextButtonElement = document.getElementById('mcq-next-btn');
+        if (selectedMcqAnswers[currentMcqIndex] !== undefined) {
+            nextButtonElement.removeAttribute('disabled');
+            if (currentMcqIndex === mcqData.length - 1) {
+                nextButtonElement.innerHTML = `Complete Assessment <i class="fas fa-flag-checkered"></i>`;
+            } else {
+                nextButtonElement.innerHTML = `Next Question <i class="fas fa-arrow-right"></i>`;
+            }
+        } else {
+            nextButtonElement.setAttribute('disabled', 'true');
+        }
+    }
+
+    function checkMcqAnswer(chosenIndex, selectedDomNode) {
+        const questionPayload = mcqData[currentMcqIndex];
+        selectedMcqAnswers[currentMcqIndex] = chosenIndex;
+
+        // Disallow alternative options clicks
+        document.querySelectorAll('.mcq-option').forEach(btn => btn.classList.add('disabled', 'pointer-events-none'));
+
+        const feedbackBoxElement = document.getElementById('mcq-feedback-box');
+        feedbackBoxElement.classList.remove('invisible');
+
+        if (chosenIndex === questionPayload.answer) {
+            selectedDomNode.style.borderColor = "var(--color-success)";
+            selectedDomNode.style.background = "rgba(74, 222, 128, 0.1)";
+            selectedDomNode.innerHTML += ` <i class="fas fa-check-circle text-emerald-400"></i>`;
+            
+            feedbackBoxElement.textContent = questionPayload.feedback;
+            feedbackBoxElement.className = "min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+        } else {
+            selectedDomNode.style.borderColor = "var(--color-error)";
+            selectedDomNode.style.background = "rgba(248, 113, 113, 0.1)";
+            selectedDomNode.innerHTML += ` <i class="fas fa-times-circle text-red-400"></i>`;
+            
+            // Highlight actual correct line path transparently for instant correction feedback loops
+            const allOptionNodes = document.getElementById('mcq-options-container').children;
+            const correctOptionNode = allOptionNodes[questionPayload.answer];
+            correctOptionNode.style.borderColor = "var(--color-success)";
+            correctOptionNode.innerHTML += ` <i class="fas fa-check-circle text-emerald-400"></i>`;
+
+            feedbackBoxElement.textContent = "Incorrect choice. Review parameters and keyword requirements to consolidate conceptual alignment.";
+            feedbackBoxElement.className = "min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20";
+        }
+
+        // Enable moving forward through steps
+        const stepForwardButton = document.getElementById('mcq-next-btn');
+        stepForwardButton.removeAttribute('disabled');
+        if (currentMcqIndex === mcqData.length - 1) {
+            stepForwardButton.innerHTML = `Complete Assessment <i class="fas fa-flag-checkered"></i>`;
+        }
+    }
+
+    function navigateMcq(directionValue) {
+        if (directionValue === 1 && currentMcqIndex === mcqData.length - 1) {
+            // Trigger customized completion message UI replacement workflow logic bounds
+            const wizardFrameBody = document.getElementById('mcq-wizard-body');
+            wizardFrameBody.className = "text-center py-8 space-y-4 flex flex-col justify-center items-center h-full";
+            wizardFrameBody.innerHTML = `
+                <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center rounded-full text-4xl mb-2 animate-bounce">
+                    <i class="fas fa-award"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-100">You've completed the quiz!</h3>
+                <p class="text-sm text-slate-400 max-w-md">
+                    Fantastic work! You have verified your functional comprehension loops. You now understand definitions, custom parameters, and value operations inside Python!
+                </p>
+                <button class="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition-all" onclick="resetMcqWizardFlow()">
+                    <i class="fas fa-undo"></i> Retake Assessment
+                </button>
+            `;
+            return;
+        }
+
+        currentMcqIndex += directionValue;
+        renderMcqWizardLayout();
+    }
+
+    function resetMcqWizardFlow() {
+        currentMcqIndex = 0;
+        selectedMcqAnswers = {};
+        
+        // Restore default layout skeleton markup to container space context tags
+        const wizardFrameBody = document.getElementById('mcq-wizard-body');
+        wizardFrameBody.className = "flex-1 flex flex-col justify-center max-w-4xl mx-auto w-full space-y-4";
+        wizardFrameBody.innerHTML = `
+            <div id="mcq-question-text" class="text-base md:text-lg font-semibold text-slate-200 leading-relaxed"></div>
+            <div id="mcq-code-container" class="hidden mb-2">
+                <pre class="language-python"><code id="mcq-code-snippet" class="language-python"></code></pre>
+            </div>
+            <div id="mcq-options-container" class="grid grid-cols-1 gap-2.5"></div>
+            <div id="mcq-feedback-box" class="min-h-12 flex items-center p-3 rounded-lg text-xs font-semibold invisible"></div>
+            <div class="flex justify-between items-center pt-2">
+                <button id="mcq-prev-btn" class="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-xs font-bold rounded-lg transition-all flex items-center gap-2" onclick="navigateMcq(-1)">
+                    <i class="fas fa-arrow-left"></i> Previous Question
+                </button>
+                <button id="mcq-next-btn" class="px-5 py-2 bg-sky-500 text-slate-950 hover:bg-sky-400 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold rounded-lg transition-all flex items-center gap-2" onclick="navigateMcq(1)" disabled>
+                    Next Question <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        `;
+        renderMcqWizardLayout();
+    }
+
+    // Pipeline Engine Boot Sequence Triggering Execution Hooks
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentationView();
+        renderMcqWizardLayout();
+        loadPyodideRuntime();
+    });
+</script>
+</body>
+</html>

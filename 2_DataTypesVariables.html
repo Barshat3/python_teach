@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Variables and Data Types</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .title-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace !important;
+        }
+
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 700px;
+            background-color: var(--bg-card);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            font-weight: 600;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key-box {
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.75rem;
+            color: #f1f5f9;
+        }
+
+        .option-card {
+            background-color: #334155;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .option-card:hover:not(.disabled) {
+            background-color: #475569;
+            transform: scale(1.01);
+        }
+
+        .option-card.correct {
+            background-color: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--success) !important;
+        }
+
+        .option-card.incorrect {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--danger) !important;
+        }
+
+        .bug-line {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            display: block;
+        }
+        .bug-line:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .bug-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.25);
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Custom scrollbar */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 0.75rem !important;
+            background: #0f172a !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+
+<div id="presentation-container">
+
+    <div class="slide active">
+        <div class="flex items-center gap-3 mb-4 text-indigo-400">
+            <i class="fa-solid fa-box-open text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Python Basics</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-6">What is a Variable?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
+            <div class="space-y-5">
+                <p class="text-xl text-slate-300 leading-relaxed">
+                    In simple words, a <strong class="text-indigo-400">variable is a container</strong> for storing data values.
+                </p>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-lg mb-2 text-cyan-400"><i class="fa-solid fa-lightbulb mr-2"></i>Key Purposes:</h3>
+                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                        <li>Used to store data for later use in your code.</li>
+                        <li>The stored data can be numbers, text, or complex values.</li>
+                        <li>Allows your programs to be dynamic and reusable.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="bg-slate-900 rounded-2xl p-6 border border-slate-700/50 flex flex-col justify-center items-center text-center">
+                <div class="text-6xl text-indigo-500 mb-4 animate-bounce">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <div class="border-4 border-dashed border-slate-700 rounded-xl p-4 w-full bg-slate-800/40">
+                    <span class="text-xs font-mono text-slate-500 block mb-1">Variable Container Label</span>
+                    <div class="text-2xl font-bold text-accent font-mono mb-2">box_contents</div>
+                    <div class="bg-indigo-600/20 text-indigo-300 p-3 rounded font-mono text-lg border border-indigo-500/30">
+                        "Your Data Value Here"
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4 text-cyan-400">
+            <i class="fa-solid fa-pen-clip text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Syntax & Protocol</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-4">Defining & Naming Variables</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            <div>
+                <h3 class="text-xl font-bold mb-2 text-slate-300">The Assignment Syntax</h3>
+                <pre class="language-python"><code class="language-python"># Syntax
+variable_name = value
+
+# Real World Example
+name = "Alex"</code></pre>
+                
+                <div class="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-200 text-sm">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+                    <strong>Pro-Tip:</strong> The <code>=</code> sign in Python isn't "equal to" like in math. It is an <strong>assignment operator</strong> that pushes the right side value into the left side container.
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-slate-300">Strict Rules for Naming</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-xl">
+                        <div class="text-emerald-400 font-bold mb-2"><i class="fa-solid fa-circle-check mr-2"></i>Valid Names</div>
+                        <ul class="font-mono text-sm space-y-1 text-emerald-200">
+                            <li>name</li>
+                            <li>_age</li>
+                            <li>favorite_color</li>
+                        </ul>
+                        <p class="text-xs text-slate-400 mt-2">Must start with a letter or underscore (_).</p>
+                    </div>
+
+                    <div class="bg-rose-950/40 border border-rose-500/30 p-4 rounded-xl">
+                        <div class="text-rose-400 font-bold mb-2"><i class="fa-solid fa-circle-xmark mr-2"></i>Invalid Names</div>
+                        <ul class="font-mono text-sm space-y-1 text-rose-200">
+                            <li>2name</li>
+                            <li>my name</li>
+                            <li>@age</li>
+                        </ul>
+                        <p class="text-xs text-slate-400 mt-2">Cannot start with a number, contain spaces, or special characters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-2 text-emerald-400">
+            <i class="fa-solid fa-tags text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Data Architecture</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-4">Data Types in Python</h2>
+        <p class="text-slate-400 mb-4 text-sm">Python dynamically infers the nature of data you save. Here are the 4 essential foundation types:</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="px-2 py-0.5 text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 rounded">str</span>
+                    <i class="fa-solid fa-quote-right text-slate-500"></i>
+                </div>
+                <h4 class="font-bold text-lg mb-1">String</h4>
+                <p class="text-xs text-slate-400 mb-3">Text data enclosed inside quotes <code>""</code> or <code>''</code>.</p>
+                <pre class="language-python" style="font-size:0.75rem;"><code class="language-python">name = "Alex"</code></pre>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="px-2 py-0.5 text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 rounded">int</span>
+                    <i class="fa-solid fa-arrow-1-9 text-slate-500"></i>
+                </div>
+                <h4 class="font-bold text-lg mb-1">Integer</h4>
+                <p class="text-xs text-slate-400 mb-3">Whole numbers stretching from negative to positive infinity.</p>
+                <pre class="language-python" style="font-size:0.75rem;"><code class="language-python">age = 25</code></pre>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="px-2 py-0.5 text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 rounded">float</span>
+                    <i class="fa-solid fa-circle-dot text-slate-500"></i>
+                </div>
+                <h4 class="font-bold text-lg mb-1">Float</h4>
+                <p class="text-xs text-slate-400 mb-3">Real fractional numbers containing decimal points.</p>
+                <pre class="language-python" style="font-size:0.75rem;"><code class="language-python">height = 5.4</code></pre>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700/50">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="px-2 py-0.5 text-xs font-mono font-bold bg-purple-500/20 text-purple-300 rounded">bool</span>
+                    <i class="fa-solid fa-toggle-on text-slate-500"></i>
+                </div>
+                <h4 class="font-bold text-lg mb-1">Boolean</h4>
+                <p class="text-xs text-slate-400 mb-3">Binary state representation. Holds either True or False.</p>
+                <pre class="language-python" style="font-size:0.75rem;"><code class="language-python">is_active = True</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4 text-purple-400">
+            <i class="fa-solid fa-desktop text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Output Generation</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-6">Displaying Variables</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-300 mb-2">1. Basic Printing Syntax</h3>
+                    <p class="text-sm text-slate-400 mb-2">Pass the variable name inside the <code>print()</code> function call natively.</p>
+                    <pre class="language-python"><code class="language-python">name = "Alex"
+print(name) # Output: Alex</code></pre>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-slate-300 mb-2">2. Multi-argument Combinations</h3>
+                    <p class="text-sm text-slate-400 mb-2">Separate plain text sentences and variable instances cleanly with commas.</p>
+                    <pre class="language-python"><code class="language-python">name = "Alex"
+age = 25
+print("My name is", name, "and I am", age, "years old.")</code></pre>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl p-5 border border-slate-700 flex flex-col justify-between">
+                <div>
+                    <div class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-3">Under the Hood Execution Engine</div>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        When commas separate components inside a <code>print()</code> call, Python instantly drops a localized space character cleanly between them during rendering automatically!
+                    </p>
+                </div>
+                <div class="bg-black/40 border border-slate-800 rounded-lg p-4 font-mono text-sm">
+                    <div class="text-slate-500 mb-1 border-b border-slate-800 pb-1 text-xs"><i class="fa-solid fa-terminal mr-2"></i>Terminal Console Result</div>
+                    <div class="text-emerald-400">My name is Alex and I am 25 years old.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4 text-amber-400">
+            <i class="fa-solid fa-code text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Live Workspace</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-4">Hands-On Interactive Laboratory</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[calc(100%-5rem)]">
+            <div class="flex flex-col h-full space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Editable Script Engine</span>
+                    <select id="sandbox-selector" class="bg-slate-800 text-xs rounded border border-slate-700 px-2 py-1 text-slate-300 focus:outline-none">
+                        <option value="ex1">Example 1: Storing & Displaying</option>
+                        <option value="ex2">Example 2: Rectangle Area Math</option>
+                    </select>
+                </div>
+                <textarea id="python-editor" class="w-full flex-grow font-mono text-sm bg-slate-950 text-slate-200 p-4 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false"></textarea>
+                <button id="run-btn" disabled class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg">
+                    <span id="py-loader-spinner"><i class="fa-solid fa-circle-notch animate-spin"></i></span>
+                    <span id="run-btn-text">Booting Python Runtime Infrastructure...</span>
+                </button>
+            </div>
+
+            <div class="flex flex-col h-full space-y-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Real-Time Process Output stdout</span>
+                <div id="python-output" class="w-full flex-grow bg-black font-mono text-sm text-emerald-400 p-4 rounded-xl border border-slate-800 overflow-y-auto whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4 text-rose-400">
+            <i class="fa-solid fa-bug text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Debugging Simulation</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-2">Code Bug Hunt!</h2>
+        <p class="text-slate-400 text-sm mb-4">Locate and click the lines containing syntactic code errors. Can you spot them all?</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-sm line-height-relaxed select-none">
+                <div class="bug-line" data-line="1" data-bug="true"><span class="text-slate-600 mr-4">1</span>1_user_age = 18</div>
+                <div class="bug-line" data-line="2" data-bug="false"><span class="text-slate-600 mr-4">2</span>user_name = "Charlie"</div>
+                <div class="bug-line" data-line="3" data-bug="true"><span class="text-slate-600 mr-4">3</span>favorite color = "Blue"</div>
+                <div class="bug-line" data-line="4" data-bug="false"><span class="text-slate-600 mr-4">4</span>print(user_name)</div>
+            </div>
+
+            <div class="bg-slate-800/40 border border-slate-700/60 p-6 rounded-xl flex flex-col justify-between h-full min-h-[200px]">
+                <div>
+                    <h3 class="text-xl font-bold mb-2 text-slate-200">Defect Tracker Dashboard</h3>
+                    <p class="text-slate-400 text-sm mb-4">Clicking lines with naming-rule breaks records points instantly.</p>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-900 p-4 rounded-lg border border-slate-800">
+                    <div class="text-3xl text-amber-500 font-bold font-mono" id="bug-score">0 / 2</div>
+                    <div class="text-xs text-slate-400">Bugs Found Successfully inside the Code Container Sandbox Block</div>
+                </div>
+                <div id="bug-feedback" class="mt-3 text-sm text-center h-6 font-bold"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4 text-emerald-400">
+            <i class="fa-solid fa-clipboard-question text-3xl"></i>
+            <span class="text-sm font-bold tracking-widest uppercase">Knowledge Verification</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-4">Check Your Understanding</h2>
+
+        <div id="mcq-wrapper" class="flex flex-col justify-between flex-grow">
+            <div>
+                <div class="flex justify-between text-xs text-slate-400 uppercase font-mono font-bold tracking-widest mb-3 border-b border-slate-700 pb-2">
+                    <span id="mcq-progress-lbl">Question 1 of 5</span>
+                    <span class="text-indigo-400">Self Assessment Portion</span>
+                </div>
+
+                <div id="mcq-question-box" class="text-xl text-slate-200 font-medium mb-6"></div>
+
+                <div id="mcq-options-box" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <div id="mcq-feedback-panel" class="my-4 p-3 rounded-xl font-bold text-center text-sm hidden"></div>
+
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-800">
+                <button id="mcq-prev-btn" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-lg transition text-sm disabled:opacity-30 disabled:pointer-events-none">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Back
+                </button>
+                <button id="mcq-next-btn" disabled class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold rounded-lg transition text-sm">
+                    Next Question <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mcq-complete-view" class="hidden flex-col items-center justify-center text-center py-12 space-y-4 flex-grow">
+            <div class="text-6xl text-emerald-400"><i class="fa-solid fa-circle-check animate-pulse"></i></div>
+            <h3 class="text-3xl font-bold">Assessment Cycle Finalized!</h3>
+            <p class="text-slate-400 max-w-md">You have evaluated all user-provided standard multiple choice questions accurately. Continue navigating to wrap up.</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // System Slide Orchestration Data Configurations
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progress');
+    const slideCounter = document.getElementById('slide-counter');
+    let currentSlideIdx = 0;
+
+    function updatePresentationState() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIdx) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Counter Updates
+        slideCounter.textContent = `${currentSlideIdx + 1} / ${slides.length}`;
+        
+        // Linear Progress Bar Width calculations
+        const percentage = ((currentSlideIdx + 1) / slides.length) * 100;
+        progressBar.style.width = `${percentage}%`;
+
+        // Retrigger structural layout processing of static snippet blocks
+        Prism.highlightAll();
+    }
+
+    // Keyboard Driver Input hooks
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            if(currentSlideIdx < slides.length - 1) {
+                currentSlideIdx++;
+                updatePresentationState();
+            }
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if(currentSlideIdx > 0) {
+                currentSlideIdx--;
+                updatePresentationState();
+            }
+        }
+    });
+
+    // Code Editor Preset Libraries Mapping Configurations
+    const codeTemplates = {
+        ex1: `favorite_book = "Harry Potter"
+age = 13
+print("My favorite book is", favorite_book, "and I am", age, "years old.")`,
+        ex2: `length = 10
+width = 5
+area = length * width
+print(area)`
+    };
+
+    const sandboxSelector = document.getElementById('sandbox-selector');
+    const pyEditor = document.getElementById('python-editor');
+    const pyOutput = document.getElementById('python-output');
+    const runBtn = document.getElementById('run-btn');
+    const runBtnText = document.getElementById('run-btn-text');
+    const loaderSpinner = document.getElementById('py-loader-spinner');
+
+    pyEditor.value = codeTemplates.ex1;
+    sandboxSelector.addEventListener('change', (e) => {
+        pyEditor.value = codeTemplates[e.target.value];
+    });
+
+    // Real Asynchronous Pyodide Virtualized Environment Pipeline Setup
+    let pyodideInstance = null;
+    async function initializePythonEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            // Environment ready
+            runBtn.disabled = false;
+            loaderSpinner.classList.add('hidden');
+            runBtnText.textContent = "Execute Code Space Block";
+        } catch(err) {
+            runBtnText.textContent = "Failed Core Runtime Load Layer";
+            pyOutput.textContent = `Python Environment Initialization Critical Failure Trace: \n${err}`;
+        }
+    }
+    initializePythonEngine();
+
+    runBtn.addEventListener('click', async () => {
+        if(!pyodideInstance) return;
+        pyOutput.textContent = "Running calculation pipelines dynamically...";
+        
+        // Highjacking Python stdout pipelines cleanly via safe wrapper abstractions
+        try {
+            pyodideInstance.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+            
+            await pyodideInstance.runPythonAsync(pyEditor.value);
+            
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if(stderr) {
+                pyOutput.textContent = stderr;
+                pyOutput.style.color = "#ef4444"; // Danger Red State Output error context
+            } else {
+                pyOutput.textContent = stdout || "Script executed successfully with no structural stdout return.";
+                pyOutput.style.color = "#10b981"; // Emerald Green State Success Standard output standard
+            }
+        } catch(err) {
+            pyOutput.textContent = err.message;
+            pyOutput.style.color = "#ef4444";
+        }
+    });
+
+    // Bug Hunt Core Execution Rules Trackers Logic block
+    const bugLines = document.querySelectorAll('.bug-line');
+    const bugScoreDisplay = document.getElementById('bug-score');
+    const bugFeedback = document.getElementById('bug-feedback');
+    let localizedBugsCount = 0;
+    const targetsToWin = 2;
+
+    bugLines.forEach(line => {
+        line.addEventListener('click', () => {
+            if(line.classList.contains('selected-bug')) return; // Deduplication checks guardrails
+            
+            const isBug = line.getAttribute('data-bug') === "true";
+            line.classList.add('selected-bug');
+            
+            if(isBug) {
+                localizedBugsCount++;
+                bugScoreDisplay.textContent = `${localizedBugsCount} / ${targetsToWin}`;
+                bugFeedback.textContent = "Excellent! Found an invalid variable name declaration layout standard rule breaker!";
+                bugFeedback.style.color = "#10b981";
+                if(localizedBugsCount === targetsToWin) {
+                    bugFeedback.textContent = "Incredible Job! All logical variable styling naming rule violations exposed!";
+                }
+            } else {
+                bugFeedback.textContent = "Incorrect target tracking parameter. That line syntax structures flawlessly.";
+                bugFeedback.style.color = "#ef4444";
+                setTimeout(() => line.classList.remove('selected-bug'), 800);
+            }
+        });
+    });
+
+    // Verbatim Question Sets Injector Framework Architecture
+    const quizDataset = [
+        {
+            q: "Which of the following is NOT a valid variable name in Python?",
+            o: ["A. student_age", "B. _height", "C. 2name", "D. total_sum"],
+            a: 2, // Map options index positions natively cleanly
+            f: "Answer: C. 2name. Variable names cannot start with numeric digits natively."
+        },
+        {
+            q: "What is the correct syntax to check the data type of a variable x?",
+            o: ["A. print(type x)", "B. type(x)", "C. print(type(x))", "D. check(type(x))"],
+            a: 2,
+            f: "Answer: C. print(type(x)). Wraps the native type tracking resolution inside visual standard out printers cleanly."
+        },
+        {
+            q: "Which of the following is an example of a float data type?",
+            o: ["A. 15", "B. \"15.0\"", "C. 15.0", "D. True"],
+            a: 2,
+            f: "Answer: C. 15.0. Integers tracking decimal parameters explicitly signify Float data models."
+        },
+        {
+            q: "What will the following code output?<br><br><code class='font-mono bg-slate-950 px-2 py-1 text-sm rounded block text-indigo-300 whitespace-pre'>name = \"Alice\"\nage = 25\nprint(f\"My name is {name} and I am {age} years old.\")</code>",
+            o: ["A. My name is name and I am age years old.", "B. My name is Alice and I am 25 years old.", "C. My name is Alice and I am age years old.", "D. SyntaxError"],
+            a: 1,
+            f: "Answer: B. My name is Alice and I am 25 years old. The literal f-string parser cleanly extracts runtime value properties."
+        },
+        {
+            q: "What is the result of the following code?<br><br><code class='font-mono bg-slate-950 px-2 py-1 text-sm rounded block text-indigo-300 whitespace-pre'>length = 5\nwidth = 3\narea = length * width\nprint(area)</code>",
+            o: ["A. 15", "B. 8", "C. 15.0", "D. Error"],
+            a: 0,
+            f: "Answer: A. 15. Multiplies integers natively resulting cleanly in standard whole integer parameters."
+        }
+    ];
+
+    let currentMcqIdx = 0;
+    let selectedAnswerIdx = null;
+
+    const mcqWrapper = document.getElementById('mcq-wrapper');
+    const mcqCompleteView = document.getElementById('mcq-complete-view');
+    const mcqQuestionBox = document.getElementById('mcq-question-box');
+    const mcqOptionsBox = document.getElementById('mcq-options-box');
+    const mcqProgressLbl = document.getElementById('mcq-progress-lbl');
+    const mcqFeedbackPanel = document.getElementById('mcq-feedback-panel');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+
+    function paintMcqEngine() {
+        // Reset option selected conditions properties state track hooks safely
+        selectedAnswerIdx = null;
+        mcqNextBtn.disabled = true;
+        mcqFeedbackPanel.classList.add('hidden');
+        mcqFeedbackPanel.textContent = "";
+
+        // Check quiz completion bounding arrays parameters checks
+        if(currentMcqIdx >= quizDataset.length) {
+            mcqWrapper.classList.add('hidden');
+            mcqCompleteView.classList.remove('hidden');
+            mcqCompleteView.classList.add('flex');
+            return;
+        }
+
+        mcqWrapper.classList.remove('hidden');
+        mcqCompleteView.classList.add('hidden');
+        mcqCompleteView.classList.remove('flex');
+
+        const activeQuestionItem = quizDataset[currentMcqIdx];
+        mcqProgressLbl.textContent = `Question ${currentMcqIdx + 1} of ${quizDataset.length}`;
+        mcqQuestionBox.innerHTML = activeQuestionItem.q;
+
+        // Render options blocks arrays maps dynamically
+        mcqOptionsBox.innerHTML = "";
+        activeQuestionItem.o.forEach((optionStr, indexIdx) => {
+            const cardEl = document.createElement('div');
+            cardEl.className = "option-card p-4 rounded-xl font-medium border text-slate-200 text-sm transition";
+            cardEl.innerHTML = optionStr;
+            cardEl.addEventListener('click', () => selectMcqOption(indexIdx, cardEl));
+            mcqOptionsBox.appendChild(cardEl);
+        });
+
+        // Frame back buttons validations metrics states cleanly
+        mcqPrevBtn.disabled = currentMcqIdx === 0;
+        if (currentMcqIdx === quizDataset.length - 1) {
+            mcqNextBtn.innerHTML = `Complete Quiz Module <i class="fa-solid fa-flag-checkered ml-2"></i>`;
+        } else {
+            mcqNextBtn.innerHTML = `Next Question <i class="fa-solid fa-arrow-right ml-2"></i>`;
+        }
+    }
+
+    function selectMcqOption(selectedIndex, selectedElement) {
+        if(selectedAnswerIdx !== null) return; // Locks input properties dynamically upon selection actions
+        
+        selectedAnswerIdx = selectedIndex;
+        const currentCorrectAnswer = quizDataset[currentMcqIdx].a;
+        const choicesElements = mcqOptionsBox.querySelectorAll('.option-card');
+
+        choicesElements.forEach((el) => el.classList.add('disabled'));
+
+        if(selectedAnswerIdx === currentCorrectAnswer) {
+            selectedElement.classList.add('correct');
+            mcqFeedbackPanel.className = "my-4 p-3 rounded-xl font-bold text-center text-sm bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+            mcqFeedbackPanel.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Correct! ${quizDataset[currentMcqIdx].f}`;
+        } else {
+            selectedElement.classList.add('incorrect');
+            choicesElements[currentCorrectAnswer].classList.add('correct');
+            mcqFeedbackPanel.className = "my-4 p-3 rounded-xl font-bold text-center text-sm bg-rose-500/10 border border-rose-500/30 text-rose-400";
+            mcqFeedbackPanel.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> Incorrect. ${quizDataset[currentMcqIdx].f}`;
+        }
+        
+        mcqFeedbackPanel.classList.remove('hidden');
+        mcqNextBtn.disabled = false;
+    }
+
+    mcqNextBtn.addEventListener('click', () => {
+        currentMcqIdx++;
+        paintMcqEngine();
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if(currentMcqIdx > 0) {
+            currentMcqIdx--;
+            paintMcqEngine();
+        }
+    });
+
+    // Boot execution systems orchestrators initializes cleanly natively
+    paintMcqEngine();
+    updatePresentationState();
+
+</script>
+</body>
+</html>

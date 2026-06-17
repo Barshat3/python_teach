@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to APIs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0ea5e9;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+            --accent-error: #ef4444;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #slide-counter {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 50;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .key-box {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            margin: 0 0.2rem;
+            font-family: monospace;
+            color: var(--text-main);
+        }
+
+        .code-container {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .buggy-line:hover {
+            background-color: rgba(255,255,255,0.05) !important;
+        }
+        .buggy-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-left-color: var(--accent-error);
+        }
+
+        /* Standard custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+<div id="presentation-container" class="w-full h-full relative">
+
+    <div class="slide active bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a]">
+        <div class="max-w-4xl text-center px-4 space-y-6">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-semibold text-sm tracking-wide uppercase mb-2">
+                <i class="fa-solid fa-network-wired"></i> Day 28: Networking Fundamentals
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-sky-300">
+                Introduction to APIs
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-normal">
+                Discover how modern software applications instantly connect, share data, and unlock powerful global web services using Python.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12 text-left max-w-3xl mx-auto">
+                <div class="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-5 rounded-xl flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-circle-nodes text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">What is an API?</h3>
+                        <p class="text-sm text-slate-400 mt-1">Application Programming Interface. The digital messenger bridging standalone programs together.</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-5 rounded-xl flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-400 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">REST & JSON Data</h3>
+                        <p class="text-sm text-slate-400 mt-1">Send structured web requests over standard channels and consume machine-readable data payloads.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 px-6 items-center">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="text-xs font-bold tracking-widest text-sky-400 uppercase">Core Definitions</div>
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-white">How Software Communicates</h2>
+                <p class="text-slate-400 text-sm md:text-base leading-relaxed">
+                    Instead of a user interface with buttons and inputs, an <strong>API</strong> exposes machine-readable endpoints. Programs send dynamic web messages and receive highly organized payloads back.
+                </p>
+                <div class="bg-slate-800/70 border-l-4 border-amber-500 p-4 rounded-r-xl">
+                    <div class="flex items-center gap-2 text-amber-400 font-bold text-sm mb-1">
+                        <i class="fa-solid fa-lightbulb"></i> Real-World Analogy
+                    </div>
+                    <p class="text-xs text-slate-300 leading-normal">
+                        Think of an API like a <strong>restaurant waiter</strong>. You (the client) pick an item from the menu, the waiter (the API) runs your request to the kitchen (the server), and delivers your hot meal back to your table!
+                    </p>
+                </div>
+            </div>
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-5 bg-slate-800 border border-slate-700/60 rounded-xl space-y-2">
+                    <div class="text-indigo-400 font-mono text-xs font-semibold uppercase tracking-wider">01 // The Core Acronym</div>
+                    <h3 class="text-lg font-bold text-white">Application Programming Interface</h3>
+                    <p class="text-xs text-slate-400">A contract specifying how software parts talk. It defines input rules, valid query shapes, and structured data outputs.</p>
+                </div>
+                <div class="p-5 bg-slate-800 border border-slate-700/60 rounded-xl space-y-2">
+                    <div class="text-sky-400 font-mono text-xs font-semibold uppercase tracking-wider">02 // The Web Standard</div>
+                    <h3 class="text-lg font-bold text-white">REST Architecture</h3>
+                    <p class="text-xs text-slate-400">Representational State Transfer. A widely adapted standard architecture that leverages baseline HTTP channels over the global web.</p>
+                </div>
+                <div class="p-5 bg-slate-800 border border-slate-700/60 rounded-xl space-y-2">
+                    <div class="text-emerald-400 font-mono text-xs font-semibold uppercase tracking-wider">03 // Data Shape</div>
+                    <h3 class="text-lg font-bold text-white">JSON Payloads</h3>
+                    <p class="text-xs text-slate-400">JavaScript Object Notation. Lightweight text format for storing data. Maps smoothly directly into native Python structures.</p>
+                </div>
+                <div class="p-5 bg-slate-800 border border-slate-700/60 rounded-xl space-y-2">
+                    <div class="text-purple-400 font-mono text-xs font-semibold uppercase tracking-wider">04 // Live Examples</div>
+                    <h3 class="text-lg font-bold text-white">Live Operations</h3>
+                    <p class="text-xs text-slate-400">Fetching live dynamic weather information, pulling up-to-the-minute stock indicators, or streaming breaking news directly into code.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-5xl w-full px-6 space-y-8">
+            <div class="text-center space-y-2">
+                <div class="text-xs font-bold tracking-widest text-indigo-400 uppercase">Architecture Toolkit</div>
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-white">Endpoints & HTTP Operations</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div class="lg:col-span-5 space-y-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-link text-sky-400 text-sm"></i> What is an Endpoint?
+                    </h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        An endpoint is the target destination web address (URL) hosting standard cloud capabilities. It can receive extra context options like authorization details or structural filters via special URL extensions called query parameters.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs overflow-x-auto text-slate-300">
+                        <span class="text-emerald-400">https://api.openweathermap.org/data/2.5/weather</span><span class="text-amber-400">?q=London&appid=YOUR_KEY</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-xs text-slate-400 flex justify-between"><span>Base Route:</span> <span class="font-mono text-slate-300 text-[11px]">/data/2.5/weather</span></div>
+                        <div class="text-xs text-slate-400 flex justify-between"><span>Query Param <code class="text-amber-400">q</code>:</span> <span class="font-mono text-slate-300 text-[11px]">London (Location)</span></div>
+                        <div class="text-xs text-slate-400 flex justify-between"><span>Query Param <code class="text-amber-400">appid</code>:</span> <span class="font-mono text-slate-300 text-[11px]">Authentication Credential</span></div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-800/80 border-b border-slate-700 font-bold text-sm text-slate-200">
+                        Primary HTTP Request Verbs
+                    </div>
+                    <div class="divide-y divide-slate-700/40">
+                        <div class="p-4 flex items-center gap-4">
+                            <span class="px-3 py-1 text-xs font-mono font-bold rounded bg-emerald-500/10 text-emerald-400 min-w-[75px] text-center">GET</span>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">Retrieve Data</h4>
+                                <p class="text-xs text-slate-400 mt-0.5">Fetches properties and raw content profiles from a server without changing underlying server states.</p>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center gap-4">
+                            <span class="px-3 py-1 text-xs font-mono font-bold rounded bg-sky-500/10 text-sky-400 min-w-[75px] text-center">POST</span>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">Send Data</h4>
+                                <p class="text-xs text-slate-400 mt-0.5">Transmits brand-new information assets inside payloads to build distinct entries remotely.</p>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center gap-4">
+                            <span class="px-3 py-1 text-xs font-mono font-bold rounded bg-amber-500/10 text-amber-400 min-w-[75px] text-center">PUT/PATCH</span>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">Update Data</h4>
+                                <p class="text-xs text-slate-400 mt-0.5">Modifies existing parameters, adjustments, or fully replaces object targets already tracked in systems.</p>
+                            </div>
+                        </div>
+                        <div class="p-4 flex items-center gap-4">
+                            <span class="px-3 py-1 text-xs font-mono font-bold rounded bg-rose-500/10 text-rose-400 min-w-[75px] text-center">DELETE</span>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">Remove Data</h4>
+                                <p class="text-xs text-slate-400 mt-0.5">Instructs target network destinations to wipe distinct profiles or references completely from logs.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-6xl w-full px-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="lg:col-span-5 flex flex-col justify-between py-2">
+                <div class="space-y-4">
+                    <div class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Live Integration Playground</div>
+                    <h2 class="text-3xl font-bold tracking-tight text-white">Handling API JSON in Python</h2>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        When fetching data from web endpoints using libraries like <code class="text-indigo-400 font-mono">requests</code>, web engines return text strings shaped like standard keys and values.
+                    </p>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        In Python, JSON payload maps into standard <strong class="text-emerald-400">Dictionaries</strong>. Target nested metrics using square bracket indexing structures like <code class="text-amber-400 font-mono">data["temp"]</code>.
+                    </p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 mt-4 space-y-2">
+                    <div class="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Common Pitfall Callout
+                    </div>
+                    <p class="text-xs text-slate-300 leading-normal">
+                        Using dot syntax directly like <code class="text-rose-400 font-mono">data.temp</code> will fail with an <code class="text-rose-400 font-mono">AttributeError</code>! Stick strictly to valid dictionary key-lookup configurations.
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col space-y-3">
+                <div class="code-container bg-[#1e293b] flex flex-col flex-grow">
+                    <div class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">api_parsing_demo.py</span>
+                        </div>
+                        <div id="pyodide-status" class="text-xs font-mono text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-spinner animate-spin"></i> Loading environment...
+                        </div>
+                    </div>
+                    <div class="relative flex-grow font-mono text-sm">
+                        <textarea id="python-editor" class="w-full h-48 p-4 bg-[#1b2432] text-slate-200 border-none outline-none focus:ring-0 font-mono resize-none leading-relaxed"># Mock API JSON response string
+mock_json_response = {"temp": 25, "city": "London", "status": "Cloudy"}
+
+# Inside Python, this acts directly like a dictionary
+print(f"Full Data Object: {mock_json_response}")
+
+# Accessing values using brackets
+current_temp = mock_json_response["temp"]
+current_city = mock_json_response["city"]
+
+print(f"The temperature in {current_city} is {current_temp}°C")</textarea>
+                    </div>
+                    <div class="p-3 bg-slate-900 border-t border-slate-800 flex justify-end">
+                        <button id="run-code-btn" disabled class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold text-sm rounded-md transition-colors flex items-center gap-2 shadow-lg">
+                            <i class="fa-solid fa-play"></i> Run Code
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-black/80 rounded-xl border border-slate-800 p-4 flex flex-col h-32">
+                    <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-1 font-mono">Execution Console Output</div>
+                    <pre id="console-output" class="text-xs text-emerald-400 font-mono overflow-y-auto flex-grow whitespace-pre-wrap">Console initialized. Click 'Run Code' above to test Python API handling components.</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-4xl w-full px-6 space-y-6">
+            <div class="text-center space-y-2">
+                <div class="text-xs font-bold tracking-widest text-rose-400 uppercase">Interactive Diagnostics</div>
+                <h2 class="text-3xl font-bold tracking-tight text-white">Code Lab: Bug Hunt Edition</h2>
+                <p class="text-sm text-slate-400 max-w-xl mx-auto">
+                    Spot the runtime errors below related to syntax handling and index lookup logic! Click on lines you suspect contain critical errors.
+                </p>
+            </div>
+
+            <div class="bg-[#1e293b] code-container overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
+                    <span class="text-xs font-mono text-slate-400"><i class="fa-solid fa-bug text-rose-400 mr-1.5"></i> weather_service_buggy.py</span>
+                    <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold" id="bug-tracker-text">Bugs Remaining: 2</span>
+                </div>
+                <div class="p-2 font-mono text-sm leading-relaxed text-slate-300 bg-[#1b2432] select-none">
+                    <div class="buggy-line p-1 px-3 rounded text-slate-500" data-is-bug="false">import requests</div>
+                    <div class="buggy-line p-1 px-3 rounded text-slate-300" data-is-bug="false">payload = {"temp": 18, "units": "metric", "status_code": 401}</div>
+                    <div class="buggy-line p-1 px-3 rounded text-slate-300" data-is-bug="true">current_temp = payload.temp</div>
+                    <div class="buggy-line p-1 px-3 rounded text-slate-300" data-is-bug="false">print("API Data Connected Successfully")</div>
+                    <div class="buggy-line p-1 px-3 rounded text-slate-300" data-is-bug="true">print(f"Reporting system indicators: " + payload(units))</div>
+                </div>
+            </div>
+
+            <div id="bug-feedback-zone" class="h-10 text-center text-sm font-semibold transition-all duration-200"></div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-3xl w-full px-6 space-y-6">
+            <div class="text-center space-y-1">
+                <div class="text-xs font-bold tracking-widest text-indigo-400 uppercase">Knowledge Verification</div>
+                <h2 class="text-3xl font-bold tracking-tight text-white">Check Your Understanding</h2>
+                <div class="text-xs text-slate-400 font-mono mt-1" id="mcq-progress-indicator">Question 1 of 10</div>
+            </div>
+
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl relative min-h-[380px] flex flex-col justify-between">
+                <div id="mcq-question-box" class="space-y-6">
+                    <h3 class="text-xl font-bold text-white leading-snug" id="mcq-question-text">
+                        Loading evaluation criteria question text parameters...
+                    </h3>
+                    <div class="grid grid-cols-1 gap-3" id="mcq-options-container">
+                        </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-between">
+                    <button id="mcq-prev-btn" class="px-4 py-2 rounded-lg font-bold text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i> Previous
+                    </button>
+                    <div id="mcq-status-feedback" class="text-xs font-bold"></div>
+                    <button id="mcq-next-btn" disabled class="px-5 py-2 rounded-lg font-bold text-xs bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white transition-all flex items-center gap-1.5">
+                        Next <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // VERBATIM USER SUPPLIED MCQ STORAGE
+    const mcqData = [
+        {
+            q: "What does API stand for?",
+            a: "a) Automated Program Internet",
+            b: "b) Application Programming Interface",
+            c: "c) App Process Integration",
+            d: "d) Advanced Python Instruction",
+            correct: "b"
+        },
+        {
+            q: "Which Python library is most commonly used to interact with web APIs?",
+            a: "a) math",
+            b: "b) random",
+            c: "c) requests",
+            d: "d) time",
+            correct: "c"
+        },
+        {
+            q: "What is the most common format for data returned by a REST API?",
+            a: "a) HTML",
+            b: "b) JSON",
+            c: "c) TXT",
+            d: "d) CSV",
+            correct: "b"
+        },
+        {
+            q: "Which HTTP method is used to retrieve data from an API?",
+            a: "a) SEND",
+            b: "b) POST",
+            c: "c) GET",
+            d: "d) FETCH",
+            correct: "c"
+        },
+        {
+            q: "What is the purpose of an API Key?",
+            a: "a) To make the code run faster",
+            b: "b) To identify the user and provide access to the server",
+            c: "c) To encrypt the Python file",
+            d: "d) To name the variables",
+            correct: "b"
+        },
+        {
+            q: "In the OpenWeatherMap API, what does the 'units=metric' parameter do?",
+            a: "a) Shows the distance in miles",
+            b: "b) Shows the temperature in Celsius",
+            c: "c) Shows the temperature in Kelvin",
+            d: "d) It does nothing",
+            correct: "b"
+        },
+        {
+            q: "If an API response looks like {\"temp\": 25}, how do you access the temperature in Python?",
+            a: "a) data.temp",
+            b: "b) data[\"temp\"]",
+            c: "c) data(temp)",
+            d: "d) data{temp}",
+            correct: "b"
+        },
+        {
+            q: "What happens if you use an invalid API Key?",
+            a: "a) The program crashes",
+            b: "b) You receive an error code (like 401 Unauthorized)",
+            c: "c) The program gives you fake data",
+            d: "d) Python deletes your script",
+            correct: "b"
+        },
+        {
+            q: "A JSON object in Python behaves most like which data type?",
+            a: "a) List",
+            b: "b) Integer",
+            c: "c) Dictionary",
+            d: "d) String",
+            correct: "c"
+        },
+        {
+            q: "What is an API \"Endpoint\"?",
+            a: "a) The last line of your code",
+            b: "b) The specific URL where the API data is located",
+            c: "c) The close button of the app",
+            d: "d) The result of a calculation",
+            correct: "b"
+        }
+    ];
+
+    // SLIDE FRAMEWORK MANAGEMENT STATE
+    let slides = document.querySelectorAll('.slide');
+    let currentSlideIndex = 0;
+    const totalSlides = slides.length;
+
+    function updatePresentationLayout() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Update indicators
+        document.getElementById('slide-counter').textContent = `${currentSlideIndex + 1} / ${totalSlides}`;
+        const percentage = ((currentSlideIndex + 1) / totalSlides) * 100;
+        document.getElementById('progress').style.width = `${percentage}%`;
+
+        // Prism layout refresh safety hook
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+        }
+    }
+
+    function moveNext() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updatePresentationLayout();
+        }
+    }
+
+    function movePrev() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentationLayout();
+        }
+    }
+
+    // Keyboard Hook setup
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; // Bypass if typing
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            moveNext();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            movePrev();
+        }
+    });
+
+    // PYODIDE INTEGRATION SYSTEM ENGINE
+    let pyodideInstance = null;
+    async function initPyodideEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.getElementById('pyodide-status').innerHTML = '<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Python Engine Ready</span>';
+            document.getElementById('run-code-btn').removeAttribute('disabled');
+        } catch(err) {
+            document.getElementById('pyodide-status').innerHTML = '<span class="text-rose-400"><i class="fa-solid fa-circle-xmark"></i> Load Error</span>';
+            console.error(err);
+        }
+    }
+    initPyodideEngine();
+
+    document.getElementById('run-code-btn').addEventListener('click', async () => {
+        if(!pyodideInstance) return;
+        const codeText = document.getElementById('python-editor').value;
+        const outputConsole = document.getElementById('console-output');
+        outputConsole.textContent = "Running script...\n";
+
+        // Reset system stdout redirection streams cleanly
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(codeText);
+            let stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            let stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            outputConsole.textContent = stdout + (stderr ? "\nErrors:\n" + stderr : "");
+            if(!stdout && !stderr) {
+                outputConsole.textContent = "Script executed successfully with no direct standard console outputs.";
+            }
+        } catch(err) {
+            outputConsole.textContent = `Execution Error Caught:\n${err.message}`;
+        }
+    });
+
+    // BUG HUNT INTERACTION MECHANICS
+    let remainingBugsCount = 2;
+    document.querySelectorAll('.buggy-line').forEach(line => {
+        line.addEventListener('click', function() {
+            if(this.classList.contains('selected-bug')) return; // Avoid double click tracking
+            
+            const isBug = this.getAttribute('data-is-bug') === 'true';
+            const feedbackZone = document.getElementById('bug-feedback-zone');
+            
+            if(isBug) {
+                this.classList.add('selected-bug');
+                this.classList.remove('text-slate-300');
+                this.classList.add('text-rose-400');
+                remainingBugsCount--;
+                document.getElementById('bug-tracker-text').textContent = `Bugs Remaining: ${remainingBugsCount}`;
+                feedbackZone.textContent = "Great catch! You found an operational code bug.";
+                feedbackZone.className = "h-10 text-center text-sm font-semibold text-emerald-400";
+                
+                if(remainingBugsCount === 0) {
+                    feedbackZone.textContent = "Excellent diagnostic work! All code bugs discovered successfully.";
+                    feedbackZone.className = "h-10 text-center text-sm font-semibold text-emerald-400 animate-bounce";
+                }
+            } else {
+                feedbackZone.textContent = "Line verified functional. No bugs detected there. Keep hunting!";
+                feedbackZone.className = "h-10 text-center text-sm font-semibold text-rose-400";
+            }
+        });
+    });
+
+    // VERBATIM MCQ MECHANICS COMPONENT Flow Control
+    let currentMcqIdx = 0;
+    let selectedOptionKey = null;
+
+    function renderActiveQuestion() {
+        if(currentMcqIdx >= mcqData.length) {
+            // Completed state layout transformation
+            document.getElementById('mcq-question-box').innerHTML = `
+                <div class="text-center py-12 space-y-4">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-scale">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Assessment Complete!</h3>
+                    <p class="text-sm text-slate-400 max-w-sm mx-auto">You have thoroughly completed all 10 user-provided API architectural knowledge evaluation criteria questions verified.</p>
+                </div>
+            `;
+            document.getElementById('mcq-next-btn').style.display = 'none';
+            document.getElementById('mcq-status-feedback').textContent = "";
+            document.getElementById('mcq-progress-indicator').textContent = "100% Verified";
+            return;
+        }
+
+        const data = mcqData[currentMcqIdx];
+        document.getElementById('mcq-progress-indicator').textContent = `Question ${currentMcqIdx + 1} of ${mcqData.length}`;
+        document.getElementById('mcq-question-text').textContent = data.q;
+        
+        const optionsContainer = document.getElementById('mcq-options-container');
+        optionsContainer.innerHTML = '';
+        document.getElementById('mcq-status-feedback').textContent = "";
+        
+        const nextBtn = document.getElementById('mcq-next-btn');
+        nextBtn.setAttribute('disabled', 'true');
+        nextBtn.innerHTML = currentMcqIdx === mcqData.length - 1 ? 'Finish Assessment <i class="fa-solid fa-flag-checkered text-[10px]"></i>' : 'Next Question <i class="fa-solid fa-arrow-right text-[10px]"></i>';
+        
+        selectedOptionKey = null;
+
+        // Render matching dictionary profiles pairs
+        ['a', 'b', 'c', 'd'].forEach(key => {
+            const optionString = data[key];
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left p-3.5 px-5 bg-slate-700/40 hover:bg-slate-700/70 border border-slate-600/40 rounded-xl font-medium text-sm text-slate-200 transition-all flex items-center justify-between group";
+            btn.innerHTML = `<span>${optionString}</span> <i class="fa-regular fa-circle text-slate-500 text-xs group-hover:text-slate-300"></i>`;
+            
+            btn.addEventListener('click', () => {
+                if(selectedOptionKey !== null) return; // Prevent clicking twice
+                selectedOptionKey = key;
+                
+                const isCorrect = key === data.correct;
+                if(isCorrect) {
+                    btn.className = "w-full text-left p-3.5 px-5 bg-emerald-500/10 border-2 border-emerald-500 rounded-xl font-bold text-sm text-emerald-400 transition-all flex items-center justify-between";
+                    btn.innerHTML = `<span>${optionString}</span> <i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+                    document.getElementById('mcq-status-feedback').className = "text-xs font-bold text-emerald-400";
+                    document.getElementById('mcq-status-feedback').innerHTML = '<i class="fa-solid fa-circle-check"></i> Verified Correct Answer!';
+                } else {
+                    btn.className = "w-full text-left p-3.5 px-5 bg-rose-500/10 border-2 border-rose-500 rounded-xl font-bold text-sm text-rose-400 transition-all flex items-center justify-between";
+                    btn.innerHTML = `<span>${optionString}</span> <i class="fa-solid fa-circle-xmark text-rose-400"></i>`;
+                    document.getElementById('mcq-status-feedback').className = "text-xs font-bold text-rose-400";
+                    document.getElementById('mcq-status-feedback').innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Incorrect. Code Answer is Option (${data.correct.toUpperCase()})`;
+                    
+                    // Highlight correct option passively
+                    setTimeout(() => {
+                        Array.from(optionsContainer.children).forEach(child => {
+                            if(child.textContent.trim().startsWith(data.correct + ")")) {
+                                child.className = "w-full text-left p-3.5 px-5 bg-slate-700/80 border border-emerald-500/60 rounded-xl font-medium text-sm text-emerald-400 transition-all flex items-center justify-between";
+                            }
+                        });
+                    }, 150);
+                }
+                nextBtn.removeAttribute('disabled');
+            });
+
+            optionsContainer.appendChild(btn);
+        });
+
+        // Adjust previous button safety block state tracking
+        document.getElementById('mcq-prev-btn').disabled = currentMcqIdx === 0;
+    }
+
+    document.getElementById('mcq-next-btn').addEventListener('click', () => {
+        currentMcqIdx++;
+        renderActiveQuestion();
+    });
+
+    document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+        if(currentMcqIdx > 0) {
+            currentMcqIdx--;
+            // Remount component interface states to reset complete overrides dynamically
+            if(currentMcqIdx == mcqData.length - 1) {
+                location.reload(); // Quick reset hook fallback if component was rewritten on complete
+            }
+            renderActiveQuestion();
+        }
+    });
+
+    // Boot execution tracking anchors on frame initiation
+    updatePresentationLayout();
+    renderActiveQuestion();
+</script>
+</body>
+</html>

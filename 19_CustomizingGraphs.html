@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matplotlib: Customizing Graphs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --color-primary: #4F46E5;
+            --color-secondary: #06B6D4;
+            --color-success: #10B981;
+            --color-danger: #EF4444;
+            --color-warning: #F59E0B;
+            --color-bg-dark: #0F172A;
+            --color-bg-card: #1E293B;
+            --color-text-main: #F8FAFC;
+            --color-text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 750px;
+            background-color: var(--color-bg-card);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            position: relative;
+            overflow-y: auto;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 24px;
+            right: 32px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 32px;
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            z-index: 50;
+            opacity: 0.7;
+        }
+
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin: 0 3px;
+            font-family: monospace;
+        }
+
+        /* Custom scrollbars */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+        }
+
+        /* Bug Hunt Styles */
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            background: rgba(239, 68, 68, 0.2);
+            border-left-color: var(--color-danger);
+        }
+
+        /* Pyodide Console Styles */
+        .console-output {
+            background-color: #050b14;
+            font-family: 'Fira Code', monospace;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 80px;
+            max-height: 160px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* MCQ Options */
+        .mcq-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .mcq-option:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--color-primary);
+            transform: translateX(4px);
+        }
+        .mcq-option.correct {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--color-success) !important;
+            color: #A7F3D0;
+        }
+        .mcq-option.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--color-danger) !important;
+            color: #FCA5A5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 6</div>
+
+<div id="presentation-container" class="w-full flex justify-center items-center">
+
+    <div class="slide active" id="slide-0">
+        <div class="flex h-full flex-col justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="bg-indigo-600/20 text-indigo-400 p-4 rounded-2xl border border-indigo-500/30">
+                    <i class="fa-solid fa-chart-line text-3xl"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Class 17 Presentation</span>
+                    <h1 class="text-4xl font-extrabold text-white mt-1">Customizing Graphs in Matplotlib</h1>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4">
+                        <i class="fa-solid fa-eye text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Make Data Clear</h3>
+                    <p class="text-slate-400 text-sm">Incorporate descriptive titles, distinct labels, and precise legends to remove assumptions from data interpretation.</p>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-4">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Enhance Visual Appeal</h3>
+                    <p class="text-slate-400 text-sm">Apply modern line styling, background grids, and contrastive elements to instantly capture your audience's attention.</p>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col items-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 mb-4">
+                        <i class="fa-solid fa-comments text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Improve Communication</h3>
+                    <p class="text-slate-400 text-sm">Transform a chaotic mess of points or lines into an intuitive narrative framework that immediately conveys data insights.</p>
+                </div>
+            </div>
+
+            <div class="bg-indigo-950/40 border border-indigo-800/60 rounded-xl p-4 flex items-center space-x-3">
+                <i class="fa-solid fa-lightbulb text-indigo-400 text-lg"></i>
+                <p class="text-sm text-indigo-200 font-medium"><strong>Why Customize?</strong> A default graph shows data; a well-customized graph tells a memorable, actionable story.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+        <div class="flex h-full flex-col justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-sliders text-indigo-400 mr-2"></i>Core Customization Syntax</h2>
+                <p class="text-slate-400 text-sm mb-6">Master the building blocks to add structure, labels, and analytical markers to your Matplotlib visualizations.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+                <div class="space-y-4">
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-start space-x-3">
+                        <div class="text-indigo-400 font-mono font-bold bg-indigo-950 px-2.5 py-1 rounded-md text-sm mt-0.5">1</div>
+                        <div>
+                            <h4 class="text-base font-bold text-white mb-0.5">Adding a Title</h4>
+                            <code class="text-cyan-400 font-mono text-sm">plt.title("My Graph Title")</code>
+                            <p class="text-xs text-slate-400 mt-1">Positions a descriptive global header directly above the active axes layer.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-start space-x-3">
+                        <div class="text-cyan-400 font-mono font-bold bg-cyan-950 px-2.5 py-1 rounded-md text-sm mt-0.5">2</div>
+                        <div>
+                            <h4 class="text-base font-bold text-white mb-0.5">Labeling Axes</h4>
+                            <div class="space-y-1 mt-1">
+                                <div><code class="text-cyan-400 font-mono text-sm">plt.xlabel("X-Axis Label")</code></div>
+                                <div><code class="text-cyan-400 font-mono text-sm">plt.ylabel("Y-Axis Label")</code></div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Identifies variables and metrics being mapped along structural pathways.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 flex items-start space-x-3">
+                        <div class="text-emerald-400 font-mono font-bold bg-emerald-950 px-2.5 py-1 rounded-md text-sm mt-0.5">3</div>
+                        <div>
+                            <h4 class="text-base font-bold text-white mb-0.5">Styling & Background</h4>
+                            <div class="space-y-1 mt-1">
+                                <div><code class="text-cyan-400 font-mono text-sm">plt.plot(x, y, color="red")</code></div>
+                                <div><code class="text-cyan-400 font-mono text-sm">plt.grid(True)</code></div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Changes data plot strokes and deploys aligned grid alignments for enhanced traceability.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 rounded-xl p-4 border border-slate-800 flex flex-col justify-center">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block font-heading">Syntax Overview Block</span>
+                    <pre class="rounded-lg m-0 overflow-x-auto"><code class="language-python">import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4]
+y = [10, 24, 36, 48]
+
+plt.plot(x, y, color="red")
+plt.title("My Graph Title")
+plt.xlabel("X-Axis Label")
+plt.ylabel("Y-Axis Label")
+plt.grid(True)
+
+plt.show()</code></pre>
+                </div>
+            </div>
+
+            <div class="bg-amber-950/40 border border-amber-900/60 rounded-xl p-3 flex items-center space-x-2">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm"></i>
+                <p class="text-xs text-amber-200"><strong>Common Pitfall:</strong> Forgetting to pass the <code class="bg-slate-900 px-1 rounded font-mono">label="..."</code> property into <code class="bg-slate-900 px-1 rounded font-mono">plt.plot()</code> when assembling complex multiple-line charts with active legends!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex h-full flex-col justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-code text-indigo-400 mr-2"></i>Interactive Sandbox Practice</h2>
+                <p class="text-slate-400 text-sm mb-4">Modify the parameters below to customize an analytics tracker program tracking weekly metrics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto items-stretch h-[60%]">
+                <div class="flex flex-col space-y-2">
+                    <div class="flex justify-between items-center bg-slate-900 px-4 py-2 rounded-t-xl border-t border-x border-slate-700/60">
+                        <span class="text-xs text-slate-400 font-mono flex items-center"><i class="fa-brands fa-python text-indigo-400 mr-1.5"></i>exercise_tracker.py</span>
+                        <button id="run-btn" class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold font-heading text-xs px-4 py-1.5 rounded transition-all flex items-center space-x-1" disabled>
+                            <span id="run-btn-text"><i class="fa-solid fa-play mr-1"></i>Run Code</span>
+                        </button>
+                    </div>
+                    <textarea id="code-editor" class="w-full flex-1 p-4 bg-slate-950 font-mono text-sm rounded-b-xl border-b border-x border-slate-700/60 text-slate-200 focus:outline-none focus:border-indigo-500 resize-none">import matplotlib.pyplot as plt
+
+# Dataset: Days of the week vs Minutes exercised
+days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+minutes = [30, 45, 0, 60, 20, 90, 45]
+
+# Step 1: Draw the baseline line graph tracking data metrics
+plt.plot(days, minutes, color="indigo", label="Routine")
+
+# Step 2: Inject explicit target headers and titles
+plt.title("Weekly Exercise Routine Tracker")
+plt.xlabel("Days of the Week")
+plt.ylabel("Minutes Expended")
+
+# Step 3: Enable visualization frameworks
+plt.grid(True)
+plt.legend()
+
+# Display current configuration
+print("Plot configuration verified successfully!")
+print(f"Tracking {len(days)} diagnostic milestones across standard active operations.")</textarea>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <div class="bg-slate-900 px-4 py-2 rounded-t-xl border-t border-x border-slate-700/60 flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-terminal mr-1.5"></i>Output Terminal</span>
+                        <div id="pyodide-loading-indicator" class="text-xs text-amber-400 flex items-center">
+                            <i class="fa-solid fa-circle-notch animate-spin mr-1.5"></i>Loading environment...
+                        </div>
+                    </div>
+                    <div id="console-log" class="console-output flex-1 rounded-b-xl text-slate-300">Run code to see standard console output logs...</div>
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800 text-xs text-slate-400">
+                        <p class="font-semibold text-slate-300 mb-1"><i class="fa-solid fa-circle-info text-indigo-400 mr-1"></i>Code Implementation Goal:</p>
+                        Customize the chart parameters above. Try altering colors to <code class="bg-slate-900 px-1 rounded text-cyan-400 font-mono">"red"</code> or <code class="bg-slate-900 px-1 rounded text-cyan-400 font-mono">"teal"</code>, modifying the string arguments, or disabling gridlines with <code class="bg-slate-900 px-1 rounded text-cyan-400 font-mono">False</code>.
+                    </div>
+                </div>
+            </div>
+
+            <div></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="flex h-full flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-bug text-rose-500 mr-2"></i>Syntactical Bug Hunt!</h2>
+                        <p class="text-slate-400 text-sm">Find and click the lines containing structural script breaking layout errors or plotting mistakes.</p>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 text-right">
+                        <span class="text-xs text-slate-500 font-bold block uppercase tracking-wider">Bugs Selected</span>
+                        <span id="bug-tracker-score" class="text-xl font-black text-rose-500 font-heading">0 / 2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 my-auto items-center">
+                <div class="md:col-span-3 bg-slate-950 rounded-2xl border border-slate-800/80 p-4 font-mono text-sm overflow-hidden shadow-inner">
+                    <div class="bug-line p-2 rounded" data-line="1" data-is-bug="false"><span class="text-slate-600 mr-4 select-none">1</span><span class="text-indigo-400">import</span> matplotlib.pyplot <span class="text-indigo-400">as</span> plt</div>
+                    <div class="bug-line p-2 rounded" data-line="2" data-is-bug="false"><span class="text-slate-600 mr-4 select-none">2</span>x_val = [1, 2, 3, 4]</div>
+                    <div class="bug-line p-2 rounded" data-line="3" data-is-bug="false"><span class="text-slate-600 mr-4 select-none">3</span>y_val = [10, 20, 30, 40]</div>
+                    <div class="bug-line p-2 rounded" data-line="4" data-is-bug="true"><span class="text-slate-600 mr-4 select-none">4</span>plt.title = <span class="text-emerald-400">"Production Chart"</span></div>
+                    <div class="bug-line p-2 rounded" data-line="5" data-is-bug="false"><span class="text-slate-600 mr-4 select-none">5</span>plt.xlabel(<span class="text-emerald-400">"Timeline Intervals"</span>)</div>
+                    <div class="bug-line p-2 rounded" data-line="6" data-is-bug="true"><span class="text-slate-600 mr-4 select-none">6</span>plt.gridLines(<span class="text-indigo-400">True</span>)</div>
+                    <div class="bug-line p-2 rounded" data-line="7" data-is-bug="false"><span class="text-slate-600 mr-4 select-none">7</span>plt.show()</div>
+                </div>
+
+                <div class="md:col-span-2 space-y-4">
+                    <div id="bug-feedback-box" class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 min-h-[140px] flex flex-col justify-center">
+                        <p class="text-sm text-slate-400 text-center italic" id="bug-feedback-text">Click on lines in the script editor block that look incorrect or contain syntactical execution errors!</p>
+                    </div>
+                    <div class="bg-indigo-950/20 border border-indigo-900/50 rounded-xl p-3 text-xs text-indigo-300">
+                        <i class="fa-solid fa-circle-nodes mr-1"></i> Look closely at line assignments versus operational functional executions.
+                    </div>
+                </div>
+            </div>
+
+            <div></div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex h-full flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-clipboard-question text-emerald-400 text-xl"></i>
+                        <h2 class="text-2xl font-bold text-white">Check Your Understanding</h2>
+                    </div>
+                    <span id="mcq-progress" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 font-bold font-heading text-slate-400">Question 1 of 7</span>
+                </div>
+            </div>
+
+            <div id="mcq-questions-wrapper" class="my-auto max-w-3xl mx-auto w-full">
+                <div class="mcq-question-block space-y-4" data-index="0">
+                    <h3 class="text-lg font-bold text-white">1. What is the purpose of adding a title to a graph?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. To make the graph colorful.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>B. To summarize what the graph is about.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>C. To add more data to the graph.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. To confuse the audience.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="1">
+                    <h3 class="text-lg font-bold text-white">2. Which function is used to label the x-axis in Matplotlib?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. plt.title()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>B. plt.xlabel()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>C. plt.legend()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. plt.ylabel()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="2">
+                    <h3 class="text-lg font-bold text-white">3. What does the label parameter do in the plt.plot() function?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. Adds grid lines to the graph.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>B. Sets the label for the legend.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>C. Changes the line color.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. Adds a title to the graph.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="3">
+                    <h3 class="text-lg font-bold text-white">4. How do you display a legend on the graph in Matplotlib?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. plt.title("Legend")</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>B. plt.grid(True)</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>C. plt.legend()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. plt.xlabel("Legend")</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="4">
+                    <h3 class="text-lg font-bold text-white">5. Which command adds grid lines to the graph?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>A. plt.grid(True)</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>B. plt.title("Grid Lines")</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>C. plt.legend()</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. plt.plot(grid=True)</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="5">
+                    <h3 class="text-lg font-bold text-white">6. Which of the following is NOT a valid customization option in Matplotlib?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. Adding a title to the graph.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>B. Changing line colors.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>C. Creating animations.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. Adjusting axis labels.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mcq-question-block space-y-4 hidden" data-index="6">
+                    <h3 class="text-lg font-bold text-white">7. Why should contrasting colors be used in graphs?</h3>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>A. To confuse the viewer.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>B. To make the graph harder to read.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="true">
+                            <span>C. To ensure elements are distinguishable.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                        <button class="mcq-option p-3.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between" data-correct="false">
+                            <span>D. To make the graph look dull.</span><i class="status-icon fa-solid"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="mcq-completion-card" class="hidden text-center py-8 space-y-4">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl shadow-lg shadow-emerald-500/5">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white font-heading">Assessment Finished!</h3>
+                        <p class="text-slate-400 text-sm mt-1">You have reviewed all user validation checks for Matplotlib graph customization.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-3">
+                <button id="mcq-prev-btn" class="bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold font-heading text-xs px-4 py-2 rounded-lg transition-all flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                    <i class="fa-solid fa-angle-left mr-1"></i>Previous Question
+                </button>
+                <div id="mcq-feedback-text-box" class="text-xs font-semibold text-slate-400">Select an answer to proceed.</div>
+                <button id="mcq-next-btn" class="bg-indigo-600 text-white hover:bg-indigo-500 font-bold font-heading text-xs px-4 py-2 rounded-lg transition-all flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                    Next Question<i class="fa-solid fa-angle-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex h-full flex-col justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="bg-emerald-600/20 text-emerald-400 p-3.5 rounded-xl border border-emerald-500/30">
+                    <i class="fa-solid fa-square-check text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Module Completed</span>
+                    <h2 class="text-3xl font-bold text-white">Summary & Checklist</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto items-center">
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700/30">
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                        <span class="text-sm text-slate-300">Adding descriptive graph headers using <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">plt.title()</code></span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700/30">
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                        <span class="text-sm text-slate-300">Labeling structural axes variables via <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">plt.xlabel() / ylabel()</code></span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700/30">
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                        <span class="text-sm text-slate-300">Deploying layout markers & legends with <code class="font-mono bg-slate-900 px-1 py-0.5 rounded text-cyan-400">plt.legend() / grid()</code></span>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-900/50 rounded-2xl p-6 text-center space-y-3">
+                    <div class="text-4xl text-indigo-400"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <h3 class="text-lg font-bold text-white font-heading">Ready for Production Graphics!</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">You have mastered configuring standard design structures for Python graphs. Use descriptive typography and clear color highlights to communicate insights efficiently.</p>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-500 font-mono">
+                Press <span class="key-box">&larr;</span> to go backward or re-run core layout test structures.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // Presenter Layer Core Configuration
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const progressBar = document.getElementById('progress');
+    const slideCounter = document.getElementById('slide-counter');
+
+    function updateSlides() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlide) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Update presentation trackers
+        slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Synchronize Prism layout renders
+        setTimeout(() => {
+            Prism.highlightAll();
+        }, 50);
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            updateSlides();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlides();
+        }
+    }
+
+    // Keyboard bindings hook
+    document.addEventListener('keydown', (e) => {
+        // Prevent default window actions if interactive fields are not focused
+        if (document.activeElement.id === 'code-editor') return;
+
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            prevSlide();
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // Pyodide Execution Sandbox Framework Initialization
+    // ------------------------------------------------------------------------
+    const runBtn = document.getElementById('run-btn');
+    const runBtnText = document.getElementById('run-btn-text');
+    const consoleLog = document.getElementById('console-log');
+    const loadingIndicator = document.getElementById('pyodide-loading-indicator');
+    let pyodideInstance = null;
+
+    async function initPyodide() {
+        try {
+            pyodideInstance = await loadPyodide();
+            loadingIndicator.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>Python Loaded';
+            runBtn.disabled = false;
+        } catch (err) {
+            loadingIndicator.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-500 mr-1"></i>Initialization Failed';
+            consoleLog.textContent = "Failed to compile background runtime initialization frameworks.";
+        }
+    }
+    initPyodide();
+
+    runBtn.addEventListener('click', async () => {
+        if (!pyodideInstance) return;
+        
+        runBtn.disabled = true;
+        runBtnText.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i>Executing...';
+        consoleLog.textContent = "Compiling configurations...\n";
+
+        // Setup real stdout redirect hooks
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        const code = document.getElementById('code-editor').value;
+        try {
+            await pyodideInstance.runPythonAsync(code);
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            consoleLog.textContent = stdout + (stderr ? "\nError Output:\n" + stderr : "");
+            if(!stdout && !stderr) {
+                consoleLog.textContent = "Execution completed with no structural output returns.";
+            }
+        } catch (err) {
+            consoleLog.textContent = `Execution Error:\n${err.message}`;
+        } finally {
+            runBtn.disabled = false;
+            runBtnText.innerHTML = '<i class="fa-solid fa-play mr-1"></i>Run Code';
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // Bug Hunt Mechanism Execution Hooks
+    // ------------------------------------------------------------------------
+    const correctBugs = [4, 6]; 
+    let caughtBugs = [];
+    const bugTrackerScore = document.getElementById('bug-tracker-score');
+    const bugFeedbackText = document.getElementById('bug-feedback-text');
+
+    document.querySelectorAll('.bug-line').forEach(line => {
+        line.addEventListener('click', () => {
+            const lineNum = parseInt(line.getAttribute('data-line'));
+            const isBug = line.getAttribute('data-is-bug') === 'true';
+
+            if (line.classList.contains('selected-bug')) {
+                // Deselect logic
+                line.classList.remove('selected-bug');
+                caughtBugs = caughtBugs.filter(b => b !== lineNum);
+            } else {
+                // Select logic
+                line.classList.add('selected-bug');
+                if (!caughtBugs.includes(lineNum)) {
+                    caughtBugs.push(lineNum);
+                }
+            }
+
+            // Calculate feedback states
+            bugTrackerScore.textContent = `${caughtBugs.filter(b => correctBugs.includes(b)).length} / ${correctBugs.length}`;
+            
+            if (isBug) {
+                if(lineNum === 4) {
+                    bugFeedbackText.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-square-check mr-1"></i>Bug Found on Line 4!</span> Matplotlib titles are function properties (<code class="font-mono text-xs bg-slate-950 px-1 rounded text-cyan-400">plt.title("...")</code>), not variable assignments!`;
+                } else if(lineNum === 6) {
+                    bugFeedbackText.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-square-check mr-1"></i>Bug Found on Line 6!</span> The active framework function is <code class="font-mono text-xs bg-slate-950 px-1 rounded text-cyan-400">plt.grid(True)</code>. There is no method named <code class="font-mono text-xs bg-slate-950 px-1 rounded text-rose-400">plt.gridLines()</code>.`;
+                }
+            } else {
+                bugFeedbackText.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i>No Error Found!</span> Line ${lineNum} is standard production-ready code. Keep digging!`;
+            }
+        });
+    });
+
+    // ------------------------------------------------------------------------
+    // MCQ Multi-Question Presentation Slide Core Infrastructure
+    // ------------------------------------------------------------------------
+    let mcqIndex = 0;
+    const mcqBlocks = document.querySelectorAll('.mcq-question-block');
+    const totalMcqs = mcqBlocks.length;
+    const mcqProgress = document.getElementById('mcq-progress');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+    const mcqFeedbackBox = document.getElementById('mcq-feedback-text-box');
+    const mcqCompletionCard = document.getElementById('mcq-completion-card');
+
+    function updateMcqQuestion() {
+        mcqBlocks.forEach((block, idx) => {
+            if (idx === mcqIndex) {
+                block.classList.remove('hidden');
+            } else {
+                block.classList.add('hidden');
+            }
+        });
+
+        mcqProgress.textContent = `Question ${mcqIndex + 1} of ${totalMcqs}`;
+        mcqPrevBtn.disabled = mcqIndex === 0;
+        
+        // Verify state options selected previously
+        const currentBlock = mcqBlocks[mcqIndex];
+        const selectedOption = currentBlock.querySelector('.mcq-option.correct, .mcq-option.incorrect');
+        
+        if (selectedOption) {
+            mcqNextBtn.disabled = false;
+            mcqFeedbackBox.textContent = "Answer locked. You can proceed forward.";
+        } else {
+            mcqNextBtn.disabled = true;
+            mcqFeedbackBox.textContent = "Select an answer to proceed.";
+        }
+
+        if(mcqIndex === totalMcqs - 1 && selectedOption) {
+            mcqNextBtn.innerHTML = 'Complete Quiz<i class="fa-solid fa-check-double ml-1"></i>';
+        } else {
+            mcqNextBtn.innerHTML = 'Next Question<i class="fa-solid fa-angle-right ml-1"></i>';
+        }
+    }
+
+    // Attach interaction handling logic across MCQ items
+    mcqBlocks.forEach((block) => {
+        const options = block.querySelectorAll('.mcq-option');
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                // If already answered, ignore subsequent adjustments
+                if (block.querySelector('.mcq-option.correct, .mcq-option.incorrect')) return;
+
+                const isCorrect = option.getAttribute('data-correct') === 'true';
+                const statusIcon = option.querySelector('.status-icon');
+
+                // Mark all elements within the question chunk disabled
+                options.forEach(o => o.classList.add('disabled', 'opacity-60'));
+                option.classList.remove('opacity-60');
+
+                if (isCorrect) {
+                    option.classList.add('correct');
+                    statusIcon.classList.add('fa-circle-check');
+                    mcqFeedbackBox.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i>Correct!</span> Excelled conceptual evaluation match.`;
+                } else {
+                    option.classList.add('incorrect');
+                    statusIcon.classList.add('fa-circle-xmark');
+                    mcqFeedbackBox.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i>Incorrect.</span> See target guidelines.`;
+                    
+                    // Highlight true validation baseline element
+                    const correctOption = block.querySelector('[data-correct="true"]');
+                    correctOption.classList.remove('opacity-60');
+                    correctOption.classList.add('correct');
+                    correctOption.querySelector('.status-icon').classList.add('fa-circle-check');
+                }
+
+                mcqNextBtn.disabled = false;
+                if(mcqIndex === totalMcqs - 1) {
+                    mcqNextBtn.innerHTML = 'Complete Quiz<i class="fa-solid fa-check-double ml-1"></i>';
+                }
+            });
+        });
+    });
+
+    mcqNextBtn.addEventListener('click', () => {
+        if (mcqIndex < totalMcqs - 1) {
+            mcqIndex++;
+            updateMcqQuestion();
+        } else {
+            // Trigger target quiz terminal metrics layouts
+            mcqBlocks.forEach(b => b.classList.add('hidden'));
+            mcqCompletionCard.classList.remove('hidden');
+            mcqNextBtn.classList.add('hidden');
+            mcqPrevBtn.classList.add('hidden');
+            mcqFeedbackBox.classList.add('hidden');
+            mcqProgress.textContent = "Quiz Complete";
+        }
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if (mcqIndex > 0) {
+            mcqIndex--;
+            // Ensure visual state reset if viewing completion metrics cards
+            mcqCompletionCard.classList.add('hidden');
+            mcqNextBtn.classList.remove('hidden');
+            mcqPrevBtn.classList.remove('hidden');
+            mcqFeedbackBox.classList.remove('hidden');
+            updateMcqQuestion();
+        }
+    });
+
+    // Fire baseline initialization structures
+    updateSlides();
+    updateMcqQuestion();
+</script>
+</body>
+</html>

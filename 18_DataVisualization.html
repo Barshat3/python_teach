@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Data Visualization with Matplotlib</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            box-sizing: border-box;
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        #slide-counter {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+            z-index: 50;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(4px);
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+        .nav-hint {
+            position: absolute;
+            bottom: 1rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 50;
+            pointer-events: none;
+        }
+        .key-box {
+            background: var(--bg-card);
+            border: 1px solid #334155;
+            border-radius: 4px;
+            padding: 1px 6px;
+            margin: 0 2px;
+            font-family: monospace;
+        }
+        .code-container pre {
+            margin: 0 !important;
+            border-radius: 0.75rem;
+        }
+        .buggy-line {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            display: block;
+        }
+        .buggy-line:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .buggy-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.3) !important;
+            border-left: 4px solid var(--accent-red);
+        }
+        .buggy-line.selected-ok {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-left: 4px solid var(--accent-green);
+        }
+        .mcq-option {
+            background: var(--bg-card);
+            border: 2px solid #334155;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .mcq-option:hover {
+            border-color: var(--secondary);
+            transform: translateY(-1px);
+        }
+        .mcq-option.correct {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .mcq-option.incorrect {
+            border-color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .btn-nav {
+            background: var(--primary);
+            transition: all 0.2s;
+        }
+        .btn-nav:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .btn-nav:disabled {
+            background: #334155;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        .console-out {
+            background: #050b14;
+            font-family: 'Fira Code', monospace;
+            border: 1px solid #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 7</div>
+
+<div id="presentation-container" class="relative w-full h-full">
+
+    <div class="slide active bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <div class="max-w-4xl text-center space-y-6">
+            <span class="badge px-4 py-1.5 rounded-full text-sm font-semibold tracking-wider uppercase">Class 16 &bull; Data Science</span>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-cyan-300">
+                Introduction to Data Visualization
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto">
+                Discover the power of translating raw elements and metrics into clear, impactful, and beautiful visual representations using Python.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 text-left">
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700/50 backdrop-blur-sm flex items-start space-x-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">What is Data Visualization?</h3>
+                        <p class="text-sm text-slate-400 mt-1">A powerful toolkit to represent and communicate complex datasets clearly at a glance.</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700/50 backdrop-blur-sm flex items-start space-x-4">
+                    <div class="p-3 bg-cyan-500/10 rounded-lg text-cyan-400"><i class="fa-solid fa-eye"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white">Spot Patterns Instantly</h3>
+                        <p class="text-sm text-slate-400 mt-1">Easily identify major trends, anomalies, structures, and behaviors hidden inside huge datasets.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div class="md:col-span-5 space-y-5">
+                <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Core Engine</span>
+                <h2 class="text-4xl font-bold text-white">Introduction to Matplotlib</h2>
+                <p class="text-slate-300 leading-relaxed">
+                    <strong>Matplotlib</strong> is the fundamental Python ecosystem library dedicated to generating static, animated, and fully interactive graphic visualizations.
+                </p>
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center space-x-3 text-slate-300">
+                        <i class="fa-solid fa-square-check text-emerald-400"></i>
+                        <span>Extremely customizable formatting structure</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-slate-300">
+                        <i class="fa-solid fa-square-check text-emerald-400"></i>
+                        <span>Industry-standard integration ecosystem</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="md:col-span-7 space-y-4">
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4">
+                    <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Environment Setup & Installation</h4>
+                    <div class="code-container">
+                        <pre><code class="language-bash"># Run this command in your system terminal or cell block
+pip install matplotlib</code></pre>
+                    </div>
+                </div>
+                <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-4">
+                    <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Standard Import Standard Syntax</h4>
+                    <div class="code-container">
+                        <pre><code class="language-python"># Pyplot provides a convenient state-machine interface
+import matplotlib.pyplot as plt</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div class="md:col-span-5 space-y-4">
+                <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Linear Tracking</span>
+                <h2 class="text-4xl font-bold text-white">Creating a Line Chart</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Perfect for tracking sequential variations, trends, and continuous updates across custom periods. 
+                </p>
+                <div class="bg-amber-500/10 border border-amber-500/20 text-amber-300 p-3.5 rounded-lg text-xs space-y-1">
+                    <span class="font-bold block"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Critical Parameter Rule</span>
+                    The lengths of both horizontal coordinate arrays and vertical coordinate arrays must match precisely, or Python throws a <code class="font-mono bg-amber-950 px-1 rounded">ValueError</code>.
+                </div>
+            </div>
+            
+            <div class="md:col-span-7">
+                <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-xs text-slate-400 font-mono">line_chart_example.py</span>
+                        <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Sequential Data</span>
+                    </div>
+                    <div class="code-container text-sm">
+                        <pre><code class="language-python">import matplotlib.pyplot as plt
+
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+rainfall = [3.2, 3.8, 4.1, 2.9, 2.5, 1.8, 1.5]
+
+plt.plot(months, rainfall)
+plt.title('Monthly Rainfall')
+plt.xlabel('Months')
+plt.ylabel('Rainfall (inches)')
+plt.show()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div class="md:col-span-5 space-y-4">
+                <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Comparative Metric</span>
+                <h2 class="text-4xl font-bold text-white">Creating a Bar Chart</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    A bar chart is a great way to compare completely independent structural item groups, individual categories, or discrete classification lists.
+                </p>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2 text-xs">
+                    <div class="font-bold text-slate-300 uppercase tracking-wide">Key Attribute Control</div>
+                    <p class="text-slate-400">Use the optional <code class="text-cyan-400 font-mono">color</code> parameter inside the main execution call to customize your bars:</p>
+                    <code class="block bg-slate-950 p-2 rounded text-emerald-400 font-mono">plt.bar(categories, scores, color='emerald')</code>
+                </div>
+            </div>
+            
+            <div class="md:col-span-7">
+                <div class="bg-slate-800 rounded-xl p-4 border border-slate-700 space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-xs text-slate-400 font-mono">bar_chart_example.py</span>
+                        <span class="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">Discrete Data</span>
+                    </div>
+                    <div class="code-container text-sm">
+                        <pre><code class="language-python">import matplotlib.pyplot as plt
+
+categories = ['Math', 'Science', 'English', 'History']
+scores = [90, 85, 78, 88]
+
+plt.bar(categories, scores)
+plt.title('Student Scores') 
+plt.xlabel('Subjects')
+plt.ylabel('Scores')
+plt.show()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-6xl w-full h-full flex flex-col justify-between py-4">
+            <div class="mb-2">
+                <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Interactive Sandbox</span>
+                <h2 class="text-3xl font-bold text-white mt-1">Hands-On Practice</h2>
+                <p class="text-slate-400 text-sm">
+                    Write a program to visualize the total number of books read by each student in a class using a structural bar chart.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-grow h-3/5 min-h-[300px]">
+                <div class="lg:col-span-7 flex flex-col bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                    <div class="bg-slate-950 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                            <span class="text-xs text-slate-400 font-mono pl-2">editor.py</span>
+                        </div>
+                        <div id="pyodide-status" class="text-xs text-amber-400 flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span>Loading Python engine...</span>
+                        </div>
+                    </div>
+                    <textarea id="code-editor" class="w-full flex-grow p-4 bg-slate-950 font-mono text-sm text-slate-200 outline-none resize-none" spellcheck="false">import matplotlib.pyplot as plt
+
+# Data definitions
+students = ['Alice', 'Bob', 'Charlie', 'David', 'Eva']
+books_read = [12, 8, 15, 6, 10]
+
+# Build the structural configuration layout
+plt.bar(students, books_read, color='skyblue')
+plt.title('Books Read per Student')
+plt.xlabel('Students')
+plt.ylabel('Books Count')
+
+# Display result summary metric strings safely
+print("Data layout successfully mounted configuration maps.")
+print("Rendering plot generation calculations:")
+for s, b in zip(students, books_read):
+    print(f" - {s}: {b} books read")
+
+plt.show()</textarea>
+                    <div class="p-3 bg-slate-800 border-t border-slate-700 flex justify-end">
+                        <button id="run-btn" disabled class="btn-nav text-sm font-bold text-white px-5 py-2 rounded-lg flex items-center space-x-2 shadow-lg opacity-50">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Execute Code</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                    <div class="bg-slate-950 px-4 py-2 border-b border-slate-700">
+                        <span class="text-xs text-slate-400 font-mono uppercase tracking-wider">Console Console Output Terminal</span>
+                    </div>
+                    <div id="console-output" class="console-out flex-grow p-4 text-xs font-mono text-slate-400 overflow-y-auto whitespace-pre-wrap">Click "Execute Code" above to pass compiling script data strings...</div>
+                    <div class="bg-amber-500/10 p-3 text-xs text-amber-300 border-t border-amber-500/20 flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-info mt-0.5 flex-shrink-0"></i>
+                        <span><strong>Engine Note:</strong> Matplotlib chart instances rendering live terminal simulations show configuration values and string conversions.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-4xl w-full space-y-6">
+            <div class="text-center space-y-2">
+                <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase"><i class="fa-solid fa-bug mr-1"></i> Interactive Debugging</span>
+                <h2 class="text-4xl font-bold text-white">Find the Structural Errors!</h2>
+                <p class="text-slate-400 text-sm max-w-xl mx-auto">
+                    The block contains <strong>2 logical/syntax bugs</strong>. Click the broken logic lines to track errors and complete code verification.
+                </p>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="bg-slate-950 px-4 py-2 border-b border-slate-700 flex justify-between items-center text-xs">
+                    <span class="text-slate-400 font-mono">broken_visualization.py</span>
+                    <span id="bug-tracker" class="font-bold text-amber-400 tracking-wide">Bugs Found: 0 / 2</span>
+                </div>
+                <div class="p-4 bg-slate-950 font-mono text-sm md:text-base space-y-1">
+                    <div class="buggy-line text-slate-400" data-bug="false" data-line="1">import matplotlib.pyplot as plt</div>
+                    <div class="buggy-line text-slate-400" data-bug="false" data-line="2">months = ['Jan', 'Feb', 'Mar']</div>
+                    <div class="buggy-line text-slate-400" data-bug="true" data-msg="Length Mismatch! Rainfall has 4 metrics but Months has only 3. This triggers a ValueError execution crash." data-line="3">rainfall = [1.2, 2.5, 3.1, 4.0]</div>
+                    <div class="buggy-line text-slate-400" data-bug="false" data-line="4">plt.plot(months, rainfall)</div>
+                    <div class="buggy-line text-slate-400" data-bug="false" data-line="5">plt.title('Q1 Rainfall')</div>
+                    <div class="buggy-line text-slate-400" data-bug="true" data-msg="Incorrect API Method! To show plots, you must call plt.show() - display() is not part of matplotlib's standard runtime framework." data-line="6">plt.display()</div>
+                </div>
+            </div>
+            
+            <div id="bug-feedback" class="min-h-[48px] bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 text-sm text-center text-slate-400 transition-all duration-200">
+                Click lines containing configuration bugs or invalid commands to log investigation vectors.
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-900">
+        <div class="max-w-4xl w-full space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                <div>
+                    <span class="badge px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase">Assessment Portion</span>
+                    <h2 class="text-3xl font-bold text-white mt-1">Check Your Understanding</h2>
+                </div>
+                <div id="mcq-progress" class="text-sm font-semibold tracking-wide text-cyan-400 bg-cyan-950/40 border border-cyan-900/50 px-3 py-1 rounded-lg">
+                    Question 1 of 8
+                </div>
+            </div>
+
+            <div id="mcq-card-frame" class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl space-y-6 min-h-[380px] flex flex-col justify-between">
+                <div id="mcq-content" class="space-y-4">
+                    <h3 id="mcq-question" class="text-xl font-medium text-white leading-snug"></h3>
+                    <div id="mcq-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"></div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-700/50 pt-4 mt-4">
+                    <button id="mcq-prev-btn" class="px-4 py-2 text-sm font-bold rounded-lg border border-slate-600 hover:bg-slate-700 transition duration-150 text-slate-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-arrow-left"></i> <span>Previous</span>
+                    </button>
+                    <div id="mcq-feedback-text" class="text-sm font-bold text-slate-400 max-w-md text-center"></div>
+                    <button id="mcq-next-btn" class="btn-nav px-5 py-2 text-sm font-bold rounded-lg text-white flex items-center space-x-2 shadow-md">
+                        <span>Next</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+
+<script>
+    // --- MCQS DATA CONFIGURATION ---
+    const mcqQuestions = [
+        {
+            q: "Which library is commonly used in Python to create charts and visualizations?",
+            a: ["pandas", "matplotlib", "numpy", "requests"],
+            correct: 1,
+            feedback: "Correct! Matplotlib is the core charting foundation framework library."
+        },
+        {
+            q: "Which command is used to display the chart after plotting the data?",
+            a: ["plt.show()", "plt.plot()", "plt.display()", "plt.render()"],
+            correct: 0,
+            feedback: "Correct! plt.show() triggers rendering sequences and pops open active views."
+        },
+        {
+            q: "What is the purpose of the following command in a line chart?\n\nplt.xlabel('Months')",
+            a: ["To label the y-axis", "To label the x-axis", "To add a title to the chart", "To display the chart"],
+            correct: 1,
+            feedback: "Correct! plt.xlabel() binds coordinate text strings underneath the x-axis track."
+        },
+        {
+            q: "If you want to change the color of the bars in a bar chart, which parameter should you use in the plt.bar() function?",
+            a: ["color", "style", "marker", "font"],
+            correct: 0,
+            feedback: "Correct! The color parameter maps programmatic string color styles to elements."
+        },
+        {
+            q: "How do you install the matplotlib library if it’s not already installed?",
+            a: ["install matplotlib", "pip install matplotlib", "python install matplotlib", "apt-get install matplotlib"],
+            correct: 1,
+            feedback: "Correct! pip install targets public PyPI packages for extraction downloads."
+        },
+        {
+            q: "Which type of chart would best display monthly rainfall data for comparison?",
+            a: ["Pie Chart", "Line Chart", "Bar Chart", "Scatter Plot"],
+            correct: 2,
+            feedback: "Correct! Bar Charts create straightforward comparative structures for simple categorical variations."
+        },
+        {
+            q: "What happens if the lengths of the X and Y data lists are not equal in a plot?",
+            a: ["The plot will still render correctly.", "The program will raise a ValueError.", "The extra data points will be ignored.", "The program will automatically adjust the lengths."],
+            correct: 1,
+            feedback: "Correct! Core dimensions must fit cleanly or structural engine components generate ValueErrors."
+        },
+        {
+            q: "What function is used to save a chart as an image?",
+            a: ["plt.savechart()", "plt.export()", "plt.savefig()", "plt.write()"],
+            correct: 2,
+            feedback: "Correct! plt.savefig() streams rendering context streams out into discrete files."
+        }
+    ];
+
+    // --- PRESENTATION LAYER STATE CONTROLLER ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlidesCount = slides.length;
+    const slideCounterEl = document.getElementById('slide-counter');
+    const progressBarEl = document.getElementById('progress');
+
+    function updatePresentationState() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Refresh Slide Counters & Progress Lines
+        slideCounterEl.innerText = `${currentSlideIndex + 1} / ${totalSlidesCount}`;
+        const pct = ((currentSlideIndex + 1) / totalSlidesCount) * 100;
+        progressBarEl.style.width = `${pct}%`;
+        
+        // Dynamic Execution Updates
+        Prism.highlightAll();
+    }
+
+    function moveNextSlide() {
+        if (currentSlideIndex < totalSlidesCount - 1) {
+            currentSlideIndex++;
+            updatePresentationState();
+        }
+    }
+
+    function movePrevSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updatePresentationState();
+        }
+    }
+
+    // Capture Key-stroke Actions
+    window.addEventListener('keydown', (e) => {
+        // Prevent generic collisions on inputs/textarea editors
+        if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
+            return; 
+        }
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            moveNextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            movePrevSlide();
+        }
+    });
+
+    // --- INTEGRATED MCQ RUNTIME FLOW ENGINE ---
+    let currentMcqIdx = 0;
+    let selectedMcqAnswers = {}; // track responses across individual item keys
+
+    const mcqQuestionEl = document.getElementById('mcq-question');
+    const mcqOptionsEl = document.getElementById('mcq-options');
+    const mcqProgressEl = document.getElementById('mcq-progress');
+    const mcqFeedbackEl = document.getElementById('mcq-feedback-text');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+
+    function paintMcqQuestion() {
+        if (currentMcqIdx >= mcqQuestions.length) {
+            // Quiz completed layout wrapper view injection render
+            mcqProgressEl.innerText = "Completed!";
+            document.getElementById('mcq-card-frame').innerHTML = `
+                <div class="text-center py-12 space-y-4 my-auto">
+                    <div class="text-emerald-400 text-6xl mb-2"><i class="fa-solid fa-circle-check"></i></div>
+                    <h3 class="text-2xl font-bold text-white">Knowledge Review Completed!</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        You have addressed all available evaluation items tracking basic Matplotlib data structures successfully.
+                    </p>
+                    <button onclick="resetMcqEngine()" class="btn-nav px-5 py-2 font-bold rounded-lg text-white text-sm inline-flex items-center space-x-2 mt-2">
+                        <i class="fa-solid fa-rotate-right"></i> <span>Restart Assessment</span>
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const data = mcqQuestions[currentMcqIdx];
+        mcqProgressEl.innerText = `Question ${currentMcqIdx + 1} of ${mcqQuestions.length}`;
+        mcqQuestionEl.innerText = data.q;
+        mcqOptionsEl.innerHTML = '';
+        mcqFeedbackEl.innerText = '';
+        
+        // Lock visibility rules on directional toggles
+        mcqPrevBtn.disabled = (currentMcqIdx === 0);
+        mcqNextBtn.innerHTML = (currentMcqIdx === mcqQuestions.length - 1) ? `<span>Finish</span> <i class="fa-solid fa-flag-checkered"></i>` : `<span>Next</span> <i class="fa-solid fa-arrow-right"></i>`;
+
+        data.a.forEach((opt, index) => {
+            const div = document.createElement('div');
+            div.className = "mcq-option p-4 rounded-xl text-sm md:text-base font-semibold text-slate-200 transition-all";
+            div.innerText = opt;
+            
+            // Reapply selections if backtracking via previous actions
+            if (selectedMcqAnswers[currentMcqIdx] !== undefined) {
+                if (index === data.correct) {
+                    div.classList.add('correct');
+                } else if (index === selectedMcqAnswers[currentMcqIdx]) {
+                    div.classList.add('incorrect');
+                }
+            } else {
+                div.onclick = () => selectMcqOption(index, data.correct, div);
+            }
+            mcqOptionsEl.appendChild(div);
+        });
+
+        if (selectedMcqAnswers[currentMcqIdx] !== undefined) {
+            mcqFeedbackEl.innerText = data.feedback;
+        }
+    }
+
+    function selectMcqOption(selectedIndex, correctIndex, element) {
+        if (selectedMcqAnswers[currentMcqIdx] !== undefined) return; // ignore duplicate submissions
+        selectedMcqAnswers[currentMcqIdx] = selectedIndex;
+
+        const options = mcqOptionsEl.children;
+        if (selectedIndex === correctIndex) {
+            element.classList.add('correct');
+            mcqFeedbackEl.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> ${mcqQuestions[currentMcqIdx].feedback}</span>`;
+        } else {
+            element.classList.add('incorrect');
+            options[correctIndex].classList.add('correct');
+            mcqFeedbackEl.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> Incorrect. Check tracking conditions.</span>`;
+        }
+    }
+
+    mcqPrevBtn.onclick = () => {
+        if (currentMcqIdx > 0) {
+            currentMcqIdx--;
+            paintMcqQuestion();
+        }
+    };
+
+    mcqNextBtn.onclick = () => {
+        currentMcqIdx++;
+        paintMcqQuestion();
+    };
+
+    function resetMcqEngine() {
+        currentMcqIdx = 0;
+        selectedMcqAnswers = {};
+        // Restore base interactive layout shell wrappers
+        document.getElementById('mcq-card-frame').innerHTML = `
+            <div id="mcq-content" class="space-y-4">
+                <h3 id="mcq-question" class="text-xl font-medium text-white leading-snug"></h3>
+                <div id="mcq-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"></div>
+            </div>
+            <div class="flex items-center justify-between border-t border-slate-700/50 pt-4 mt-4">
+                <button id="mcq-prev-btn" class="px-4 py-2 text-sm font-bold rounded-lg border border-slate-600 hover:bg-slate-700 transition duration-150 text-slate-300 flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Previous</span>
+                </button>
+                <div id="mcq-feedback-text" class="text-sm font-bold text-slate-400 max-w-md text-center"></div>
+                <button id="mcq-next-btn" class="btn-nav px-5 py-2 text-sm font-bold rounded-lg text-white flex items-center space-x-2 shadow-md">
+                    <span>Next</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        `;
+        // Re-bind dynamically broken listeners inside generated templates
+        setTimeout(() => {
+            Object.assign(mcqQuestionEl, { id: 'mcq-question' });
+            // assign references properly
+            window.mcqQuestionEl = document.getElementById('mcq-question');
+            window.mcqOptionsEl = document.getElementById('mcq-options');
+            window.mcqFeedbackEl = document.getElementById('mcq-feedback-text');
+            window.mcqPrevBtn = document.getElementById('mcq-prev-btn');
+            window.mcqNextBtn = document.getElementById('mcq-next-btn');
+            
+            // Bind actions explicitly
+            window.mcqPrevBtn.onclick = () => { if (currentMcqIdx > 0) { currentMcqIdx--; paintMcqQuestion(); } };
+            window.mcqNextBtn.onclick = () => { currentMcqIdx++; paintMcqQuestion(); };
+            
+            paintMcqQuestion();
+        }, 10);
+    }
+
+    // --- BUG HUNT MODULE CONTROLLER ---
+    let loggedBugsCount = 0;
+    const bugTrackerEl = document.getElementById('bug-tracker');
+    const bugFeedbackEl = document.getElementById('bug-feedback');
+
+    document.querySelectorAll('.buggy-line').forEach(line => {
+        line.onclick = () => {
+            const isBug = line.getAttribute('data-bug') === 'true';
+            const lineID = line.getAttribute('data-line');
+            
+            if (isBug) {
+                if (!line.classList.contains('selected-bug')) {
+                    line.classList.add('selected-bug');
+                    line.classList.remove('text-slate-400');
+                    line.classList.add('text-white');
+                    loggedBugsCount++;
+                    bugTrackerEl.innerText = `Bugs Found: ${loggedBugsCount} / 2`;
+                    bugFeedbackEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Line ${lineID}: ${line.getAttribute('data-msg')}</span>`;
+                }
+            } else {
+                if (!line.classList.contains('selected-ok')) {
+                    line.classList.add('selected-ok');
+                    bugFeedbackEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark"></i> Line ${lineID} is correct. Keep monitoring data frameworks!</span>`;
+                    setTimeout(() => line.classList.remove('selected-ok'), 1500);
+                }
+            }
+
+            if(loggedBugsCount === 2) {
+                bugTrackerEl.className = "font-bold text-emerald-400 tracking-wide animate-bounce";
+                bugFeedbackEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-trophy mr-1"></i> Excellent! Debug processing verification run successfully completed.</span>`;
+            }
+        };
+    });
+
+    // --- REAL PYODIDE WORKSPACE RUNTIME ---
+    let pyodideInstance = null;
+    const runBtn = document.getElementById('run-btn');
+    const pyodideStatusEl = document.getElementById('pyodide-status');
+    const consoleOutputEl = document.getElementById('console-output');
+
+    async function bootstrapPyodideSystem() {
+        try {
+            pyodideInstance = await loadPyodide();
+            // Patch internal IO systems to capture prints directly inside custom HTML elements
+            await pyodideInstance.runPythonAsync(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+            
+            pyodideStatusEl.className = "text-xs text-emerald-400 flex items-center space-x-1";
+            pyodideStatusEl.innerHTML = `<i class="fa-solid fa-circle"></i> <span>Python Engine Ready</span>`;
+            runBtn.disabled = false;
+            runBtn.classList.remove('opacity-50');
+        } catch (error) {
+            pyodideStatusEl.className = "text-xs text-rose-400 flex items-center space-x-1";
+            pyodideStatusEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>Initialization Failed</span>`;
+            consoleOutputEl.innerText = `Failed loading runtime subsystem variables: \n${error}`;
+        }
+    }
+
+    runBtn.onclick = async () => {
+        if(!pyodideInstance) return;
+        consoleOutputEl.innerText = "Executing compilation processes...";
+        
+        const scriptBody = document.getElementById('code-editor').value;
+        try {
+            // Clear buffer contexts before running strings
+            await pyodideInstance.runPythonAsync(`
+                import sys, io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+
+            await pyodideInstance.runPythonAsync(scriptBody);
+            
+            const standardOut = await pyodideInstance.runPythonAsync(`sys.stdout.getvalue()`);
+            const standardErr = await pyodideInstance.runPythonAsync(`sys.stderr.getvalue()`);
+            
+            if (standardErr.trim().length > 0) {
+                consoleOutputEl.className = "console-out flex-grow p-4 text-xs font-mono text-rose-400 overflow-y-auto whitespace-pre-wrap";
+                consoleOutputEl.innerText = standardErr;
+            } else {
+                consoleOutputEl.className = "console-out flex-grow p-4 text-xs font-mono text-emerald-400 overflow-y-auto whitespace-pre-wrap";
+                consoleOutputEl.innerText = standardOut || "Execution finished cleanly (No console output).";
+            }
+        } catch(err) {
+            consoleOutputEl.className = "console-out flex-grow p-4 text-xs font-mono text-rose-400 overflow-y-auto whitespace-pre-wrap";
+            consoleOutputEl.innerText = `Traceback (Runtime Execution Crash):\n${err.message}`;
+        }
+    };
+
+    // --- INITIALIZATION GATE ---
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentationState();
+        paintMcqQuestion();
+        bootstrapPyodideSystem();
+    });
+</script>
+</body>
+</html>

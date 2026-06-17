@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Graph Types with Matplotlib</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #06B6D4;
+            --accent: #F43F5E;
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace !important;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0.6s;
+            transform: translateX(50px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem;
+            box-sizing: border-box;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .slide.prev {
+            transform: translateX(-50px);
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 50;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .key-box {
+            background: #334155;
+            color: #F1F5F9;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+            border-bottom: 2px solid #1E293B;
+            font-family: monospace;
+        }
+
+        .buggy-line {
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s ease;
+        }
+        .buggy-line:hover {
+            background: rgba(244, 63, 94, 0.15) !important;
+        }
+        .buggy-line.selected-bug {
+            background: rgba(244, 63, 94, 0.3) !important;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Standard custom scrollbar for terminal/outputs */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1E293B;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748B;
+        }
+
+        /* Live console output */
+        .console-out {
+            background: #090D16;
+            border: 1px solid #1E293B;
+            color: #A7F3D0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+<div id="presentation-container" class="relative w-full h-full overflow-hidden">
+
+    <div class="slide active bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-center items-center text-center">
+        <div class="max-w-4xl px-4">
+            <span class="text-xs font-bold tracking-widest text-cyan-400 uppercase bg-cyan-950/50 border border-cyan-800 px-3 py-1 rounded-full mb-6 inline-block">
+                Class 18 &bull; Data Visualization
+            </span>
+            <h1 class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-indigo-200 mb-6 tracking-tight">
+                Advanced Graph Types
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+                Mastering structural comparisons and pattern analysis using <span class="text-indigo-400 font-semibold">Scatter Plots</span> and <span class="text-cyan-400 font-semibold">Pie Charts</span> in Matplotlib.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto text-left">
+                <div class="p-6 bg-slate-900/60 border border-slate-800 rounded-xl flex items-start gap-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-chart-scatter text-2xl"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white mb-1">Scatter Plots</h3>
+                        <p class="text-sm text-slate-400">Discover underlying relationships, dependencies, and coordinate distribution profiles between two variables.</p>
+                    </div>
+                </div>
+                <div class="p-6 bg-slate-900/60 border border-slate-800 rounded-xl flex items-start gap-4">
+                    <div class="p-3 bg-cyan-500/10 rounded-lg text-cyan-400"><i class="fa-solid fa-chart-pie text-2xl"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg text-white mb-1">Pie Charts</h3>
+                        <p class="text-sm text-slate-400">Analyze part-to-whole categorical allocations, composition summaries, and structural percentage shares.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-950">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto w-full">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded-lg"><i class="fa-solid fa-chart-scatter text-xl"></i></span>
+                    <h2 class="text-3xl font-extrabold text-white">Scatter Plots Revealed</h2>
+                </div>
+                <p class="text-slate-300 leading-relaxed">
+                    Scatter plots plot distinct coordinate nodes to evaluate statistical <strong>relationships or patterns</strong> between two metrics. Each unique point links its horizontal evaluation value ($x$) with its vertical result ($y$).
+                </p>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-5 space-y-4">
+                    <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Key Indicators & Architecture</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3"><span class="text-indigo-400 mt-1">&bull;</span><span class="text-slate-300"><strong>Data Elements:</strong> Best for discrete variables requiring direct structural trend visibility without point-to-point lines.</span></li>
+                        <li class="flex items-start gap-3"><span class="text-indigo-400 mt-1">&bull;</span><span class="text-slate-300"><strong>Critical Condition:</strong> Array match requirements dictate that lengths of the input arrays $x$ and $y$ must be perfectly identical.</span></li>
+                    </ul>
+                </div>
+                <div class="bg-amber-950/30 border border-amber-900/50 rounded-xl p-4 flex gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg mt-0.5"></i>
+                    <p class="text-xs text-amber-300 leading-relaxed">
+                        <strong class="block text-sm font-semibold mb-0.5">Common Layout Mistake:</strong>
+                        Mismatched array sizes will instantly abort compilation and trigger an explicit structural error runtime exception.
+                    </p>
+                </div>
+            </div>
+            <div class="lg:col-span-7 flex flex-col h-full justify-center">
+                <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-950 border-b border-slate-800">
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-xs text-slate-400 font-mono ml-2">scatter_plot.py</span></div>
+                        <span class="text-xs text-slate-500 font-mono">Live Interactive Mode</span>
+                    </div>
+                    <div class="p-0 font-mono text-sm relative">
+                        <textarea id="code-scatter" class="w-full h-56 p-4 bg-slate-900 text-slate-100 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none">import matplotlib.pyplot as plt
+
+x = [1, 2, 3, 4, 5]
+y = [2, 4, 6, 8, 10]
+
+# Generate standard scatter plot nodes
+plt.scatter(x, y, color='blue', marker='o', label='Data Points')
+plt.title("Scatter Plot Example")
+plt.xlabel("X-Axis")
+plt.ylabel("Y-Axis")
+plt.legend()
+plt.show()</textarea>
+                    </div>
+                    <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-400 pyidide-status-text"><i class="fa-solid fa-circle-notch animate-spin text-indigo-400 mr-2"></i>Loading Python runtime...</span>
+                        <button onclick="runPythonCode('code-scatter', 'out-scatter')" class="run-btn px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white rounded-md text-sm font-semibold flex items-center gap-2 transition-all" disabled>
+                            <i class="fa-solid fa-play"></i> Run Code
+                        </button>
+                    </div>
+                    <div class="console-out p-4 font-mono text-xs h-28 overflow-y-auto" id="out-scatter">
+                        Execution terminal output window displays here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-950">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-7xl mx-auto w-full">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg"><i class="fa-solid fa-chart-pie text-xl"></i></span>
+                    <h2 class="text-3xl font-extrabold text-white">Pie Charts Decoded</h2>
+                </div>
+                <p class="text-slate-300 leading-relaxed">
+                    Pie charts illustrate <strong>proportions of categories within a whole</strong> structure. Excellent for displaying percentages or share distributions at a macro snapshot view level.
+                </p>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Functional Parameters</h4>
+                    <div class="space-y-2.5 text-xs font-mono">
+                        <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-cyan-400">autopct='%1.1f%%'</span><span class="text-slate-400">Formats share labels into percentage tags</span></div>
+                        <div class="flex justify-between border-b border-slate-800 pb-1.5"><span class="text-cyan-400">colors=[]</span><span class="text-slate-400">Passes individual slice background palettes</span></div>
+                        <div class="flex justify-between pb-0.5"><span class="text-cyan-400">startangle=90</span><span class="text-slate-400">Rotates the initial element starting alignment</span></div>
+                    </div>
+                </div>
+                <div class="bg-rose-950/30 border border-rose-900/50 rounded-xl p-4 flex gap-3">
+                    <i class="fa-solid fa-circle-exclamation text-rose-500 text-lg mt-0.5"></i>
+                    <p class="text-xs text-rose-300 leading-relaxed">
+                        <strong class="block text-sm font-semibold mb-0.5">Data Distortion Threat:</strong>
+                        If structural item sizes fail to reach exactly $100\%$, tracking profiles become corrupted and scale integrity is lost.
+                    </p>
+                </div>
+            </div>
+            <div class="lg:col-span-7 flex flex-col h-full justify-center">
+                <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-950 border-b border-slate-800">
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-xs text-slate-400 font-mono ml-2">pie_chart.py</span></div>
+                        <span class="text-xs text-slate-500 font-mono">Live Interactive Mode</span>
+                    </div>
+                    <div class="p-0 font-mono text-sm relative">
+                        <textarea id="code-pie" class="w-full h-56 p-4 bg-slate-900 text-slate-100 font-mono focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none">import matplotlib.pyplot as plt
+
+labels = ['Math', 'Science', 'English', 'History']
+sizes = [20, 30, 25, 25] 
+colors = ['gold', 'lightblue', 'lightgreen', 'pink']
+
+# Render proportion values using specialized keywords
+plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+plt.title("Subject Time Allocation")
+plt.show()</textarea>
+                    </div>
+                    <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-400 pyidide-status-text"><i class="fa-solid fa-circle-notch animate-spin text-indigo-400 mr-2"></i>Loading Python runtime...</span>
+                        <button onclick="runPythonCode('code-pie', 'out-pie')" class="run-btn px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded-md text-sm font-semibold flex items-center gap-2 transition-all" disabled>
+                            <i class="fa-solid fa-play"></i> Run Code
+                        </button>
+                    </div>
+                    <div class="console-out p-4 font-mono text-xs h-28 overflow-y-auto" id="out-pie">
+                        Execution terminal output window displays here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-950">
+        <div class="max-w-5xl mx-auto w-full space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg"><i class="fa-solid fa-bug text-xl"></i></span>
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">Code Bug Hunt</h2>
+                        <p class="text-sm text-slate-400">Mismatched collections break matrix tracking coordinates. Locate the faulty instruction row below.</p>
+                    </div>
+                </div>
+                <div class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg font-mono text-right">
+                    <span class="text-xs block text-slate-400">BUGS FOUND</span>
+                    <span id="bug-tracker-text" class="text-lg font-bold text-rose-400">0 / 1</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-2xl">
+                <div class="bg-slate-950 px-4 py-2.5 border-b border-slate-800 text-xs text-slate-400 font-mono">
+                    faulty_scatter.py &mdash; Find and select the line containing the dimensional mismatch structural error
+                </div>
+                <div class="p-4 font-mono text-sm sm:text-base leading-relaxed bg-slate-900 text-slate-300">
+                    <div class="buggy-line px-4 py-1.5 rounded" data-is-bug="false"><span class="inline-block w-8 text-slate-600 select-none">1</span>import matplotlib.pyplot as plt</div>
+                    <div class="buggy-line px-4 py-1.5 rounded" data-is-bug="false"><span class="inline-block w-8 text-slate-600 select-none">2</span>horizontals = [12, 16, 22, 34, 45]</div>
+                    <div class="buggy-line px-4 py-1.5 rounded" data-is-bug="true"><span class="inline-block w-8 text-slate-600 select-none">3</span>verticals = [102, 140, 189, 210]</div>
+                    <div class="buggy-line px-4 py-1.5 rounded" data-is-bug="false"><span class="inline-block w-8 text-slate-600 select-none">4</span>plt.scatter(horizontals, verticals, color='red')</div>
+                    <div class="buggy-line px-4 py-1.5 rounded" data-is-bug="false"><span class="inline-block w-8 text-slate-600 select-none">5</span>plt.show()</div>
+                </div>
+            </div>
+            <div id="bug-hunt-feedback" class="p-4 rounded-xl min-h-[3.5rem] bg-slate-900/40 border border-slate-800/80 text-sm text-slate-400 flex items-center transition-all">
+                Identify the logic mismatch between data properties to progress...
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-950">
+        <div class="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
+            <div class="lg:col-span-2 flex flex-col justify-between space-y-6">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg"><i class="fa-solid fa-laptop-code text-xl"></i></span>
+                        <h2 class="text-2xl font-bold text-white">Hands-on Sandbox</h2>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Apply layout skills inside our isolated programming workspace to verify structural integrity.
+                    </p>
+                    
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Task 1: Scatter Mapping</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">Plot hours of study vs. test scores. Include custom dimensions along with descriptive markers, coordinate axes tags, and structural label legends.</p>
+                    </div>
+
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-cyan-400">Task 2: Routine Share Profile</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">Map your allocation properties (sleep, study, exercise) with precise fractional structures using <span class="font-mono text-cyan-300">autopct</span> formatting styles.</p>
+                    </div>
+                </div>
+                <div class="p-3 bg-emerald-950/20 border border-emerald-900/30 rounded-lg text-[11px] text-emerald-400 font-mono">
+                    Note: Graphical system updates display structural output logs inside the system execution terminal panel.
+                </div>
+            </div>
+            <div class="lg:col-span-3 flex flex-col h-full justify-center">
+                <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl h-full min-h-[400px]">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-950 border-b border-slate-800">
+                        <div class="flex items-center gap-2"><i class="fa-brands fa-python text-emerald-400"></i><span class="text-xs text-slate-400 font-mono">student_sandbox.py</span></div>
+                    </div>
+                    <textarea id="code-sandbox" class="w-full flex-grow p-4 bg-slate-900 text-slate-100 font-mono text-sm focus:outline-none focus:ring-0 resize-none min-h-[250px]">import matplotlib.pyplot as plt
+
+# Write your custom code solution profile inside this workspace container
+activities = ['Sleep', 'Study', 'Coding', 'Rest']
+shares = [35, 25, 25, 15]
+custom_hex = ['#6366f1', '#06b6d4', '#10b981', '#f43f5e']
+
+plt.pie(shares, labels=activities, colors=custom_hex, autopct='%1.1f%%')
+plt.title("My Allocation Profile")
+plt.show()</textarea>
+                    <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-400 pyidide-status-text"><i class="fa-solid fa-circle-notch animate-spin text-indigo-400 mr-2"></i>Loading Python runtime...</span>
+                        <button onclick="runPythonCode('code-sandbox', 'out-sandbox')" class="run-btn px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded-md text-xs font-bold tracking-wider uppercase transition-all" disabled>
+                            Evaluate Sandbox
+                        </button>
+                    </div>
+                    <div class="console-out p-4 font-mono text-xs h-32 overflow-y-auto" id="out-sandbox">
+                        Ready to process execution parameters...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide bg-slate-950">
+        <div class="max-w-4xl mx-auto w-full space-y-6" id="mcq-module-box">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <h2 class="text-2xl font-bold text-white">Check Your Understanding</h2>
+                </div>
+                <span id="mcq-structural-tracker" class="text-xs font-mono px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-slate-400">
+                    Question 1 of 10
+                </span>
+            </div>
+
+            <div id="mcq-question-wrapper" class="space-y-6 min-h-[340px] flex flex-col justify-between">
+                </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <button id="mcq-prev-action" onclick="traverseMcqNode(-1)" class="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-lg font-semibold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <button id="mcq-next-action" onclick="traverseMcqNode(1)" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold text-sm transition-all flex items-center gap-2" disabled>
+                    Next Question <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // System Global Declarations
+    let currentSlideIdx = 0;
+    const slides = document.querySelectorAll('.slide');
+    let pyodideInstance = null;
+
+    // Structured User MCQ Dataset Verbatim
+    const mcqCollection = [
+        {
+            q: "What is the main purpose of a scatter plot?",
+            opts: [
+                "To show proportions of a whole",
+                "To display relationships or patterns between two variables",
+                "To visualize time-based data",
+                "To create interactive graphs"
+            ],
+            ans: 1,
+            exp: "Scatter plots map individual coordinate observations to emphasize directional associations, dependencies, or spatial correlation tracking between two attributes."
+        },
+        {
+            q: "In Python, which library is commonly used for creating scatter plots and pie charts?",
+            opts: ["NumPy", "pandas", "Matplotlib", "SciPy"],
+            ans: 2,
+            exp: "Matplotlib forms the standard graphical plotting platform in Python, exposing modular layout functions like plt.scatter() and plt.pie()."
+        },
+        {
+            q: "Which parameter is used to add percentage labels to segments in a pie chart?",
+            opts: ["colors", "autopct", "startangle", "title"],
+            ans: 1,
+            exp: "The autopct configuration takes string formatting rules to compute string text tags inside categorical slices automatically."
+        },
+        {
+            q: "In a scatter plot, what does the marker parameter control?",
+            opts: ["The color of the graph", "The size of the axes", "The shape of the data points", "The title of the graph"],
+            ans: 2,
+            exp: "The marker element reconfigures structural rendering indicators from standard circular dots to options like crosses, squares, or diamond elements."
+        },
+        {
+            q: "If the data for a pie chart does not sum to 100, what issue may occur?",
+            opts: ["The pie chart will not display.", "The proportions will be distorted.", "The pie chart will automatically adjust to fit.", "The labels will not appear."],
+            ans: 1,
+            exp: "When cumulative totals differ from standard sums, Matplotlib rescales elements relative to totals, risking visual clarity and comparative structural alignment errors."
+        },
+        {
+            q: "Which function is used to create a scatter plot in Matplotlib?",
+            opts: ["plt.plot()", "plt.scatter()", "plt.pie()", "plt.hist()"],
+            ans: 1,
+            exp: "plt.scatter() evaluates independent arrays to generate distinct non-connected data points on cross-coordinate dimensions."
+        },
+        {
+            q: "What does the startangle parameter in a pie chart control?",
+            opts: ["The size of each segment", "The initial rotation of the chart", "The color scheme of the chart", "The title of the chart"],
+            ans: 1,
+            exp: "startangle sets the geometric degree rotation offset for rendering the opening segment border block profile counter-clockwise."
+        },
+        {
+            q: "How do you display the graph after creating it in Matplotlib?",
+            opts: ["plt.show()", "plt.display()", "plt.render()", "plt.graph()"],
+            ans: 0,
+            exp: "plt.show() releases buffered canvas rendering properties into native environment interfaces or graphical application viewing panels."
+        },
+        {
+            q: "What will happen if the lengths of the x and y data lists in a scatter plot do not match?",
+            opts: ["The scatter plot will be created with missing points.", "An error will occur.", "The plot will automatically adjust the data.", "The plot will display a blank graph."],
+            ans: 1,
+            exp: "Matched mapping dimensions require strict coordinate balance pairings; unmatched data array allocations immediately trigger structural layout trace anomalies and stop compilation."
+        },
+        {
+            q: "Which parameter allows you to set custom colors for segments in a pie chart?",
+            opts: ["autopct", "colors", "labels", "legend"],
+            ans: 1,
+            exp: "The colors variable takes indexed color strings to assign specific backgrounds to structural category shares sequentially."
+        }
+    ];
+
+    let currentMcqIdx = 0;
+    let selectedMcqAns = null;
+
+    // Initialization Sequence
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentationState();
+        initializePyodideRuntime();
+        generateMcqDomElement();
+        setupBugHuntListeners();
+    });
+
+    // View Engine Navigation Actions
+    function updatePresentationState() {
+        slides.forEach((slide, idx) => {
+            slide.classList.remove('active', 'prev');
+            if (idx === currentSlideIdx) {
+                slide.classList.add('active');
+            } else if (idx < currentSlideIdx) {
+                slide.classList.add('prev');
+            }
+        });
+
+        // Track global structural numbers dynamically
+        document.getElementById('slide-counter').textContent = `${currentSlideIdx + 1} / ${slides.length}`;
+        const linearShare = ((currentSlideIdx + 1) / slides.length) * 100;
+        document.getElementById('progress').style.width = `${linearShare}%`;
+
+        // Refresh highlighted structures
+        Prism.highlightAll();
+    }
+
+    function navigateDirections(step) {
+        if (step === 1 && currentSlideIdx < slides.length - 1) {
+            currentSlideIdx++;
+            updatePresentationState();
+        } else if (step === -1 && currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updatePresentationState();
+        }
+    }
+
+    // Keyboard Event Handlers
+    window.addEventListener('keydown', (e) => {
+        // Safe lock checking if user is typing custom parameters in input text areas
+        if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+        
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateDirections(1);
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigateDirections(-1);
+        }
+    });
+
+    // Integrated Asynchronous Pyodide Infrastructure
+    async function initializePyodideRuntime() {
+        try {
+            pyodideInstance = await loadPyodide();
+            // Load base mock package structure to capture standard figure tracking profiles cleanly
+            await pyodideInstance.runPythonAsync(`
+                import sys
+                import io
+                class MockPlot:
+                    def __init__(self): pass
+                    def scatter(self, *args, **kwargs): print(f"[System Plot Info: Generated Scatter profile matching parameters]")
+                    def pie(self, *args, **kwargs): print(f"[System Plot Info: Generated Proportion Pie composition share mapping]")
+                    def title(self, text): print(f"[Plot Configuration: Title set to '{text}']")
+                    def xlabel(self, text): print(f"[Plot Configuration: X-Axis tag defined as '{text}']")
+                    def ylabel(self, text): print(f"[Plot Configuration: Y-Axis tag defined as '{text}']")
+                    def legend(self): print("[Plot Configuration: Category labels layout registered]")
+                    def show(self): print("[System Action: Graphical structural canvas view verified and flushed]")
+                
+                sys.modules['matplotlib'] = type(sys)('matplotlib')
+                import matplotlib
+                matplotlib.pyplot = MockPlot()
+            `);
+            
+            document.querySelectorAll('.pyidide-status-text').forEach(node => {
+                node.innerHTML = `<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1.5"></i>Environment Standard Active</span>`;
+            });
+            document.querySelectorAll('.run-btn').forEach(btn => btn.disabled = false);
+        } catch (err) {
+            document.querySelectorAll('.pyidide-status-text').forEach(node => {
+                node.innerHTML = `<span class="text-rose-400 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Engine Offline</span>`;
+            });
+            console.error("Pyodide tracking fault context: ", err);
+        }
+    }
+
+    async function runPythonCode(sourceTextareaId, stdoutConsoleId) {
+        const scriptBody = document.getElementById(sourceTextareaId).value;
+        const screenTerminal = document.getElementById(stdoutConsoleId);
+        screenTerminal.textContent = "Executing calculation instructions...\n";
+
+        if (!pyodideInstance) {
+            screenTerminal.textContent = "Error: Computation environment context execution unavailable.";
+            return;
+        }
+
+        try {
+            // Re-route typical python output parameters into local storage catch parameters
+            await pyodideInstance.runPythonAsync(`
+                import sys
+                from io import StringIO
+                sys.stdout = StringIO()
+                sys.stderr = StringIO()
+            `);
+
+            await pyodideInstance.runPythonAsync(scriptBody);
+
+            const consoleStdout = await pyodideInstance.runPythonAsync(`sys.stdout.getvalue()`);
+            const consoleStderr = await pyodideInstance.runPythonAsync(`sys.stderr.getvalue()`);
+
+            let combinedLogs = consoleStdout + consoleStderr;
+            screenTerminal.textContent = combinedLogs || "Instruction processing completed with no standard output traces returned.";
+        } catch (runtimeFault) {
+            screenTerminal.textContent = `Execution Error Stack Trace:\n${runtimeFault.message}`;
+        }
+    }
+
+    // Interactive Quiz Node Processing Rules
+    function generateMcqDomElement() {
+        const frame = document.getElementById('mcq-question-wrapper');
+        const countIndicator = document.getElementById('mcq-structural-tracker');
+        const advanceBtn = document.getElementById('mcq-next-action');
+        const regressBtn = document.getElementById('mcq-prev-action');
+
+        selectedMcqAns = null;
+        advanceBtn.disabled = true;
+
+        // Navigation state adjustments
+        regressBtn.style.display = currentMcqIdx === 0 ? 'none' : 'flex';
+        countIndicator.textContent = `Question ${currentMcqIdx + 1} of ${mcqCollection.length}`;
+
+        const dataNode = mcqCollection[currentMcqIdx];
+
+        let variableOptionsHtml = '';
+        dataNode.opts.forEach((variantText, variantIdx) => {
+            variableOptionsHtml += `
+                <button onclick="evaluateMcqSelection(${variantIdx})" class="mcq-option-node w-full text-left p-4 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl flex items-center gap-4 transition-all group" data-idx="${variantIdx}">
+                    <span class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono text-xs text-slate-400 group-hover:bg-slate-700 group-hover:text-white transition-all">
+                        ${String.fromCharCode(65 + variantIdx)}
+                    </span>
+                    <span class="text-slate-200 text-sm md:text-base font-medium">${variantText}</span>
+                </button>
+            `;
+        });
+
+        frame.innerHTML = `
+            <div class="space-y-3">
+                <h3 class="text-lg md:text-xl font-bold text-slate-100 leading-relaxed">${dataNode.q}</h3>
+            </div>
+            <div class="grid grid-cols-1 gap-3 my-2">
+                ${variableOptionsHtml}
+            </div>
+            <div id="mcq-feedback-drawer" class="opacity-0 max-h-0 overflow-hidden transition-all duration-300 p-0 rounded-xl text-sm leading-relaxed">
+            </div>
+        `;
+    }
+
+    function evaluateMcqSelection(selectedIdx) {
+        if (selectedMcqAns !== null) return; // Freeze options once an answer is chosen
+        selectedMcqAns = selectedIdx;
+
+        const correctAnsIdx = mcqCollection[currentMcqIdx].ans;
+        const optionsNodes = document.querySelectorAll('.mcq-option-node');
+        const feedbackContainer = document.getElementById('mcq-feedback-drawer');
+        const advanceBtn = document.getElementById('mcq-next-action');
+
+        optionsNodes.forEach((node) => {
+            const currentItemIdx = parseInt(node.getAttribute('data-idx'));
+            if (currentItemIdx === correctAnsIdx) {
+                node.classList.remove('bg-slate-900', 'border-slate-800');
+                node.classList.add('bg-emerald-950/40', 'border-emerald-500/50', 'text-emerald-200');
+                node.querySelector('span').classList.add('bg-emerald-500', 'text-white', 'border-emerald-400');
+            } else if (currentItemIdx === selectedIdx) {
+                node.classList.remove('bg-slate-900', 'border-slate-800');
+                node.classList.add('bg-rose-950/40', 'border-rose-500/50', 'text-rose-200');
+                node.querySelector('span').classList.add('bg-rose-500', 'text-white', 'border-rose-400');
+            }
+        });
+
+        // Configure validation responses
+        if (selectedIdx === correctAnsIdx) {
+            feedbackContainer.className = "p-4 bg-emerald-950/30 border border-emerald-900/40 text-emerald-300 text-xs md:text-sm rounded-xl opacity-100 max-h-40 transition-all";
+            feedbackContainer.innerHTML = `<div class="flex gap-2"><i class="fa-solid fa-circle-check text-base mt-0.5"></i><div><strong>Correct Verification.</strong> ${mcqCollection[currentMcqIdx].exp}</div></div>`;
+        } else {
+            feedbackContainer.className = "p-4 bg-rose-950/30 border border-rose-900/40 text-rose-300 text-xs md:text-sm rounded-xl opacity-100 max-h-40 transition-all";
+            feedbackContainer.innerHTML = `<div class="flex gap-2"><i class="fa-solid fa-circle-xmark text-base mt-0.5"></i><div><strong>Incorrect Selection.</strong> ${mcqCollection[currentMcqIdx].exp}</div></div>`;
+        }
+
+        // Setup progression status flags
+        advanceBtn.disabled = false;
+        if (currentMcqIdx === mcqCollection.length - 1) {
+            advanceBtn.innerHTML = `Complete Assessment <i class="fa-solid fa-flag-checkered"></i>`;
+        }
+    }
+
+    function traverseMcqNode(direction) {
+        if (direction === 1) {
+            if (currentMcqIdx < mcqCollection.length - 1) {
+                currentMcqIdx++;
+                generateMcqDomElement();
+            } else {
+                // Assessment submission flow state presentation
+                const moduleBox = document.getElementById('mcq-module-box');
+                moduleBox.className = "text-center py-12 space-y-6 max-w-xl mx-auto";
+                moduleBox.innerHTML = `
+                    <div class="w-20 h-20 bg-gradient-to-tr from-indigo-500 to-cyan-400 rounded-full flex items-center justify-center text-3xl text-white mx-auto shadow-lg shadow-indigo-500/20 animate-bounce">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-bold text-white">Review Assessment Complete!</h2>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            You have successfully cross-examined all Matplotlib structural variables, coordinate conditions, and graph parameters.
+                        </p>
+                    </div>
+                    <button onclick="resetAssessmentFlow()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-sm rounded-lg font-semibold transition-all inline-flex items-center gap-2 mx-auto">
+                        <i class="fa-solid fa-rotate-left"></i> Restart Assessment
+                    </button>
+                `;
+                document.getElementById('mcq-next-action').style.display = 'none';
+                document.getElementById('mcq-prev-action').style.display = 'none';
+            }
+        } else if (direction === -1 && currentMcqIdx > 0) {
+            currentMcqIdx--;
+            generateMcqDomElement();
+            document.getElementById('mcq-next-action').innerHTML = `Next Question <i class="fa-solid fa-arrow-right"></i>`;
+        }
+    }
+
+    function resetAssessmentFlow() {
+        location.reload();
+    }
+
+    // Bug Hunt Logic Tracker Implementation
+    function setupBugHuntListeners() {
+        const trackingLines = document.querySelectorAll('.buggy-line');
+        const textFeedback = document.getElementById('bug-hunt-feedback');
+        const structuralScore = document.getElementById('bug-tracker-text');
+
+        trackingLines.forEach(lineNode => {
+            lineNode.addEventListener('click', () => {
+                const targetFaultIdentity = lineNode.getAttribute('data-is-bug') === 'true';
+                
+                // Reset alternate elements styling tracking flags
+                trackingLines.forEach(item => item.classList.remove('selected-bug'));
+                
+                if (targetFaultIdentity) {
+                    lineNode.classList.add('selected-bug');
+                    structuralScore.textContent = "1 / 1";
+                    structuralScore.className = "text-lg font-bold text-emerald-400";
+                    textFeedback.className = "p-4 rounded-xl min-h-[3.5rem] bg-emerald-950/30 border border-emerald-900/40 text-sm text-emerald-300 transition-all flex items-center gap-3";
+                    textFeedback.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i><span><strong>Bug Found on Line 3!</strong> Array lengths must match exactly. <code>horizontals</code> contains 5 units, whereas <code>verticals</code> only sets 4 element values.</span>`;
+                } else {
+                    lineNode.classList.add('selected-bug');
+                    structuralScore.textContent = "0 / 1";
+                    structuralScore.className = "text-lg font-bold text-rose-400";
+                    textFeedback.className = "p-4 rounded-xl min-h-[3.5rem] bg-rose-950/30 border border-rose-900/40 text-sm text-rose-300 transition-all flex items-center gap-3";
+                    textFeedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i><span>Line checked contains clean execution patterns. Review allocation scales vs dimensions.</span>`;
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

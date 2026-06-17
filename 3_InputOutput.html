@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Programming: Basic Input and Output</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #3730A3;
+            --accent: #10B981;
+            --bg-dark: #0F172A;
+            --card-dark: #1E293B;
+            --text-light: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+        }
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.98) translateY(10px);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+        #slide-counter {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .code-container pre {
+            margin: 0 !important;
+            border-radius: 0.75rem !important;
+            background: #0B0F19 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .bug-line.selected-bug {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-left: 4px solid #EF4444;
+        }
+        .bug-line.selected-clean {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-left: 4px solid #10B981;
+        }
+        .interactive-terminal {
+            background: #0B0F19;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+        }
+        .terminal-header {
+            background: #1E293B;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans">
+
+<div id="slide-counter">1 / 1</div>
+<div id="presentation-container" class="relative w-full h-full max-w-7xl mx-auto">
+
+    <div class="slide active" id="slide-0">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full max-h-[85vh]">
+            <div class="lg:col-span-7 space-y-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-sm font-semibold border border-indigo-500/20">
+                    <i class="fa-solid fa-graduation-cap"></i> Python Basics
+                </div>
+                <h1 class="text-4xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+                    Basic Input & <span class="text-indigo-400">Output</span>
+                </h1>
+                <p class="text-lg text-slate-400 leading-relaxed max-w-2xl">
+                    Programs live through interaction. In Python, communicating with users is straightforward: we capture information using the environment and showcase results instantly on screen.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/60 shadow-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                            </span>
+                            <h3 class="font-bold text-slate-200">The <code class="font-mono bg-slate-800 px-1 py-0.5 rounded text-amber-400 text-sm">input()</code> Core</h3>
+                        </div>
+                        <p class="text-sm text-slate-400">Pauses execution to gather structured data directly from whoever is running your software.</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800/60 shadow-xl">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                <i class="fa-solid fa-desktop"></i>
+                            </span>
+                            <h3 class="font-bold text-slate-200">The <code class="font-mono bg-slate-800 px-1 py-0.5 rounded text-amber-400 text-sm">print()</code> Core</h3>
+                        </div>
+                        <p class="text-sm text-slate-400">Pushes information onto the visual system console terminal interface instantly.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-5 relative hidden lg:block">
+                <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-emerald-500/10 rounded-3xl filter blur-2xl"></div>
+                <div class="relative p-6 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-2xl backdrop-blur-md text-center space-y-4">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                        <i class="fa-brands fa-python text-3xl text-indigo-400 animate-pulse"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 w-24 bg-indigo-500/40 rounded mx-auto"></div>
+                        <div class="h-2 w-32 bg-slate-700 rounded mx-auto"></div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-left font-mono text-xs text-slate-400 space-y-1">
+                        <div><span class="text-emerald-400">>>></span> user_data = input()</div>
+                        <div><span class="text-emerald-400">>>></span> print(user_data)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+        <div class="space-y-6">
+            <div class="flex items-center gap-2 text-indigo-400 text-sm font-semibold">
+                <i class="fa-solid fa-code"></i> Anatomy of IO
+            </div>
+            <h2 class="text-3xl lg:text-4xl font-bold text-white">Syntax & Practical Implementation</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div class="space-y-4 p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">Collection Engine</span>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold text-slate-200">Taking an Input</h3>
+                        <p class="text-sm text-slate-400">Assign incoming text information dynamically straight into variables.</p>
+                    </div>
+                    <div class="code-container font-mono text-sm">
+                        <pre><code class="language-python"># Syntax Template
+variable = input("Your prompt message")
+
+# Real-world Execution
+name = input("What is your name? ")</code></pre>
+                    </div>
+                </div>
+
+                <div class="space-y-4 p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">Presentation Engine</span>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-xl font-bold text-slate-200">Displaying an Output</h3>
+                        <p class="text-sm text-slate-400">Renders calculated evaluations or explicit phrases onto visual run logs.</p>
+                    </div>
+                    <div class="code-container font-mono text-sm">
+                        <pre><code class="language-python"># Syntax Template
+print("Your message")
+
+# Real-world Execution
+print("Welcome to Python!")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 flex gap-4 items-start max-w-4xl">
+                <span class="text-amber-400 text-xl mt-0.5"><i class="fa-solid fa-lightbulb"></i></span>
+                <div>
+                    <h4 class="font-bold text-slate-200 text-sm">Real-World Analogy</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        Think of <code class="font-mono text-amber-300">input()</code> like an empty order slip standard form handed to a customer—the program waits until they write something down. Think of <code class="font-mono text-amber-300">print()</code> like the digital announcement board displaying orders when they are ready.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full max-h-[85vh] items-center">
+            <div class="lg:col-span-5 space-y-5">
+                <div class="text-emerald-400 text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Data Binding
+                </div>
+                <h2 class="text-3xl lg:text-4xl font-bold text-white">Combining Input &amp; Output</h2>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    By embedding expressions through modern <strong>f-strings (Formatted String Literals)</strong>, you can construct custom dynamic greeting logs cleanly without messy string concatenation symbols.
+                </p>
+                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">The Power of "f" Prefix</h4>
+                    <p class="text-xs text-slate-400">
+                        Putting an <code class="text-indigo-400 font-mono">f</code> right before structural quote parameters lets you evaluate variable references natively inside explicit curly containers (<code class="text-emerald-400 font-mono">{variable}</code>).
+                    </p>
+                </div>
+                <blockquote class="border-l-4 border-indigo-500 bg-indigo-500/5 p-3 rounded-r text-xs text-slate-400 font-mono">
+                    name = input("What is your name? ")<br>
+                    print(f"Hello {name}!")
+                </blockquote>
+            </div>
+
+            <div class="lg:col-span-7">
+                <div class="interactive-terminal flex flex-col h-[400px] shadow-2xl">
+                    <div class="terminal-header px-4 py-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                            <span class="text-xs font-mono text-slate-400 ml-2">live_io_sandbox.py</span>
+                        </div>
+                        <button onclick="runPythonSandbox('sandbox-code', 'sandbox-output', 'sandbox-input')" class="run-btn px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded text-xs flex items-center gap-1.5 transition disabled:opacity-50" disabled>
+                            <i class="fa-solid fa-play text-[10px]"></i> Run Code
+                        </button>
+                    </div>
+                    <div class="flex-1 grid grid-rows-2 p-3 gap-3 bg-slate-950 font-mono text-sm">
+                        <div class="relative">
+                            <label class="absolute right-2 top-1 text-[10px] uppercase tracking-wider text-slate-500 font-sans font-bold">Editable Code Canvas</label>
+                            <textarea id="sandbox-code" class="w-full h-full bg-slate-900/60 p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 text-indigo-300 resize-none font-mono text-xs">name = "Alex"
+print(f"Hello {name}!")</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="relative flex flex-col">
+                                <label class="text-[10px] uppercase tracking-wider text-slate-500 font-sans font-bold mb-1">Simulated Prompt Input</label>
+                                <input id="sandbox-input" type="text" value="Alex" class="w-full flex-1 bg-slate-900 p-2 rounded border border-slate-800 text-xs focus:outline-none focus:border-emerald-500 text-slate-200">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[10px] uppercase tracking-wider text-slate-500 font-sans font-bold mb-1">Standard Console Output</label>
+                                <div id="sandbox-output" class="flex-1 bg-slate-900 border border-slate-800 rounded p-2 text-xs text-slate-300 overflow-y-auto whitespace-pre-wrap">Click Run to trigger active generation execution blocks...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pyodide-status text-[11px] text-amber-400/80 mt-2 text-right font-mono flex items-center justify-end gap-1.5">
+                    <i class="fa-solid fa-circle-notch animate-spin text-amber-500"></i> Synchronizing cloud compute runtime kernels...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="space-y-6">
+            <div class="text-amber-400 text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Critical Paradigm Guardrails
+            </div>
+            <h2 class="text-3xl lg:text-4xl font-bold text-white">Numeric Input &amp; Type Conversion</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-6 space-y-4">
+                    <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                        <h4 class="font-bold text-red-400 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-skull-crossbones"></i> The Universal String Trait Danger
+                        </h4>
+                        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                            Every piece of user-typed information gathered through <code class="font-mono text-red-300 bg-red-950/40 px-1 rounded">input()</code> arrives inside the architecture strictly structured as a <strong>String</strong> data format wrapper. If you try direct math operation equations on it without conversions, it crashes with a <code class="text-red-400 font-mono">TypeError</code>.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2 text-slate-300 text-sm leading-relaxed">
+                        <p>To safely execute calculations, encapsulate prompts inside structural casting adapters:</p>
+                        <ul class="space-y-1.5 text-xs font-mono text-slate-400 pl-4">
+                            <li><span class="text-emerald-400">int()</span> - Transforms raw textual inputs into standard whole math numbers (Integers).</li>
+                            <li><span class="text-emerald-400">float()</span> - Transforms values into high precision digital decimals.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-6">
+                    <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
+                        <div class="text-xs text-slate-400 tracking-wider font-bold uppercase">Mathematical Dynamic Example Block</div>
+                        <div class="code-container font-mono text-xs">
+                            <pre><code class="language-python"># Ask user for data casting instantly
+age = int(input("How old are you? "))
+
+# Evaluation execution block inside template placeholder wrapper
+print(f"Next year, you will be {age + 1}.")</code></pre>
+                        </div>
+                        <div class="p-3 bg-slate-950 rounded border border-slate-800 text-xs font-mono space-y-1 text-slate-400">
+                            <div class="text-[10px] text-slate-500 font-sans uppercase font-bold">Standard Simulation:</div>
+                            <div>How old are you? <span class="text-amber-400">15</span></div>
+                            <div class="text-emerald-400">Next year, you will be 16.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full max-h-[85vh]">
+            <div class="lg:col-span-5 space-y-4">
+                <span class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide bg-indigo-500/10 text-indigo-400 rounded-full border border-indigo-500/20">Practice Module A</span>
+                <h2 class="text-3xl font-bold text-white">1. Basic Input and Output</h2>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Test out conversational single value capturing parameters. Notice how cleanly individual elements resolve straight inside dynamic string layout containers.
+                </p>
+                <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
+                    <div class="font-bold text-slate-200">Execution Script Flow Blueprint:</div>
+                    <p>Provide your favorite visual wavelength spectrum color inside the dynamic live configuration box on the right side to see real-time updates.</p>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7">
+                <div class="interactive-terminal flex flex-col h-[350px]">
+                    <div class="terminal-header px-4 py-2.5 flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-400">practice_1.py</span>
+                        <button onclick="runPythonSandbox('p1-code', 'p1-output', 'p1-input')" class="run-btn px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded text-xs transition flex items-center gap-1.5" disabled>
+                            <i class="fa-solid fa-play"></i> Run Code
+                        </button>
+                    </div>
+                    <div class="flex-1 grid grid-rows-2 p-3 gap-3 bg-slate-950 font-mono text-xs">
+                        <div class="relative">
+                            <textarea id="p1-code" class="w-full h-full bg-slate-900/60 p-2 rounded border border-slate-800 text-indigo-300 focus:outline-none focus:border-indigo-500 resize-none">color = "Blue"
+print(f"Wow, {color} is a beautiful color!")</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="flex flex-col">
+                                <label class="text-[10px] text-slate-500 mb-1 font-bold font-sans uppercase">Favorite Color Input Input</label>
+                                <input id="p1-input" type="text" value="Blue" class="bg-slate-900 border border-slate-800 rounded p-1.5 text-slate-200 focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[10px] text-slate-500 mb-1 font-bold font-sans uppercase">Console Terminal Output Log</label>
+                                <div id="p1-output" class="flex-1 bg-slate-900 border border-slate-800 rounded p-1.5 text-slate-300 overflow-y-auto whitespace-pre-wrap">Awaiting trigger execution parameters...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center h-full max-h-[85vh]">
+            <div class="lg:col-span-5 space-y-4">
+                <span class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">Practice Module B</span>
+                <h2 class="text-3xl font-bold text-white">2. Multiple Input and Output</h2>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Scale interaction steps upward. This system maps multiple execution data tracks at the same time into separate structural container points seamlessly.
+                </p>
+                <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
+                    <div class="font-bold text-slate-200">Execution Tracking Rules:</div>
+                    <p>Enter separate distinct records inside the tracking parameter arrays below to generate mapped responses instantly.</p>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-7">
+                <div class="interactive-terminal flex flex-col h-[350px]">
+                    <div class="terminal-header px-4 py-2.5 flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-400">practice_2.py</span>
+                        <button onclick="runPythonSandbox('p2-code', 'p2-output', 'p2-input', true)" class="run-btn px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded text-xs transition flex items-center gap-1.5" disabled>
+                            <i class="fa-solid fa-play"></i> Run Code
+                        </button>
+                    </div>
+                    <div class="flex-1 grid grid-rows-2 p-3 gap-3 bg-slate-950 font-mono text-xs">
+                        <div class="relative">
+                            <textarea id="p2-code" class="w-full h-full bg-slate-900/60 p-2 rounded border border-slate-800 text-emerald-300 focus:outline-none focus:border-emerald-500 resize-none">name = "Chris"
+hobby = "Coding"
+print(f"Hi {name}, it's great to meet someone who loves {hobby}!")</textarea>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-2">
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold font-sans uppercase block">Name Entry Input</label>
+                                    <input id="p2-input-1" type="text" value="Chris" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-200 focus:outline-none focus:border-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold font-sans uppercase block">Hobby Entry Input</label>
+                                    <input id="p2-input-2" type="text" value="Coding" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-200 focus:outline-none focus:border-emerald-500">
+                                </div>
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="text-[10px] text-slate-500 mb-1 font-bold font-sans uppercase">Terminal Output Logs</label>
+                                <div id="p2-output" class="flex-1 bg-slate-900 border border-slate-800 rounded p-1.5 text-slate-300 overflow-y-auto whitespace-pre-wrap">Awaiting multi-track inputs...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="space-y-6 max-w-5xl mx-auto">
+            <div class="text-amber-400 text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-trophy"></i> Capstone Assignment Challenge
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-3xl font-bold text-white">Class Assignment: Student Metrics Logger</h2>
+                <p class="text-sm text-slate-400">Design a complete consolidated input processing script execution framework using the strict parameter specifications outlined below.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+                <div class="md:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                    <h3 class="text-base font-bold text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+                        <i class="fa-solid fa-clipboard-list text-indigo-400"></i> Target Structural Metrics
+                    </h3>
+                    <ul class="space-y-3 text-xs text-slate-300">
+                        <li class="flex gap-2.5 items-start">
+                            <span class="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 text-[10px] font-bold">1</span>
+                            <span>Prompt for the student's explicit full legal <strong>Name</strong> classification string.</span>
+                        </li>
+                        <li class="flex gap-2.5 items-start">
+                            <span class="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 text-[10px] font-bold">2</span>
+                            <span>Prompt for their top choice tracking <strong>Favorite Subject</strong> inside school curriculum indexes.</span>
+                        </li>
+                        <li class="flex gap-2.5 items-start">
+                            <span class="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 text-[10px] font-bold">3</span>
+                            <span>Prompt for the numerical total <strong>Hours of Daily Study</strong> tracking allocation metrics.</span>
+                        </li>
+                    </ul>
+
+                    <div class="pt-2">
+                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Target Template Expected Output Layout Blueprint:</div>
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800 text-[11px] font-mono text-emerald-400/90 leading-normal">
+                            "Hi [Name], it's amazing that you study [Subject] for [Hours] hours every day!"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+                    <div class="flex-1 flex flex-col min-h-[200px]">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-mono text-slate-400">assignment_canvas.py</span>
+                            <button onclick="runPythonSandbox('assignment-code', 'assignment-output', 'assignment-input-1', false, true)" class="run-btn px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded text-xs transition" disabled>
+                                <i class="fa-solid fa-play"></i> Test Architecture Verification
+                            </button>
+                        </div>
+                        <textarea id="assignment-code" class="flex-1 w-full bg-slate-950 p-3 rounded-lg font-mono text-xs text-indigo-300 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none min-h-[140px]"># Write your complete script interaction process program blocks here
+name = "Taylor"
+subject = "Computer Science"
+hours = "3"
+
+print(f"Hi {name}, it's amazing that you study {subject} for {hours} hours every day!")</textarea>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 block mb-0.5">Name</label>
+                            <input id="assignment-input-1" type="text" value="Taylor" class="w-full bg-slate-950 border border-slate-800 rounded p-1 text-slate-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 block mb-0.5">Subject</label>
+                            <input id="assignment-input-2" type="text" value="Computer Science" class="w-full bg-slate-950 border border-slate-800 rounded p-1 text-slate-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-slate-500 block mb-0.5">Hours</label>
+                            <input id="assignment-input-3" type="text" value="3" class="w-full bg-slate-950 border border-slate-800 rounded p-1 text-slate-200 focus:outline-none">
+                        </div>
+                    </div>
+                    <div id="assignment-output" class="mt-3 bg-slate-950 border border-slate-800 rounded p-2 text-[11px] font-mono text-slate-400 min-h-[40px]">
+                        Console logs show up instantly right here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <div class="space-y-5 max-w-4xl mx-auto">
+            <div class="text-rose-400 text-sm font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-bug animate-bounce"></i> Interactive Structural Code Debugging Lab
+            </div>
+            <div class="space-y-1">
+                <h2 class="text-3xl font-bold text-white">Code Bug Hunt!</h2>
+                <p class="text-sm text-slate-400">Locate the broken line below. Find and select the faulty sequence statement directly on the layout lines.</p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+                <div class="bg-slate-800 px-4 py-2 flex justify-between items-center border-b border-slate-700/60">
+                    <span class="text-xs font-mono text-slate-400 text-indigo-300">broken_input_casting.py</span>
+                    <span class="text-xs font-semibold px-2 py-0.5 bg-slate-950 rounded text-slate-400">
+                        Bugs Found: <span id="bug-counter" class="text-rose-400 font-bold">0</span> / 1
+                    </span>
+                </div>
+                
+                <div class="p-4 bg-slate-950 font-mono text-sm leading-relaxed space-y-1">
+                    <div class="bug-line p-2 rounded text-slate-300" data-is-bug="false" data-feedback="Clean tracking sequence setup code lines. This correctly queries parameter structures." onclick="checkBugLine(this)">
+                        <span class="text-slate-600 inline-block w-6 select-none">1</span> <span class="text-indigo-400">age_input</span> = <span class="text-amber-400">input</span>(<span class="text-emerald-400">"Enter age: "</span>)
+                    </div>
+                    <div class="bug-line p-2 rounded text-slate-300" data-is-bug="true" data-feedback="Bug Found! Direct arithmetic operations cannot be performed directly on a raw string input value before wrapping it in an explicit int() or float() type conversion adapter." onclick="checkBugLine(this)">
+                        <span class="text-slate-600 inline-block w-6 select-none">2</span> <span class="text-indigo-400">next_year</span> = <span class="text-indigo-400">age_input</span> + <span class="text-amber-400">1</span>
+                    </div>
+                    <div class="bug-line p-2 rounded text-slate-300" data-is-bug="false" data-feedback="Clean line. Output syntax structure layout operations align safely." onclick="checkBugLine(this)">
+                        <span class="text-slate-600 inline-block w-6 select-none">3</span> <span class="text-amber-400">print</span>(<span class="text-emerald-400">f"Next year: {next_year}"</span>)
+                    </div>
+                </div>
+
+                <div id="bug-feedback" class="p-4 bg-slate-900/60 text-xs border-t border-slate-800 text-slate-400 min-h-[50px] transition-all">
+                    Click on the system script lines above to audit and test lines execution blocks parameters...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-8">
+        <div class="max-w-3xl mx-auto space-y-6 w-full">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
+                    <i class="fa-solid fa-circle-check"></i> Knowledge Assessment Checkpoint
+                </div>
+                <div id="mcq-progress-indicator" class="text-xs font-mono text-slate-400 bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">
+                    Question 1 of 5
+                </div>
+            </div>
+
+            <div id="mcq-card-viewport" class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative min-h-[340px] flex flex-col justify-between">
+                
+                <div id="mcq-dynamic-content" class="space-y-4">
+                    </div>
+
+                <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-800/60">
+                    <button id="mcq-prev-btn" onclick="prevMCQQuestion()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded transition flex items-center gap-2 visibility-hidden">
+                        <i class="fa-solid fa-arrow-left"></i> Previous Question
+                    </button>
+                    <button id="mcq-next-btn" onclick="nextMCQQuestion()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded transition flex items-center gap-2 opacity-0 pointer-events-none">
+                        Next Question <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // System Slide Engine State Variables
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    
+    // Verbatim MCQ Data Array from User Input Processing Records
+    const mcqQuestions = [
+        {
+            q: "What does the input() function do in Python?",
+            options: [
+                "Prints text to the screen.",
+                "Pauses the program until the user presses a key.",
+                "Accepts user input as a string.",
+                "Formats a string for output."
+            ],
+            correct: 2,
+            answerText: "Answer: C. Accepts user input as a string."
+        },
+        {
+            q: "What is the correct way to use the input() function?",
+            options: [
+                "print(input(\"What is your name? \"))",
+                "name = input(\"What is your name? \")",
+                "input(\"What is your name? \", name)",
+                "name = input() \"What is your name?\""
+            ],
+            correct: 1,
+            answerText: "Answer: B. name = input(\"What is your name? \")"
+        },
+        {
+            q: "Which of the following is a correct use of f-strings?",
+            options: [
+                "print(f\"Hello \" + name + \"!\")",
+                "print(f\"Hello, {name}!\")",
+                "print(f\"Hello, \"name\"!\")",
+                "print(\"Hello, {name}!\")"
+            ],
+            correct: 1,
+            answerText: "Answer: B. print(f\"Hello, {name}!\")"
+        },
+        {
+            q: "What will this code output if the user inputs \"Alex\" and \"Reading\"?\n\nname = input(\"What is your name? \")\nhobby = input(\"What is your favorite hobby? \")\nprint(f\"Hi {name}, it’s great to meet someone who enjoys {hobby}!\")",
+            options: [
+                "Hi {name}, it’s great to meet someone who enjoys {hobby}!",
+                "Hi Alex, it’s great to meet someone who enjoys Reading!",
+                "Hi Alex, it’s great to meet someone who enjoys {Reading}!",
+                "SyntaxError"
+            ],
+            correct: 1,
+            answerText: "Answer: B. Hi Alex, it’s great to meet someone who enjoys Reading!"
+        },
+        {
+            q: "What is the purpose of f in an f-string?",
+            options: [
+                "Indicates that the string is formatted and can include variables.",
+                "Converts the string to uppercase.",
+                "Stops the program after printing.",
+                "Formats the string as a floating-point number."
+            ],
+            correct: 0,
+            answerText: "Answer: A. Indicates that the string is formatted and can include variables."
+        }
+    ];
+
+    let currentMCQIndex = 0;
+    let selectedMCQAnswer = null;
+    let pyodideInstance = null;
+
+    // Initialization Sequence Tracking Functions
+    window.addEventListener('DOMContentLoaded', () => {
+        updateSlidesFramework();
+        initializeMCQSlideFlow();
+        loadPyodideRuntimeEngine();
+        
+        // Connect Keyboard Navigation Action Observers
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigateSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateSlide(-1);
+            }
+        });
+    });
+
+    function updateSlidesFramework() {
+        slides.forEach((slide, idx) => {
+            if (idx === currentSlide) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Update Counter Infrastructure
+        document.getElementById('slide-counter').innerText = `${currentSlide + 1} / ${totalSlides}`;
+        
+        // Progress Meter Width Matrix Adjustments
+        const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+        document.getElementById('progress').style.width = `${progressPercentage}%`;
+        
+        // Trigger syntax highlight updates securely on transition changes
+        Prism.highlightAll();
+    }
+
+    function navigateSlide(direction) {
+        const nextTarget = currentSlide + direction;
+        if (nextTarget >= 0 && nextTarget < totalSlides) {
+            currentSlide = nextTarget;
+            updateSlidesFramework();
+        }
+    }
+
+    // Pyodide Core Logic Wrapper Engines
+    async function loadPyodideRuntimeEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            const statusElements = document.querySelectorAll('.pyodide-status');
+            statusElements.forEach(el => {
+                el.innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Computational runtime framework online. ready to compile.</span>`;
+            });
+            const runButtons = document.querySelectorAll('.run-btn');
+            runButtons.forEach(btn => btn.removeAttribute('disabled'));
+        } catch (err) {
+            console.error(err);
+            const statusElements = document.querySelectorAll('.pyodide-status');
+            statusElements.forEach(el => {
+                el.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-triangle-exclamation"></i> Runtime error pairing local sandbox environments.</span>`;
+            });
+        }
+    }
+
+    async function runPythonSandbox(codeId, outputId, inputId, isMultiTrack = false, isAssignmentTrack = false) {
+        if (!pyodideInstance) return;
+        
+        const outputConsole = document.getElementById(outputId);
+        outputConsole.innerText = "Executing calculations parameters...";
+        
+        let userScript = document.getElementById(codeId).value;
+        
+        try {
+            // Clear current standard cache streams to build zero clean state isolates
+            pyodideInstance.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+
+            if (isAssignmentTrack) {
+                const nameVal = document.getElementById('assignment-input-1').value;
+                const subjVal = document.getElementById('assignment-input-2').value;
+                const hourVal = document.getElementById('assignment-input-3').value;
+                
+                // Inject configuration attributes natively matching tracking data paths override layers
+                pyodideInstance.globals.set("input_mock_name", nameVal);
+                pyodideInstance.globals.set("input_mock_subj", subjVal);
+                pyodideInstance.globals.set("input_mock_hour", hourVal);
+                
+                // Polyfill internal input execution chains directly matching code sequence order tracking matrices
+                userScript = `
+import builtins
+mock_inputs = [input_mock_name, input_mock_subj, input_mock_hour]
+input_counter = 0
+
+def mocked_input(prompt=""):
+    global input_counter
+    val = mock_inputs[input_counter % len(mock_inputs)]
+    input_counter += 1
+    return val
+
+builtins.input = mocked_input
+` + userScript;
+
+            } else if (isMultiTrack) {
+                const in1 = document.getElementById('p2-input-1').value;
+                const in2 = document.getElementById('p2-input-2').value;
+                pyodideInstance.globals.set("in1", in1);
+                pyodideInstance.globals.set("in2", in2);
+                
+                userScript = `
+import builtins
+mock_inputs = [in1, in2]
+input_counter = 0
+def mocked_input(prompt=""):
+    global input_counter
+    val = mock_inputs[input_counter % len(mock_inputs)]
+    input_counter += 1
+    return val
+builtins.input = mocked_input
+` + userScript;
+            } else {
+                const standardInputVal = document.getElementById(inputId).value;
+                pyodideInstance.globals.set("single_input_val", standardInputVal);
+                userScript = `
+import builtins
+def mocked_input(prompt=""):
+    return single_input_val
+builtins.input = mocked_input
+` + userScript;
+            }
+
+            await pyodideInstance.runPythonAsync(userScript);
+            
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if (stderr) {
+                outputConsole.innerText = stderr;
+                outputConsole.classList.add('text-rose-400');
+            } else {
+                outputConsole.innerText = stdout || "Execution successfully terminated with empty output parameters.";
+                outputConsole.classList.remove('text-rose-400');
+            }
+        } catch (error) {
+            outputConsole.innerText = error.message;
+            outputConsole.classList.add('text-rose-400');
+        }
+    }
+
+    // Bug Hunt Optimization Methods
+    let bugDiscovered = false;
+    function checkBugLine(element) {
+        const isBug = element.getAttribute('data-is-bug') === 'true';
+        const feedbackMessage = element.getAttribute('data-feedback');
+        const feedbackContainer = document.getElementById('bug-feedback');
+        
+        if (isBug) {
+            element.classList.add('selected-bug');
+            feedbackContainer.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-square-check"></i> Correct audit check!</span><br><span class="text-slate-300">${feedbackMessage}</span>`;
+            if (!bugDiscovered) {
+                bugDiscovered = true;
+                document.getElementById('bug-counter').innerText = "1";
+            }
+        } else {
+            element.classList.add('selected-clean');
+            feedbackContainer.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark"></i> Safe line configuration audit parameter.</span><br><span class="text-slate-400">${feedbackMessage}</span>`;
+        }
+    }
+
+    // Verbatim MCQ Presentation Pipeline Layer Engine
+    function initializeMCQSlideFlow() {
+        selectedMCQAnswer = null;
+        const nextBtn = document.getElementById('mcq-next-btn');
+        const prevBtn = document.getElementById('mcq-prev-btn');
+        
+        nextBtn.classList.add('opacity-0', 'pointer-events-none');
+        
+        if (currentMCQIndex === 0) {
+            prevBtn.style.visibility = 'hidden';
+        } else {
+            prevBtn.style.visibility = 'visible';
+        }
+
+        document.getElementById('mcq-progress-indicator').innerText = `Question ${currentMCQIndex + 1} of ${mcqQuestions.length}`;
+        
+        const currentData = mcqQuestions[currentMCQIndex];
+        const displayBox = document.getElementById('mcq-dynamic-content');
+        
+        // Clean previous node mappings safely before rebuilding layouts
+        displayBox.innerHTML = '';
+        
+        // Build the structural string presentation block components nicely formatted
+        const titleNode = document.createElement('h3');
+        titleNode.className = "text-lg font-bold text-slate-100 whitespace-pre-wrap leading-snug";
+        titleNode.innerText = currentData.q;
+        displayBox.appendChild(titleNode);
+        
+        const alternativesContainer = document.createElement('div');
+        alternativesContainer.className = "grid grid-cols-1 gap-3 mt-4";
+        
+        currentData.options.forEach((opt, index) => {
+            const rowBtn = document.createElement('button');
+            rowBtn.className = "mcq-option-row w-full text-left p-3.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-sm font-medium transition-all flex items-center justify-between group";
+            rowBtn.innerHTML = `
+                <span>${opt}</span>
+                <span class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-[10px] group-hover:border-slate-500 transition-all shrink-0 ml-4"><i class="fa-solid fa-check opacity-0"></i></span>
+            `;
+            rowBtn.onclick = () => evaluateMCQSelection(rowBtn, index, currentData.correct, currentData.answerText);
+            alternativesContainer.appendChild(rowBtn);
+        });
+        
+        displayBox.appendChild(alternativesContainer);
+
+        // Feedback placeholder element mapping
+        const feedbackBlock = document.createElement('div');
+        feedbackBlock.id = "mcq-inline-feedback-msg";
+        feedbackBlock.className = "mt-4 text-xs font-mono p-3 rounded opacity-0 transition-all bg-slate-950 border border-slate-800 text-slate-400 min-h-[40px]";
+        displayBox.appendChild(feedbackBlock);
+    }
+
+    function evaluateMCQSelection(selectedRow, idx, correctIndex, descriptiveFeedback) {
+        if (selectedMCQAnswer !== null) return; // Freeze selection tracks until progression loads
+        selectedMCQAnswer = idx;
+        
+        const rows = document.querySelectorAll('.mcq-option-row');
+        const feedbackContainer = document.getElementById('mcq-inline-feedback-msg');
+        
+        rows.forEach((row, rIdx) => {
+            row.style.pointerEvents = 'none'; // Lock further inputs
+            const indicatorCircle = row.querySelector('.w-5');
+            
+            if (rIdx === correctIndex) {
+                row.classList.add('bg-emerald-500/10', 'border-emerald-500/60', 'text-emerald-400');
+                indicatorCircle.classList.add('bg-emerald-500', 'border-emerald-500', 'text-slate-950');
+                indicatorCircle.querySelector('i').classList.remove('opacity-0');
+            } else if (rIdx === idx) {
+                row.classList.add('bg-rose-500/10', 'border-rose-500/60', 'text-rose-400');
+                indicatorCircle.classList.add('bg-rose-500', 'border-rose-500', 'text-slate-950');
+                indicatorCircle.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            }
+        });
+        
+        feedbackContainer.innerText = descriptiveFeedback;
+        feedbackContainer.classList.remove('opacity-0');
+        
+        // Show next question buttons parameters dynamically updates smoothly
+        const nextBtn = document.getElementById('mcq-next-btn');
+        nextBtn.classList.remove('opacity-0', 'pointer-events-none');
+        
+        if (currentMCQIndex === mcqQuestions.length - 1) {
+            nextBtn.innerHTML = `Complete Assessment <i class="fa-solid fa-circle-check"></i>`;
+        } else {
+            nextBtn.innerHTML = `Next Question <i class="fa-solid fa-arrow-right"></i>`;
+        }
+    }
+
+    function nextMCQQuestion() {
+        if (currentMCQIndex < mcqQuestions.length - 1) {
+            currentMCQIndex++;
+            initializeMCQSlideFlow();
+        } else {
+            // Render quiz completion state within the slide view panel cleanly
+            const displayBox = document.getElementById('mcq-dynamic-content');
+            displayBox.innerHTML = `
+                <div class="text-center py-8 space-y-4">
+                    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-3xl mx-auto mb-2 animate-bounce">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Review Assessment Complete!</h3>
+                    <p class="text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+                        You've completed the quiz! You can navigate backwards through the slides or use previous controls to reassess details.
+                    </p>
+                </div>
+            `;
+            const nextBtn = document.getElementById('mcq-next-btn');
+            nextBtn.classList.add('opacity-0', 'pointer-events-none');
+        }
+    }
+
+    function prevMCQQuestion() {
+        if (currentMCQIndex > 0) {
+            currentMCQIndex--;
+            initializeMCQSlideFlow();
+        }
+    }
+</script>
+</body>
+</html>

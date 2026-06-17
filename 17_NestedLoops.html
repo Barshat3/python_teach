@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nested Loops and Patterns in Python</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --font-sans: 'Nunito', sans-serif;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-gradient);
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+        }
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 700px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+        #slide-counter {
+            position: fixed;
+            top: 2rem;
+            right: 3rem;
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 100;
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 2rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .key-box {
+            background: #334155;
+            color: #f8fafc;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            border-bottom: 3px solid #1e293b;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+        .bug-line {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 4px;
+            padding: 0 0.5rem;
+            display: block;
+        }
+        .bug-line:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        .bug-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.3) !important;
+        }
+        .bug-line.selected-clean {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+        }
+        code, pre, textarea {
+            font-family: var(--font-mono) !important;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 6</div>
+
+<div id="presentation-container" class="relative w-full h-full flex justify-center items-center">
+
+    <div class="slide active">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-lg">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <h2 class="text-3xl text-indigo-400">What are Nested Loops?</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
+            <div class="space-y-4">
+                <p class="text-lg text-slate-300 leading-relaxed">
+                    A <strong class="text-white">nested loop</strong> is simply a loop inside another loop. They are incredibly powerful tools used extensively for exploring multi-dimensional spaces, generating graphical grids, building data tables, or printing complex textual patterns.
+                </p>
+                <div class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl space-y-2">
+                    <div class="flex items-center gap-2 text-indigo-300 font-semibold">
+                        <i class="fas fa-network-wired"></i> Core Roles:
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300 pl-2">
+                        <li><span class="text-indigo-400 font-semibold">Outer Loop:</span> Controls rows, high-level structural phases, or slow cycles.</li>
+                        <li><span class="text-purple-400 font-semibold">Inner Loop:</span> Controls columns, individual step elements, or fast cycles.</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl text-sm flex gap-3">
+                    <i class="fas fa-exclamation-triangle mt-1"></i>
+                    <div>
+                        <strong class="block mb-0.5">Golden Rule</strong>
+                        For every single completion step of the outer loop, the inner loop executes completely from start to finish!
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">Syntax Template</h3>
+                <pre class="language-python rounded-xl shadow-lg m-0"><code class="language-python">for i in range(outer_limit):     # Outer loop (Rows)
+    for j in range(inner_limit): # Inner loop (Columns)
+        # Code block executes (outer_limit * inner_limit) times
+        pass</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center text-white text-lg">
+                <i class="fas fa-shoe-prints"></i>
+            </div>
+            <h2 class="text-3xl text-purple-400">Tracing Loop Execution</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch mt-4">
+            <div class="flex flex-col justify-between">
+                <div>
+                    <p class="text-slate-300 mb-4">
+                        Let's observe exactly how state evolves during nesting execution. Notice how the inner state cycles completely through while the outer index remains completely fixed.
+                    </p>
+                    <pre class="language-python rounded-xl shadow-lg"><code class="language-python">for i in range(3): # Outer loop
+    for j in range(2): # Inner loop
+        print(f"Outer: {i}, Inner: {j}")</code></pre>
+                </div>
+                <div class="bg-indigo-950/40 border border-indigo-800/40 p-4 rounded-xl mt-4">
+                    <h4 class="text-indigo-300 text-sm font-bold uppercase mb-2"><i class="fas fa-calculator mr-1"></i> Total Cycles Calculations</h4>
+                    <p class="text-sm text-slate-300">
+                        Outer steps = 3 ($i \in \{0, 1, 2\}$)<br>
+                        Inner steps = 2 ($j \in \{0, 1\}$)<br>
+                        Total print operations executed = $3 \times 2 = 6$ total lines.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-slate-900/80 border border-slate-700/60 rounded-xl p-4 flex flex-col justify-between">
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2"><i class="fas fa-terminal text-green-400 mr-2"></i>Execution Console Output</h3>
+                <div class="font-mono text-sm space-y-1 bg-black/40 p-4 rounded-lg flex-1 overflow-y-auto">
+                    <div class="text-slate-400 border-b border-slate-800 pb-1 mb-2"># Outer loop index i = 0</div>
+                    <div class="text-green-400 pl-4">Outer: 0, Inner: 0</div>
+                    <div class="text-green-400 pl-4">Outer: 0, Inner: 1</div>
+                    <div class="text-slate-400 border-b border-slate-800 pb-1 mt-3 mb-2"># Outer loop index i = 1</div>
+                    <div class="text-green-400 pl-4">Outer: 1, Inner: 0</div>
+                    <div class="text-green-400 pl-4">Outer: 1, Inner: 1</div>
+                    <div class="text-slate-400 border-b border-slate-800 pb-1 mt-3 mb-2"># Outer loop index i = 2</div>
+                    <div class="text-green-400 pl-4">Outer: 2, Inner: 0</div>
+                    <div class="text-green-400 pl-4">Outer: 2, Inner: 1</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center text-white text-lg">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h2 class="text-3xl text-emerald-400">Hands-On: Star Grid Generation</h2>
+            </div>
+            <div id="pyodide-status" class="text-xs bg-slate-800 px-3 py-1.5 border border-slate-700 rounded-lg flex items-center gap-2 text-amber-400">
+                <i class="fas fa-spinner fa-spin"></i> Loading Python environment...
+            </div>
+        </div>
+        <p class="text-slate-300 text-sm mb-3">
+            <strong>Task 1:</strong> Construct a uniform grid using nested structures. The parameter <code class="text-amber-300 bg-slate-800 px-1 rounded">end="  "</code> overrides standard carriage returns, while the blank <code class="text-amber-300 bg-slate-800 px-1 rounded">print()</code> ends a row cleanly. Feel free to modify and run this live code!
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 items-stretch" style="min-height: 0;">
+            <div class="flex flex-col">
+                <div class="bg-slate-900 border border-slate-700 rounded-t-xl px-4 py-2 text-xs font-mono text-slate-400 flex justify-between items-center">
+                    <span>grid_generator.py</span>
+                    <button onclick="runPythonCode('editor-grid', 'output-grid')" id="btn-editor-grid" disabled class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-sans px-3 py-1 rounded font-semibold text-xs transition flex items-center gap-1.5">
+                        <i class="fas fa-play"></i> Run Code
+                    </button>
+                </div>
+                <textarea id="editor-grid" class="flex-1 bg-slate-950 p-4 font-mono text-sm text-slate-200 border-x border-b border-slate-700 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false">for i in range(3):
+    for j in range(3):
+        print("*", end="  ")
+    print()</textarea>
+            </div>
+            <div class="flex flex-col">
+                <div class="bg-slate-900 border border-slate-700 rounded-t-xl px-4 py-2 text-xs font-mono text-slate-400">
+                    <span>Console Output</span>
+                </div>
+                <pre id="output-grid" class="flex-1 m-0 bg-black p-4 font-mono text-sm text-green-400 border-x border-b border-slate-700 rounded-b-xl overflow-auto whitespace-pre">Click "Run Code" to execute the script live...</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-600 flex items-center justify-center text-white text-lg">
+                    <i class="fas fa-shapes"></i>
+                </div>
+                <h2 class="text-3xl text-cyan-400">Hands-On: Geometric Triangles</h2>
+            </div>
+        </div>
+        <p class="text-slate-300 text-sm mb-3">
+            <strong>Task 2:</strong> Change how inner iterations depend dynamically on the outer iteration's current state (<code class="text-cyan-300">range(i)</code>). Modify code inside the window to flip or resize your shapes dynamically.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 items-stretch" style="min-height: 0;">
+            <div class="flex flex-col">
+                <div class="bg-slate-900 border border-slate-700 rounded-t-xl px-4 py-2 text-xs font-mono text-slate-400 flex justify-between items-center">
+                    <span>triangle_pattern.py</span>
+                    <button onclick="runPythonCode('editor-triangle', 'output-triangle')" id="btn-editor-triangle" disabled class="bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 text-white font-sans px-3 py-1 rounded font-semibold text-xs transition flex items-center gap-1.5">
+                        <i class="fas fa-play"></i> Run Code
+                    </button>
+                </div>
+                <textarea id="editor-triangle" class="flex-1 bg-slate-950 p-4 font-mono text-sm text-slate-200 border-x border-b border-slate-700 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false">rows = 5
+for i in range(1, rows + 1):
+    for j in range(i):
+        print("*", end="")
+    print()</textarea>
+            </div>
+            <div class="flex flex-col">
+                <div class="bg-slate-900 border border-slate-700 rounded-t-xl px-4 py-2 text-xs font-mono text-slate-400">
+                    <span>Console Output</span>
+                </div>
+                <pre id="output-triangle" class="flex-1 m-0 bg-black p-4 font-mono text-sm text-green-400 border-x border-b border-slate-700 rounded-b-xl overflow-auto whitespace-pre">Click "Run Code" to execute the script live...</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-rose-600 flex items-center justify-center text-white text-lg">
+                <i class="fas fa-bug"></i>
+            </div>
+            <h2 class="text-3xl text-rose-400">Interactive Code Bug Hunt</h2>
+        </div>
+        <p class="text-slate-300 text-sm mb-4">
+            This tracking segment simulates code intended to print a flat line block, but it breaks standard structural indentation flow mechanics! <strong>Click directly on the line(s)</strong> that contain fatal bugs.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mt-2">
+            <div class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-sm leading-relaxed relative">
+                <span class="absolute top-2 right-3 text-xs font-sans text-slate-500 uppercase font-bold tracking-wider">Buggy Script</span>
+                <span onclick="toggleBugLine(this, false)" class="bug-line text-slate-300">for x in range(3):</span>
+                <span onclick="toggleBugLine(this, false)" class="bug-line text-slate-300">&nbsp;&nbsp;&nbsp;&nbsp;for y in range(4):</span>
+                <span onclick="toggleBugLine(this, true)" class="bug-line text-slate-300">&nbsp;&nbsp;&nbsp;&nbsp;print("#", end="")</span>
+                <span onclick="toggleBugLine(this, false)" class="bug-line text-slate-300">&nbsp;&nbsp;&nbsp;&nbsp;print()</span>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 space-y-4">
+                <h3 class="text-sm uppercase font-bold tracking-wider text-slate-400"><i class="fas fa-bullseye text-rose-400 mr-2"></i>Hunt Score Tracker</h3>
+                <div class="flex items-center justify-between bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="text-xs text-slate-400 font-semibold">Bugs Identified:</span>
+                    <span id="bug-counter-display" class="font-mono text-sm font-bold text-rose-400">0 / 1 Found</span>
+                </div>
+                <div id="bug-feedback" class="text-xs text-slate-400 hidden bg-slate-950/50 p-3 rounded-lg leading-relaxed border border-dashed border-slate-800">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-600 flex items-center justify-center text-white text-lg">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2 class="text-3xl text-amber-400">Check Your Understanding</h2>
+            </div>
+            <span id="mcq-progress" class="text-xs bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700 px-3 py-1.5 rounded-lg">Question 1 of 5</span>
+        </div>
+
+        <div id="mcq-deck-container" class="flex-1 flex flex-col justify-between mt-2">
+            <div id="mcq-card-wrapper" class="space-y-4">
+                </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800 mt-4">
+                <button id="btn-mcq-prev" onclick="handleMcqPrev()" class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-xl text-sm font-bold text-slate-300 transition flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i> Previous Question
+                </button>
+                <div id="mcq-feedback-banner" class="text-sm font-semibold opacity-0 transition-opacity duration-200"></div>
+                <button id="btn-mcq-next" onclick="handleMcqNext()" disabled class="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2 rounded-xl text-sm font-bold text-white transition flex items-center gap-2">
+                    Next Question <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // --- Slide Navigation Architecture ---
+    let currentSlideIdx = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlidesCount = slides.length;
+    const slideCounter = document.getElementById('slide-counter');
+    const globalProgressBar = document.getElementById('progress');
+
+    function updatePresentationLayout() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIdx) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        // Counter and global progress state mapping
+        slideCounter.innerText = `${currentSlideIdx + 1} / ${totalSlidesCount}`;
+        const linearPercentage = ((currentSlideIdx + 1) / totalSlidesCount) * 100;
+        globalProgressBar.style.width = `${linearPercentage}%`;
+
+        // Safe re-trigger highlighting hook for internal elements
+        if (window.Prism) {
+            Prism.highlightAll();
+        }
+    }
+
+    function navigateNext() {
+        if (currentSlideIdx < totalSlidesCount - 1) {
+            currentSlideIdx++;
+            updatePresentationLayout();
+        }
+    }
+
+    function navigatePrev() {
+        if (currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updatePresentationLayout();
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateNext();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigatePrev();
+        }
+    });
+
+    // --- Pyodide Sandbox Runtime Environment Engine ---
+    let pyodideInstance = null;
+    async function initializePyodideEnvironment() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.getElementById('pyodide-status').innerHTML = '<i class="fas fa-check text-emerald-400"></i> Environment Ready';
+            document.getElementById('pyodide-status').classList.replace('text-amber-400', 'text-emerald-400');
+            document.getElementById('btn-editor-grid').removeAttribute('disabled');
+            document.getElementById('btn-editor-triangle').removeAttribute('disabled');
+        } catch(err) {
+            document.getElementById('pyodide-status').innerHTML = '<i class="fas fa-times text-rose-400"></i> Load Fault';
+            console.error(err);
+        }
+    }
+    initializePyodideEnvironment();
+
+    async function runPythonCode(editorElementId, outputElementId) {
+        const rawCodeText = document.getElementById(editorElementId).value;
+        const terminalOutputBox = document.getElementById(outputElementId);
+        terminalOutputBox.innerText = "Running calculations...";
+
+        if(!pyodideInstance) {
+            terminalOutputBox.innerText = "Error: Environment is currently initializing. Please try again shortly.";
+            return;
+        }
+
+        try {
+            // Intercept standard output streams directly via custom python execution proxy redirections
+            await pyodideInstance.runPythonAsync(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+            
+            await pyodideInstance.runPythonAsync(rawCodeText);
+            
+            const standardOut = await pyodideInstance.runPythonAsync('sys.stdout.getvalue()');
+            const standardErr = await pyodideInstance.runPythonAsync('sys.stderr.getvalue()');
+            
+            if(standardErr) {
+                terminalOutputBox.innerText = standardErr;
+                terminalOutputBox.style.color = '#ef4444'; // Rose error state
+            } else {
+                terminalOutputBox.innerText = standardOut || "Executed successfully with zero returned output lines.";
+                terminalOutputBox.style.color = '#34d399'; // Emerald completion state
+            }
+        } catch (runtimeErr) {
+            terminalOutputBox.innerText = runtimeErr.message;
+            terminalOutputBox.style.color = '#ef4444';
+        }
+    }
+
+    // --- Bug Hunt Engine State Tracker ---
+    let bugsDiscoveredCount = 0;
+    const targetBugsTotal = 1;
+    function toggleBugLine(elementNode, isTrueBugElement) {
+        if(elementNode.classList.contains('selected-bug') || elementNode.classList.contains('selected-clean')) {
+            return; // Terminate double evaluation routes immediately
+        }
+
+        const reportField = document.getElementById('bug-feedback');
+        reportField.classList.remove('hidden');
+
+        if(isTrueBugElement) {
+            elementNode.classList.add('selected-bug');
+            bugsDiscoveredCount++;
+            document.getElementById('bug-counter-display').innerText = `${bugsDiscoveredCount} / ${targetBugsTotal} Found`;
+            reportField.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fas fa-check-circle"></i> Found!</span> Line 3 fails structural indentation matching rules. Inside loops, print code structures must match execution nesting depths exactly.`;
+        } else {
+            elementNode.classList.add('selected-clean');
+            reportField.innerHTML = `<span class="text-rose-400 font-bold"><i class="fas fa-times-circle"></i> Clean Line!</span> This line matches correct architectural nesting loops hierarchy criteria. Look closer for misplaced spaces.`;
+        }
+    }
+
+    // --- MCQ Assessment Processor ---
+    const rawMcqDataset = [
+        {
+            q: "What is a nested loop in Python?",
+            options: [
+                "A loop that executes once and exits.",
+                "A loop inside another loop.",
+                "A loop that runs infinitely.",
+                "A loop used for conditional checks."
+            ],
+            ans: 1, // mapping B index
+            explanation: "Correct! A nested loop is structurally built by placing an inner loop inside the execution body of an outer loop sequence."
+        },
+        {
+            q: "What will be the output of the following code?<br><pre class='language-python my-2 p-2 rounded bg-black/40 text-left text-xs font-mono'>for i in range(2):\n    for j in range(3):\n        print(\"*\", end=\" \")\n    print()</pre>",
+            options: [
+                "* * <br> * *",
+                "* * * <br> * * *",
+                "* * <br> * * <br> * *",
+                "* <br> * <br> *"
+            ],
+            ans: 1, // mapping B index
+            explanation: "Correct! The outer loop triggers twice (2 rows). For each row cycle, the inner loop outputs stars 3 times sequentially across columns."
+        },
+        {
+            q: "Which statement correctly prevents the print() function from moving to a new line after each call?",
+            options: [
+                "print(\"*\", next=\" \")",
+                "print(\"*\", end=\" \")",
+                "print(\"*\", break=\" \")",
+                "print(\"*\", stop=\" \")"
+            ],
+            ans: 1, // mapping B index
+            explanation: "Correct! The 'end' keyword parameter changes Python's implicit trailing newline character '\\n' into your string choice."
+        },
+        {
+            q: "In a nested loop structure, how many times will the inner loop execute if the outer loop runs 4 times and the inner loop runs 3 times for each iteration of the outer loop?",
+            options: [
+                "4",
+                "3",
+                "12",
+                "7"
+            ],
+            ans: 2, // mapping C index
+            explanation: "Correct! Multiplicative rules state total counts match product steps: $4 \\text{ outer steps} \\times 3 \\text{ inner steps} = 12$ total operations."
+        },
+        {
+            q: "What is the primary purpose of using nested loops in pattern printing?",
+            options: [
+                "To simplify code for basic arithmetic.",
+                "To print patterns or handle multidimensional data.",
+                "To perform mathematical operations.",
+                "To debug code easily."
+            ],
+            ans: 1, // mapping B index
+            explanation: "Correct! Complex structures containing geometric grid shapes or nested multi-dimensional data items naturally scale well using coordinates mapped cleanly via separate inner and outer loops."
+        }
+    ];
+
+    let currentMcqStepIdx = 0;
+    let selectedOptionIdx = null;
+
+    function renderActiveMcqCard() {
+        selectedOptionIdx = null;
+        const banner = document.getElementById('mcq-feedback-banner');
+        banner.className = "text-sm font-semibold opacity-0 transition-opacity duration-200";
+        document.getElementById('btn-mcq-next').setAttribute('disabled', 'true');
+
+        // Block navigation bounds checking updates
+        document.getElementById('btn-mcq-prev').disabled = currentMcqStepIdx === 0;
+
+        if (currentMcqStepIdx >= rawMcqDataset.length) {
+            // Render finalized metric dashboard cards
+            document.getElementById('mcq-progress').innerText = "Quiz Finished";
+            document.getElementById('mcq-card-wrapper').innerHTML = `
+                <div class="text-center py-12 space-y-4">
+                    <div class="w-20 h-20 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center text-4xl mx-auto border border-indigo-500/30 shadow-inner">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 class="text-2xl text-white font-bold">Review Complete!</h3>
+                    <p class="text-slate-300 max-w-md mx-auto text-sm">
+                        You have finished all interactive structured comprehension checks covering nested looping mechanics successfully!
+                    </p>
+                </div>
+            `;
+            document.getElementById('btn-mcq-next').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('btn-mcq-next').style.display = 'inline-flex';
+        document.getElementById('btn-mcq-next').innerHTML = currentMcqStepIdx === rawMcqDataset.length - 1 ? 'Finish Assessment <i class="fas fa-check-double"></i>' : 'Next Question <i class="fas fa-arrow-right"></i>';
+        
+        document.getElementById('mcq-progress').innerText = `Question ${currentMcqStepIdx + 1} of ${rawMcqDataset.length}`;
+        
+        const questionData = rawMcqDataset[currentMcqStepIdx];
+        
+        let customOptionsHtml = '';
+        questionData.options.forEach((opt, idx) => {
+            customOptionsHtml += `
+                <button onclick="evaluateMcqSelection(${idx})" class="option-card w-full text-left p-4 bg-slate-800/40 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-sm text-slate-200 flex items-center justify-between group focus:outline-none focus:border-indigo-500">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 bg-slate-700 text-xs font-bold rounded-full flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">${String.fromCharCode(65 + idx)}</span>
+                        <span>${opt}</span>
+                    </div>
+                    <i class="fas fa-circle-notch opacity-0 text-slate-500 text-xs transition-opacity"></i>
+                </button>
+            `;
+        });
+
+        document.getElementById('mcq-card-wrapper').innerHTML = `
+            <div class="space-y-2">
+                <h3 class="text-lg text-white font-medium">${questionData.q}</h3>
+            </div>
+            <div class="grid grid-cols-1 gap-3 mt-4">
+                ${customOptionsHtml}
+            </div>
+        `;
+    }
+
+    function evaluateMcqSelection(pickedIndex) {
+        if (selectedOptionIdx !== null) return; // Prevent clicking alternative cards after choice lock
+        selectedOptionIdx = pickedIndex;
+        
+        const currentQuestion = rawMcqDataset[currentMcqStepIdx];
+        const buttons = document.querySelectorAll('.option-card');
+        const banner = document.getElementById('mcq-feedback-banner');
+        
+        document.getElementById('btn-mcq-next').removeAttribute('disabled');
+
+        buttons.forEach((btn, idx) => {
+            const icon = btn.querySelector('i');
+            if (idx === currentQuestion.ans) {
+                // Highlight correct selection item cards green
+                btn.classList.replace('bg-slate-800/40', 'bg-emerald-500/10');
+                btn.classList.replace('border-slate-700/60', 'border-emerald-500/50');
+                btn.querySelector('span').className = "w-6 h-6 bg-emerald-500 text-xs font-bold rounded-full flex items-center justify-center text-white";
+                icon.className = "fas fa-check-circle text-emerald-400 text-sm opacity-100";
+            } else if (idx === pickedIndex) {
+                // Misidentified erroneous option maps red
+                btn.classList.replace('bg-slate-800/40', 'bg-rose-500/10');
+                btn.classList.replace('border-slate-700/60', 'border-rose-500/50');
+                btn.querySelector('span').className = "w-6 h-6 bg-rose-500 text-xs font-bold rounded-full flex items-center justify-center text-white";
+                icon.className = "fas fa-times-circle text-rose-400 text-sm opacity-100";
+            }
+        });
+
+        banner.classList.remove('opacity-0');
+        if (pickedIndex === currentQuestion.ans) {
+            banner.className = "text-sm font-semibold text-emerald-400 tracking-wide";
+            banner.innerHTML = `<i class="fas fa-check-double mr-1.5"></i> ${currentQuestion.explanation}`;
+        } else {
+            banner.className = "text-sm font-semibold text-rose-400 tracking-wide";
+            banner.innerHTML = `<i class="fas fa-times-circle mr-1.5"></i> Incorrect choice. Let's learn from it!`;
+        }
+    }
+
+    function handleMcqNext() {
+        currentMcqStepIdx++;
+        renderActiveMcqCard();
+    }
+
+    function handleMcqPrev() {
+        if (currentMcqStepIdx > 0) {
+            currentMcqStepIdx--;
+            renderActiveMcqCard();
+        }
+    }
+
+    // Initialize layout defaults
+    updatePresentationLayout();
+    renderActiveMcqCard();
+</script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading and Writing in Text Files - Python</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-success: #34d399;
+            --accent-error: #f87171;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-hidden: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1, h2, h3, .font-title {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        .slide {
+            display: none;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: var(--bg-card);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            padding: 3rem;
+            position: relative;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-primary);
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 50;
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            z-index: 50;
+        }
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            margin: 0 0.2rem;
+            font-family: monospace;
+        }
+        .console-output {
+            background-color: #0b0f19;
+            border-left: 4px solid var(--accent-primary);
+            font-family: 'Fira Code', monospace;
+        }
+        .buggy-line {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .buggy-line:hover {
+            background-color: rgba(248, 113, 113, 0.15) !important;
+        }
+        .buggy-line.selected-bug {
+            background-color: rgba(248, 113, 113, 0.3) !important;
+            border-left: 4px solid var(--accent-error);
+        }
+        .buggy-line.selected-correct {
+            background-color: rgba(52, 211, 153, 0.2) !important;
+            border-left: 4px solid var(--accent-success);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-card); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 8</div>
+<div id="presentation-container" class="w-full flex justify-center items-center">
+
+    <div class="slide active" id="slide-1">
+        <div class="flex flex-col justify-center items-center h-full text-center">
+            <div class="mb-4 text-sm font-bold tracking-widest text-sky-400 uppercase bg-sky-500/10 px-4 py-1.5 rounded-full border border-sky-500/20">
+                Python Core Concepts
+            </div>
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-indigo-400 to-purple-400 mb-6">
+                Reading & Writing Text Files
+            </h1>
+            <p class="text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Master absolute file persistence in Python. Learn to securely open, read, construct, and manage physical storage streams.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl text-left mt-4">
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <div class="text-sky-400 text-2xl mb-2"><i class="fas fa-folder-open"></i></div>
+                    <h3 class="font-bold text-lg mb-1 text-slate-100">File Streams</h3>
+                    <p class="text-sm text-slate-400">Interfacing directly with system storage engines securely.</p>
+                </div>
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <div class="text-indigo-400 text-2xl mb-2"><i class="fas fa-book-reader"></i></div>
+                    <h3 class="font-bold text-lg mb-1 text-slate-100">Read Paradigms</h3>
+                    <p class="text-sm text-slate-400">Extracting raw continuous data blocks or arrayed lines.</p>
+                </div>
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <div class="text-purple-400 text-2xl mb-2"><i class="fas fa-pen-nib"></i></div>
+                    <h3 class="font-bold text-lg mb-1 text-slate-100">Write & Append</h3>
+                    <p class="text-sm text-slate-400">Overwriting structures or shifting cursors to append records.</p>
+                </div>
+                <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                    <div class="text-emerald-400 text-2xl mb-2"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="font-bold text-lg mb-1 text-slate-100">Context Managers</h3>
+                    <p class="text-sm text-slate-400">Safeguarding active buffers against physical stream corruption.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <span class="text-sky-400"><i class="fas fa-book-open"></i></span> 
+                    Reading from a Text File: Core Engine
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Python exposes global stream hooks using the standard built-in <code>open()</code> function.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 overflow-auto">
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/60">
+                        <h3 class="text-sky-400 font-bold mb-2 text-md uppercase tracking-wider">The Safe Architecture Pattern</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-3">
+                            Always construct file handles using the <span class="text-indigo-400 font-semibold">Context Manager / <code>with</code> statement</span>. This encapsulates resource allocation, auto-closing streams when exiting execution scope even if unexpected errors are raised.
+                        </p>
+                        <div class="bg-amber-500/10 text-amber-300 border border-amber-500/20 p-3 rounded-lg text-xs flex gap-2">
+                            <i class="fas fa-exclamation-triangle mt-0.5"></i>
+                            <span>Without <code>with</code>, unclosed files lock kernel file pointers and leak memory buffers.</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/60">
+                        <h3 class="text-slate-200 font-bold mb-2 text-sm">Key Read Modes:</h3>
+                        <table class="w-full text-xs text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-700 text-slate-400">
+                                    <th class="py-1">Mode</th>
+                                    <th class="py-1">Behavior</th>
+                                    <th class="py-1">Pointer Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-slate-800">
+                                    <td class="py-1.5 font-mono text-sky-400">"r"</td>
+                                    <td class="py-1.5 text-slate-300">Read-only (Default)</td>
+                                    <td class="py-1.5 text-slate-400">Start of File</td>
+                                </tr>
+                                <tr class="border-b border-slate-800">
+                                    <td class="py-1.5 font-mono text-indigo-400">"r+"</td>
+                                    <td class="py-1.5 text-slate-300">Read and Write</td>
+                                    <td class="py-1.5 text-slate-400">Start of File</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 flex flex-col h-full justify-between">
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-inner">
+                        <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                            <span class="text-xs font-mono text-slate-400">Syntax Blueprint</span>
+                            <span class="w-3 h-3 rounded-full bg-red-500 shadow"></span>
+                        </div>
+                        <pre class="m-0 p-4"><code class="language-python"># Syntax: Opening a target object stream safely
+with open("file_name.txt", "r") as file:    # Open a file in read mode
+    content = file.read()      # Read the entire file body structure
+    print(content)</code></pre>
+                    </div>
+
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-inner mt-4">
+                        <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                            <span class="text-xs font-mono text-slate-400">Concrete Example</span>
+                        </div>
+                        <pre class="m-0 p-4"><code class="language-python"># Concrete Implementation Target
+with open("data.txt", "r") as file:
+    content = file.read()
+    print(content)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <span class="text-indigo-400"><i class="fas fa-list-ol"></i></span> 
+                    Reading Mechanics: Array Structures via <code>readlines()</code>
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Parsing streaming blocks into addressable iterative memory collections.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start flex-1 overflow-auto">
+                <div class="space-y-4">
+                    <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                        <h3 class="text-lg font-semibold text-slate-200 mb-2"><code>read()</code> vs <code>readlines()</code></h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            While <code>read()</code> unrolls a file into a single monolithic string, <code>readlines()</code> reads the file content as a list of independent lines parsed directly at line-termination bounds (<code>\n</code>).
+                        </p>
+                        <div class="space-y-2">
+                            <div class="flex items-start gap-2 text-sm">
+                                <span class="text-indigo-400 mt-1"><i class="fas fa-check-circle"></i></span>
+                                <span class="text-slate-300">Optimized for loop iteration processing pipelines.</span>
+                            </div>
+                            <div class="flex items-start gap-2 text-sm">
+                                <span class="text-indigo-400 mt-1"><i class="fas fa-check-circle"></i></span>
+                                <span class="text-slate-300">Preserves line breaks explicitly for downstream manipulation.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-950/40 border border-indigo-500/20 p-4 rounded-xl">
+                        <h4 class="text-indigo-300 font-bold text-xs uppercase tracking-wider mb-1"><i class="fas fa-lightbulb mr-1"></i> Interactive Pro-Tip</h4>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            To strip unwanted trailing breaks (<code>\n</code>) generated during loops, invoke the string function <code>.strip()</code> on each index capture.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex flex-col h-full min-h-[300px]">
+                    <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-400">Array Line Extraction Example</span>
+                    </div>
+                    <div class="flex-1 overflow-auto">
+                        <pre class="m-0 p-4 h-full"><code class="language-python"># Reading line records as localized list structures
+with open("data.txt", "r") as file:
+    lines = file.readlines() # Generates sequence list
+    
+    for line in lines:
+        # Each 'line' variable retains its original trailing newline character
+        print(line.strip())</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-4 mb-6">
+                <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                    <span class="text-purple-400"><i class="fas fa-edit"></i></span> 
+                    Writing to a Text File: Destruction vs Append
+                </h2>
+                <p class="text-slate-400 text-sm mt-1">Instructing python runtime memory matrices to commit to permanent physical disk drives.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 overflow-auto">
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                        <h3 class="text-purple-400 font-bold mb-2 text-xs uppercase tracking-wider">The Mode Distinction Threshold</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-3">
+                            Writing leverages distinct operational directives which define the handling of pre-existing storage tracks:
+                        </p>
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-red-500/10 border border-red-500/20 p-2 rounded">
+                                <span class="text-red-400 font-mono font-bold">"w" (Write):</span> Overwrites the existing content entirely. If the file does not exist, it instantiates it.
+                            </div>
+                            <div class="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded">
+                                <span class="text-emerald-400 font-mono font-bold">"a" (Append):</span> Attaches additions at the current end of file pointer limits without zeroing data blocks out.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 text-xs space-y-2">
+                        <span class="text-slate-200 font-bold block">Method Allocation:</span>
+                        <p class="text-slate-400"><code>write(str)</code>: Inserts string chain contents.</p>
+                        <p class="text-slate-400"><code>writelines(list)</code>: Unrolls a sequence collection into structural sequential files.</p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                        <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 text-xs font-mono text-slate-400">
+                            Overwrite Context Model ("w")
+                        </div>
+                        <pre class="m-0 p-4"><code class="language-python"># Direct overwrite engine configuration
+with open("output.txt", "w") as file: 
+    file.write("Hello, World!") # Previous disk array is completely dropped</code></pre>
+                    </div>
+
+                    <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                        <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 text-xs font-mono text-slate-400">
+                            Sequence Iterable Writing ("writelines")
+                        </div>
+                        <pre class="m-0 p-4"><code class="language-python"># Direct streaming execution using structured collection matrices
+lines = ["First line\n", "Second line\n", "Third line\n"]
+
+with open("output.txt", "w") as file:
+    file.writelines(lines) # Decodes and serializes array lists directly</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-3 mb-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-3">
+                        <span class="text-emerald-400"><i class="fas fa-terminal"></i></span> 
+                        Interactive Stream Sandbox
+                    </h2>
+                    <p class="text-slate-400 text-xs mt-0.5">Write, modify, and run real Python file mutations live inside your browser sandbox environment.</p>
+                </div>
+                <div id="pyodide-status" class="text-xs font-mono px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-2">
+                    <i class="fas fa-spinner fa-spin"></i> Spinning Up Python Runtime Engine...
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+                <div class="lg:col-span-7 flex flex-col min-h-0">
+                    <div class="bg-slate-800 px-4 py-2 rounded-t-xl border-t border-x border-slate-700 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-300">sandbox_workspace.py</span>
+                        <button id="run-btn" disabled class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-bold text-xs px-4 py-1.5 rounded transition shadow flex items-center gap-1.5">
+                            <i class="fas fa-play"></i> Run Script
+                        </button>
+                    </div>
+                    <textarea id="code-editor" class="flex-1 w-full p-4 bg-slate-900 font-mono text-sm text-slate-100 border border-slate-700 rounded-b-xl focus:outline-none focus:border-emerald-500 resize-none leading-relaxed"># Mock filesystem is active inside memory space!
+# Let's write array contents and check readbacks.
+
+with open("demo_file.txt", "w") as out_stream:
+    out_stream.write("Line #1: Core Pipeline Established\n")
+    out_stream.write("Line #2: Data Persistence Locked\n")
+
+with open("demo_file.txt", "r") as in_stream:
+    compiled_payload = in_stream.read()
+    print("--- EMULATED FILE PAYLOAD OUTPUT ---")
+    print(compiled_payload)</textarea>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col min-h-0">
+                    <div class="bg-slate-800 px-4 py-2 rounded-t-xl border-t border-x border-slate-700 text-xs font-mono text-slate-300">
+                        System Standard Output / Console Error Link
+                    </div>
+                    <div id="console-out" class="flex-1 p-4 bg-slate-950 font-mono text-sm text-slate-300 rounded-b-xl border border-slate-800 overflow-auto whitespace-pre-wrap">Click "Run Script" to initialize compilation stream parsing...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-4 mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                        <span class="text-red-400"><i class="fas fa-bug"></i></span> 
+                        Code Bug Hunt Exploration
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">A software engineer built this tracking workflow but it raises structural logic faults. Isolate the bugs!</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs uppercase tracking-wider text-slate-400 font-bold">Bugs Found</div>
+                    <div class="text-2xl font-mono font-bold text-red-400" id="bug-tracker">0 / 2</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 overflow-auto">
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700">
+                        <h3 class="font-bold text-slate-200 mb-2">Instructions</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Examine the code to the right. Click directly on lines containing fundamental flaws or exceptions preventing proper handling execution.
+                        </p>
+                        <div id="bug-feedback" class="p-3 rounded-lg text-sm bg-slate-900 border border-slate-800 min-h-[60px] text-slate-400 flex items-center justify-center text-center">
+                            Click lines on the script block wrapper matrix to diagnose flaws.
+                        </div>
+                    </div>
+                    <div class="bg-red-500/5 border border-red-500/10 p-4 rounded-xl text-xs text-slate-400">
+                        <strong class="text-slate-300 block mb-1">Clue Parameters:</strong>
+                        One statement sets a catastrophic mode override, while another handles a collection type via incorrect parameter targets.
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden font-mono text-sm leading-relaxed select-none">
+                    <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 text-xs text-slate-400 flex justify-between">
+                        <span>faulty_stream_handler.py</span>
+                        <span class="text-red-400"><i class="fas fa-circle-dot animate-pulse"></i> Raw Target Code</span>
+                    </div>
+                    <div class="p-4 space-y-1">
+                        <div class="buggy-line p-2 rounded bg-slate-900/40 text-slate-500" data-bug="false" data-index="1"># Configuration to append names to tracking log</div>
+                        <div class="buggy-line p-2 rounded text-slate-300 font-mono" data-bug="true" data-index="2" data-reason="Bug Found! Opening a file in 'w' mode deletes existing records instead of appending data. Mode must be configured to 'a'.">with open("users.txt", "w") as log_file:</div>
+                        <div class="buggy-line p-2 rounded text-slate-300 font-mono pl-8" data-bug="false" data-index="3">    dataset = ["Alice\n", "Bob\n"]</div>
+                        <div class="buggy-line p-2 rounded text-slate-300 font-mono pl-8" data-bug="true" data-index="4" data-reason="Bug Found! The standard .write() expects a single string payload. Passing a list parameter requires invoking .writelines(dataset).">    log_file.write(dataset)</div>
+                        <div class="buggy-line p-2 rounded text-slate-500 font-mono pl-8" data-bug="false" data-index="5">    print("Execution stream finalized successfully.")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <div class="flex flex-col h-full">
+            <div class="border-b border-slate-700 pb-4 mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-100 flex items-center gap-3">
+                        <span class="text-purple-400"><i class="fas fa-user-check"></i></span> 
+                        Check Your Understanding
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">Validate your understanding of text file streaming structures.</p>
+                </div>
+                <div class="text-right">
+                    <span id="mcq-progress" class="font-mono text-sm bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full font-bold">Question 1 of 10</span>
+                </div>
+            </div>
+
+            <div id="mcq-question-wrapper" class="flex-1 flex flex-col justify-between">
+                <div id="mcq-card-body" class="space-y-6">
+                    <h3 id="mcq-title" class="text-xl font-medium text-slate-200 leading-relaxed"></h3>
+                    <div id="mcq-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+                
+                <div id="mcq-feedback-region" class="mt-4 p-4 rounded-xl min-h-[50px] hidden text-sm font-semibold flex items-center gap-2"></div>
+
+                <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-800">
+                    <button id="mcq-prev-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-bold text-sm px-5 py-2.5 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fas fa-arrow-left mr-2"></i> Previous
+                    </button>
+                    <button id="mcq-next-btn" disabled class="bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition shadow-md">
+                        Next Question <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-8">
+        <div class="flex flex-col justify-center items-center h-full text-center">
+            <div class="text-6xl text-emerald-400 mb-6 animate-bounce"><i class="fas fa-award"></i></div>
+            <h1 class="text-4xl font-bold text-slate-100 tracking-tight mb-4">File Stream Mechanics Decoded!</h1>
+            <p class="text-slate-400 max-w-xl mx-auto mb-8 text-md leading-relaxed">
+                You have successfully mastered context-managed filesystems, read line iterations, destructive overrides, and persistent tracking append methods.
+            </p>
+            <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 max-w-lg text-left space-y-3">
+                <h4 class="text-xs uppercase tracking-widest text-indigo-400 font-bold mb-1">Architecture Execution Checklist:</h4>
+                <div class="flex gap-2 text-sm text-slate-300"><i class="fas fa-square-check text-emerald-400 mt-0.5"></i> <span>Always invoke structural <code>with open()</code> managers</span></div>
+                <div class="flex gap-2 text-sm text-slate-300"><i class="fas fa-square-check text-emerald-400 mt-0.5"></i> <span>Differentiate destructive <code>"w"</code> streams vs safe <code>"a"</code> targets</span></div>
+                <div class="flex gap-2 text-sm text-slate-300"><i class="fas fa-square-check text-emerald-400 mt-0.5"></i> <span>Sanitize input lines by invoking standard <code>.strip()</code> modifiers</span></div>
+            </div>
+            <button onclick="changeSlide(1)" class="mt-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold px-4 py-2 rounded-lg transition">
+                <i class="fas fa-rotate-left mr-1"></i> Restart Presentation
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint font-mono">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // --- MCQS VERBATIM STRUCTURE CAPTURE ---
+    const mcqQuestions = [
+        {
+            q: "Which file mode should you use to read the content of an existing file?",
+            options: ["\"w\"", "\"r\"", "\"a\"", "\"r+\""],
+            answer: "\"r\"",
+            reason: "Correct! The default mode 'r' accesses raw systems targets purely under non-destructive read operations."
+        },
+        {
+            q: "What does the file.write() method do in Python?",
+            options: ["Reads the entire content of the file.", "Writes text to a file.", "Appends text to the end of a file.", "Closes the file after writing."],
+            answer: "Writes text to a file.",
+            reason: "Correct! file.write() commits sequential unicode string streams straight to disk storage boundaries."
+        },
+        {
+            q: "Which of the following automatically closes a file after its block of code is executed?",
+            options: ["open()", "close()", "with statement", "write()"],
+            answer: "with statement",
+            reason: "Correct! The 'with' statement acts as an explicit context manager to guarantee resource collection teardowns safely."
+        },
+        {
+            q: "What happens when you open a file in \"w\" mode that already exists?",
+            options: ["It appends content to the existing file.", "It raises an error.", "It overwrites the existing content.", "It reads the content of the file."],
+            answer: "It overwrites the existing content.",
+            reason: "Correct! Opening files in structural 'w' configurations commands system tracks to clear out old records completely."
+        },
+        {
+            q: "How do you check if a file exists in Python?",
+            options: ["Using file.check()", "Using os.path.exists()", "Using file.exists()", "Using os.exists()"],
+            answer: "Using os.path.exists()",
+            reason: "Correct! The standard modular operating system platform tools bundle contains 'os.path.exists' for pathway sanity assertions."
+        },
+        {
+            q: "What is the output of the following code?\n\nwith open(\"file.txt\", \"a\") as file:\n    file.write(\"Hello\\n\")",
+            options: ["Appends \"Hello\\n\" to the end of file.txt.", "Overwrites the content of file.txt with \"Hello\\n\".", "Reads the content of file.txt.", "Deletes file.txt."],
+            answer: "Appends \"Hello\\n\" to the end of file.txt.",
+            reason: "Correct! The mode configuration 'a' shifts current tracking parameters straight to the bottom block bounds for safe injection."
+        },
+        {
+            q: "What will happen if the file specified in open(\"nonexistent.txt\", \"r\") does not exist?",
+            options: ["The program creates a new file.", "The program raises a FileNotFoundError.", "The program appends content to the file.", "The program writes content to the file."],
+            answer: "The program raises a FileNotFoundError.",
+            reason: "Correct! Python asserts strict runtime sanity bounds, crashing execution with a FileNotFoundError block if read tracks fail."
+        },
+        {
+            q: "Which method reads the entire content of a file in Python?",
+            options: ["readline()", "read()", "readlines()", "write()"],
+            answer: "read()",
+            reason: "Correct! Invoking .read() pulls the complete physical volume into a localized monolithic text string variable."
+        },
+        {
+            q: "In which mode can you both read and write to a file?",
+            options: ["\"w\"", "\"a\"", "\"r+\"", "\"r\""],
+            answer: "\"r+\"",
+            reason: "Correct! The compound 'r+' initialization opens up dual bidirectional pipeline mappings without zeroing active files."
+        },
+        {
+            q: "Which of the following is the correct syntax to write data to a file?",
+            options: ["file.open(\"filename.txt\", \"write\")", "file.write(\"data\")", "open.write(\"filename.txt\", \"data\")", "write.file(\"filename.txt\", \"data\")"],
+            answer: "file.write(\"data\")",
+            reason: "Correct! Syntactical access tracks call down method routines via the active named reference context token."
+        }
+    ];
+
+    // Slide State Registry Track
+    let currentSlide = 1;
+    const totalSlides = 8;
+    let pyodideInstance = null;
+    let mcqIndex = 0;
+    let foundBugs = [];
+
+    // --- Dynamic Navigation Matrix System ---
+    function updateProgress() {
+        document.getElementById('slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
+        const pct = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+        document.getElementById('progress').style.width = `${pct}%`;
+    }
+
+    function changeSlide(target) {
+        if(target < 1 || target > totalSlides) return;
+        document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+        document.getElementById(`slide-${target}`).classList.add('active');
+        currentSlide = target;
+        updateProgress();
+        Prism.highlightAll();
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if(document.activeElement.tagName === 'TEXTAREA') return; // Bypass if typing inside live terminal code editors
+        if(e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(currentSlide + 1); }
+        if(e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(currentSlide - 1); }
+    });
+
+    // --- Pyodide WebAssembly Sandboxing Logic ---
+    async function initPyodideEngine() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.getElementById('pyodide-status').innerHTML = '<i class="fas fa-check-circle text-emerald-400"></i> Python Core Ready';
+            document.getElementById('pyodide-status').className = "text-xs font-mono px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-2";
+            document.getElementById('run-btn').removeAttribute('disabled');
+        } catch(err) {
+            document.getElementById('pyodide-status').textContent = "Engine Failed To Load Context Stack";
+        }
+    }
+
+    document.getElementById('run-btn').addEventListener('click', async () => {
+        const consoleOut = document.getElementById('console-out');
+        const code = document.getElementById('code-editor').value;
+        consoleOut.textContent = "Compiling and monitoring stream tracks inside sandbox framework...";
+        
+        try {
+            // Emulate standard stdout interception models
+            pyodideInstance.runPython(`
+                import sys
+                import io
+                sys.stdout = io.StringIO()
+                sys.stderr = io.StringIO()
+            `);
+            
+            await pyodideInstance.runPythonAsync(code);
+            
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            consoleOut.textContent = stdout + (stderr ? "\n--- RUNTIME EXCEPTION INTERCEPT ---\n" + stderr : "");
+            if(!stdout && !stderr) consoleOut.textContent = "Script executed cleanly. File system payload committed successfully.";
+        } catch(err) {
+            consoleOut.textContent = "--- CRITICAL SCRIPT EXECUTION FAULT ---\n" + err;
+        }
+    });
+
+    // --- Interactive Bug Hunt Segment Tracker ---
+    document.querySelectorAll('.buggy-line').forEach(line => {
+        line.addEventListener('click', function() {
+            const isBug = this.getAttribute('data-bug') === 'true';
+            const index = this.getAttribute('data-index');
+            const reason = this.getAttribute('data-reason');
+            const fb = document.getElementById('bug-feedback');
+
+            if(foundBugs.includes(index)) return; // Prevent double point extraction anomalies
+
+            if(isBug) {
+                this.classList.add('selected-bug');
+                foundBugs.push(index);
+                fb.textContent = reason;
+                fb.className = "p-3 rounded-lg text-sm bg-red-500/10 border border-red-500/20 text-red-300 min-h-[60px] flex items-center justify-center text-center";
+                document.getElementById('bug-tracker').textContent = `${foundBugs.length} / 2`;
+                if(foundBugs.length === 2) {
+                    fb.textContent = "Excellent! All structural logic anomalies mapped successfully.";
+                    fb.className = "p-3 rounded-lg text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 min-h-[60px] flex items-center justify-center text-center";
+                }
+            } else {
+                this.classList.add('selected-correct');
+                fb.textContent = "This line matches valid syntax layout rules. Look closely at the file parameters or operational mode tags.";
+                fb.className = "p-3 rounded-lg text-sm bg-slate-800 border border-slate-700 text-slate-300 min-h-[60px] flex items-center justify-center text-center";
+                setTimeout(() => this.classList.remove('selected-correct'), 1500);
+            }
+        });
+    });
+
+    // --- MCQ Engine Architecture Layer ---
+    function renderMCQQuestion() {
+        const item = mcqQuestions[mcqIndex];
+        document.getElementById('mcq-progress').textContent = `Question ${mcqIndex + 1} of ${mcqQuestions.length}`;
+        
+        // Handle logic string outputs to clean layout display formatting safely
+        document.getElementById('mcq-title').innerHTML = item.q.replace(/\n/g, '<br>').replace(/with open/g, '<code class="language-python">with open</code>');
+        
+        const optionsContainer = document.getElementById('mcq-options');
+        optionsContainer.innerHTML = '';
+        
+        const feedbackRegion = document.getElementById('mcq-feedback-region');
+        feedbackRegion.classList.add('hidden');
+        document.getElementById('mcq-next-btn').setAttribute('disabled', 'true');
+
+        // Render previous track boundary properties
+        if(mcqIndex === 0) {
+            document.getElementById('mcq-prev-btn').setAttribute('disabled', 'true');
+        } else {
+            document.getElementById('mcq-prev-btn').removeAttribute('disabled');
+        }
+
+        item.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left p-4 bg-slate-800 hover:bg-slate-700/80 border border-slate-700 rounded-xl transition text-slate-200 flex items-center justify-between text-sm font-mono";
+            btn.innerHTML = `<span>${opt}</span><i class="far fa-circle text-slate-500"></i>`;
+            
+            btn.addEventListener('click', () => {
+                // Freeze user input states across sibling option targets
+                Array.from(optionsContainer.children).forEach(b => b.setAttribute('disabled', 'true'));
+                
+                if(opt === item.answer) {
+                    btn.className = "w-full text-left p-4 bg-emerald-500/10 border-2 border-emerald-500 rounded-xl text-emerald-300 flex items-center justify-between text-sm font-mono";
+                    btn.querySelector('i').className = "fas fa-check-circle text-emerald-500";
+                    feedbackRegion.className = "mt-4 p-4 rounded-xl min-h-[50px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm flex items-center gap-2";
+                    feedbackRegion.innerHTML = `<i class="fas fa-circle-check"></i> ${item.reason}`;
+                } else {
+                    btn.className = "w-full text-left p-4 bg-red-500/10 border-2 border-red-500 rounded-xl text-red-300 flex items-center justify-between text-sm font-mono";
+                    btn.querySelector('i').className = "fas fa-times-circle text-red-500";
+                    feedbackRegion.className = "mt-4 p-4 rounded-xl min-h-[50px] bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-2";
+                    feedbackRegion.innerHTML = `<i class="fas fa-circle-xmark"></i> Missing proper attributes. Correction rule: ${item.answer}`;
+                    
+                    // Expose accurate variant targets for review clarity
+                    Array.from(optionsContainer.children).forEach(b => {
+                        if(b.textContent.trim() === item.answer) {
+                            b.className = "w-full text-left p-4 bg-emerald-500/5 border border-emerald-500/30 rounded-xl text-emerald-400/80 flex items-center justify-between text-sm font-mono";
+                        }
+                    });
+                }
+                feedbackRegion.classList.remove('hidden');
+                document.getElementById('mcq-next-btn').removeAttribute('disabled');
+            });
+            optionsContainer.appendChild(btn);
+        });
+        Prism.highlightAll();
+    }
+
+    document.getElementById('mcq-next-btn').addEventListener('click', () => {
+        if(mcqIndex < mcqQuestions.length - 1) {
+            mcqIndex++;
+            renderMCQQuestion();
+        } else {
+            // Completion sequence state target achieved
+            document.getElementById('mcq-question-wrapper').innerHTML = `
+                <div class="flex flex-col justify-center items-center py-12 text-center">
+                    <div class="text-5xl text-purple-400 mb-4 animate-pulse"><i class="fas fa-circle-check"></i></div>
+                    <h3 class="text-2xl font-bold text-slate-100 mb-2">Assessment Section Concluded</h3>
+                    <p class="text-slate-400 text-sm max-w-md">You matched all tracking checks. Continue to summarize final runtime paradigms.</p>
+                    <button onclick="changeSlide(8)" class="mt-6 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm px-6 py-2 rounded-lg transition shadow">
+                        Finalize Deck <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            `;
+        }
+    });
+
+    document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+        if(mcqIndex > 0) {
+            mcqIndex--;
+            renderMCQQuestion();
+        }
+    });
+
+    // Bootstrapping execution sequences
+    initPyodideEngine();
+    renderMCQQuestion();
+    updateProgress();
+</script>
+</body>
+</html>

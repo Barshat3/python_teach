@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Loops: Empowering Your Code with Repetition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --neutral-dark: #0f172a;
+            --neutral-light: #f8fafc;
+            --canvas-bg: #090d16;
+            --slide-bg: #131c2e;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--canvas-bg);
+            color: #e2e8f0;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace !important;
+        }
+
+        /* Slide layout styles */
+        .slide-deck {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 750px;
+            background: var(--slide-bg);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Slide Counter & Progress Bar */
+        #slide-counter {
+            position: absolute;
+            top: 2rem;
+            right: 3rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.4s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            color: #64748b;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key-box {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        /* Custom scrollbar for slides that have extra content */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 6px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        /* Bug Hunt Elements */
+        .bug-line {
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+        .bug-line.selected-bug {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-left-color: #ef4444;
+        }
+        .bug-line.selected-correct {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-left-color: #22c55e;
+        }
+
+        /* Custom Prism Override */
+        pre[class*="language-"] {
+            margin: 0 !important;
+            border-radius: 12px !important;
+            background: #0b0f19 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* MCQ Options Layout */
+        .mcq-option {
+            background: #1e293b;
+            border: 2px solid #334155;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mcq-option:hover:not(.disabled) {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            background: #24344d;
+        }
+        .mcq-option.correct {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-color: #22c55e !important;
+            color: #4ade80;
+        }
+        .mcq-option.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: #ef4444 !important;
+            color: #f87171;
+        }
+        .mcq-option.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Decorative background elements */
+        .bg-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-glow top-10 left-10"></div>
+<div class="bg-glow bottom-10 right-10"></div>
+
+<div id="slide-counter">1 / 8</div>
+
+<div class="slide-deck">
+    <div class="slide active" id="slide-1">
+        <div class="flex items-center gap-3 text-indigo-400 mb-2">
+            <i class="fa-solid fa-rotate-right text-xl animate-spin-slow"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Control Flow Core</span>
+        </div>
+        <h2 class="text-4xl font-bold text-white mb-6">What is a Loop?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
+            <div class="space-y-6">
+                <p class="text-xl text-slate-300 leading-relaxed">
+                    Loops allow you to <span class="text-indigo-400 font-bold underline decoration-indigo-400 decoration-2">execute a block of code multiple times</span> without writing the exact same code repeatedly.
+                </p>
+                <div class="p-4 bg-slate-800/50 border border-slate-700 rounded-xl">
+                    <h3 class="font-bold text-amber-400 flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-lightbulb"></i> Real-World Analogy
+                    </h3>
+                    <p class="text-sm text-slate-400">
+                        Think of running laps around a track. Instead of stating "Run lap 1", "Run lap 2", you set a instruction: <span class="italic text-slate-300">"While laps completed is less than 5, keep running."</span>
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <p class="font-semibold text-slate-200">Python provides two primary kinds of loops:</p>
+                    <div class="flex gap-4">
+                        <div class="flex-1 bg-indigo-950/40 border border-indigo-500/30 p-3 rounded-lg text-center">
+                            <span class="font-mono text-indigo-300 font-bold text-lg">for</span> loop
+                        </div>
+                        <div class="flex-1 bg-cyan-950/40 border border-cyan-500/30 p-3 rounded-lg text-center">
+                            <span class="font-mono text-cyan-300 font-bold text-lg">while</span> loop
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-inner">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 height-3 w-3 h-3 bg-red-500 rounded-full"></span>
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500">The Lazy Programmer Way</span>
+                </div>
+                <p class="text-xs text-red-400 font-mono mb-2"># Bad: Repetitive & hard to maintain</p>
+                <pre class="language-python"><code class="language-python">print("Hello World")
+print("Hello World")
+print("Hello World")
+print("Hello World")
+print("Hello World")</code></pre>
+                <div class="my-4 text-center text-slate-500"><i class="fa-solid fa-arrow-down-long"></i> Transform to Loop <i class="fa-solid fa-arrow-down-long"></i></div>
+                <p class="text-xs text-green-400 font-mono mb-2"># Clean: Scale to 5 or 5,000 effortlessly</p>
+                <pre class="language-python"><code class="language-python">for i in range(5):
+    print("Hello World")</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex items-center gap-3 text-cyan-400 mb-2">
+            <i class="fa-solid fa-circle-notch text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Condition-Driven Execution</span>
+        </div>
+        <h2 class="text-4xl font-bold text-white mb-6">The While Loop</h2>
+        <p class="text-lg text-slate-300 -mt-4 mb-4">A <code class="font-mono text-cyan-300 bg-cyan-950/50 px-1.5 py-0.5 rounded">while</code> loop repeatedly executes a block of code as long as a specified condition evaluates to <span class="text-green-400 font-bold">True</span>.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div class="flex flex-col justify-between bg-slate-900/60 p-5 rounded-xl border border-slate-800">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Blueprint Syntax</h3>
+                    <pre class="language-python"><code class="language-python">while condition:
+    # code block to execute
+    # must change something inside condition!</code></pre>
+                </div>
+                <div class="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <span class="text-xs font-bold text-amber-400 uppercase block mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Essential Warning</span>
+                    <p class="text-xs text-slate-400">If the condition stays true forever, your loop will turn into an <span class="text-amber-400 font-bold">infinite loop</span>, causing your program to crash or hang!</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Concrete Execution Trace</h3>
+                    <pre class="language-python"><code class="language-python">i = 1
+while i <= 5:
+    print(i)
+    i += 1  # Increment the counter</code></pre>
+                </div>
+                <div class="mt-3 grid grid-cols-5 gap-1.5 text-center text-xs font-mono">
+                    <div class="bg-slate-800 p-2 rounded border border-slate-700"><span class="text-slate-500 block">i=1</span><span class="text-green-400 font-bold">Print 1</span></div>
+                    <div class="bg-slate-800 p-2 rounded border border-slate-700"><span class="text-slate-500 block">i=2</span><span class="text-green-400 font-bold">Print 2</span></div>
+                    <div class="bg-slate-800 p-2 rounded border border-slate-700"><span class="text-slate-500 block">i=3</span><span class="text-green-400 font-bold">Print 3</span></div>
+                    <div class="bg-slate-800 p-2 rounded border border-slate-700"><span class="text-slate-500 block">i=4</span><span class="text-green-400 font-bold">Print 4</span></div>
+                    <div class="bg-slate-800 p-2 rounded border border-slate-700"><span class="text-slate-500 block">i=5</span><span class="text-green-400 font-bold">Print 5</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="flex items-center gap-3 text-amber-400 mb-2">
+            <i class="fa-solid fa-hand text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Loop Intervention Modifiers</span>
+        </div>
+        <h2 class="text-4xl font-bold text-white mb-4">Break & Continue Statements</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            <div class="bg-slate-950/70 p-5 rounded-xl border border-red-500/20 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-red-500/10 text-red-400 text-xs px-3 py-1 font-bold rounded-bl-lg uppercase tracking-wider">Emergency Exit</div>
+                <h3 class="text-xl font-bold text-red-400 mb-2 font-heading flex items-center gap-2">
+                    <i class="fa-solid fa-circle-stop"></i> break
+                </h3>
+                <p class="text-sm text-slate-300 mb-3">Exits the active loop sequence <strong>immediately</strong>, ignoring any remaining lines inside the block or remaining conditional passes.</p>
+                <pre class="language-python"><code class="language-python">for i in range(1, 10):
+    if i == 5:
+        break # Abort everything!
+    print(i)
+# Outputs: 1, 2, 3, 4</code></pre>
+            </div>
+
+            <div class="bg-slate-950/70 p-5 rounded-xl border border-cyan-500/20 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-cyan-500/10 text-cyan-400 text-xs px-3 py-1 font-bold rounded-bl-lg uppercase tracking-wider">Fast-Forward</div>
+                <h3 class="text-xl font-bold text-cyan-400 mb-2 font-heading flex items-center gap-2">
+                    <i class="fa-solid fa-forward-step"></i> continue
+                </h3>
+                <p class="text-sm text-slate-300 mb-3">Skips the remaining code inside the <strong>current iteration</strong> block and directly jumps straight to the next loop evaluation step.</p>
+                <pre class="language-python"><code class="language-python">for i in range(1, 10):
+    if i == 5:
+        continue # Skip printing 5!
+    print(i)
+# Outputs: 1, 2, 3, 4, 6, 7, 8, 9</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex items-center gap-3 text-emerald-400 mb-2">
+            <i class="fa-solid fa-code text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Interactive Sandbox 1</span>
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-2">Practice: First 10 Multiples</h2>
+        <p class="text-sm text-slate-400 mb-4">Write a program to dynamically print the first 10 multiples of a given target integer using a structured <code class="font-mono text-cyan-400 bg-cyan-950/40 px-1 rounded">while</code> setup.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center bg-slate-900 px-4 py-2 border border-slate-800 rounded-t-xl">
+                    <span class="text-xs font-mono text-slate-400">interactive_editor.py</span>
+                    <span id="pyodide-status" class="text-xs text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-notch animate-spin"></i> Initializing Python runtime...
+                    </span>
+                </div>
+                <textarea id="code-editor-1" class="w-full flex-1 p-4 font-mono text-sm bg-slate-950 text-emerald-400 border border-t-0 border-slate-800 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false"># Change number value to try other multiples!
+number = 7
+i = 1
+
+while i <= 10:
+    print(f"{number} x {i} = {number * i}")
+    i += 1</textarea>
+            </div>
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center bg-slate-900 px-4 py-2 border border-slate-800 rounded-t-xl">
+                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Console Standard Output</span>
+                    <button id="run-btn-1" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold text-xs px-4 py-1.5 rounded-md transition duration-200 flex items-center gap-1">
+                        <i class="fa-solid fa-play"></i> Execute Code
+                    </button>
+                </div>
+                <div id="output-console-1" class="w-full flex-1 p-4 font-mono text-sm bg-black text-slate-300 border border-t-0 border-slate-800 rounded-b-xl overflow-y-auto whitespace-pre-wrap">Click "Execute Code" above to view print operations.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex items-center gap-3 text-emerald-400 mb-2">
+            <i class="fa-solid fa-code text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Interactive Sandbox 2</span>
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-2">Practice: Even Numbers (1 to 20)</h2>
+        <p class="text-sm text-slate-400 mb-4">Complete the logical implementation details below to isolate and print every even step between 1 and 20.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center bg-slate-900 px-4 py-2 border border-slate-800 rounded-t-xl">
+                    <span class="text-xs font-mono text-slate-400">even_printer.py</span>
+                </div>
+                <textarea id="code-editor-2" class="w-full flex-1 p-4 font-mono text-sm bg-slate-950 text-emerald-400 border border-t-0 border-slate-800 rounded-b-xl focus:outline-none focus:border-indigo-500 resize-none" spellcheck="false"># Complete this challenge loop!
+num = 1
+while num <= 20:
+    if num % 2 == 0:
+        print(f"Even match: {num}")
+    num += 1</textarea>
+            </div>
+            <div class="flex flex-col h-full">
+                <div class="flex justify-between items-center bg-slate-900 px-4 py-2 border border-slate-800 rounded-t-xl">
+                    <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Console Standard Output</span>
+                    <button id="run-btn-2" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold text-xs px-4 py-1.5 rounded-md transition duration-200 flex items-center gap-1">
+                        <i class="fa-solid fa-play"></i> Execute Code
+                    </button>
+                </div>
+                <div id="output-console-2" class="w-full flex-1 p-4 font-mono text-sm bg-black text-slate-300 border border-t-0 border-slate-800 rounded-b-xl overflow-y-auto whitespace-pre-wrap">Run code to trace validation of values inside limits.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="flex items-center gap-3 text-red-400 mb-2">
+            <i class="fa-solid fa-bug text-xl animate-pulse"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Code Debugging Exercise</span>
+        </div>
+        <h2 class="text-3xl font-bold text-white mb-2">Bug Hunt Mode!</h2>
+        <p class="text-sm text-slate-400 mb-4">This snippet wants to print numbers 10 down to 1, but it contains fatal runtime errors. Find and select the lines containing errors!</p>
+        
+        <div class="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden mb-4 font-mono text-sm relative">
+            <div class="bg-slate-900 px-4 py-2 text-xs text-slate-500 border-b border-slate-800 flex justify-between">
+                <span>broken_countdown.py</span>
+                <span class="text-red-400 font-bold"><span id="bugs-found-count">0</span> of 2 Bugs Located</span>
+            </div>
+            <div class="py-2">
+                <div class="bug-line px-4 py-1.5 flex" data-line="1" data-is-bug="false"><span class="w-8 text-slate-600 select-none">1</span><span class="text-slate-300">count = 10</span></div>
+                <div class="bug-line px-4 py-1.5 flex" data-line="2" data-is-bug="true"><span class="w-8 text-slate-600 select-none">2</span><span class="text-emerald-400">while count &gt; 0</span></div>
+                <div class="bug-line px-4 py-1.5 flex" data-line="3" data-is-bug="false"><span class="w-8 text-slate-600 select-none">3</span><span class="text-slate-300">    print(count)</span></div>
+                <div class="bug-line px-4 py-1.5 flex" data-line="4" data-is-bug="true"><span class="w-8 text-slate-600 select-none">4</span><span class="text-slate-300">    count += 1</span></div>
+            </div>
+        </div>
+        <div id="bug-explanation" class="p-4 bg-slate-900 border border-slate-800 rounded-xl text-sm min-h-[60px] text-slate-400 flex items-center justify-center">
+            Click on lines in the editor where code deviations prevent execution.
+        </div>
+    </div>
+
+    <div class="slide" id="slide-7">
+        <div class="flex items-center gap-3 text-cyan-400 mb-2">
+            <i class="fa-solid fa-graduation-cap text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Knowledge Assessment</span>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-3xl font-bold text-white">Check Your Understanding</h2>
+            <span id="mcq-progress" class="text-xs font-mono font-bold px-3 py-1 bg-slate-800 rounded-full text-slate-400">Question 1 of 8</span>
+        </div>
+
+        <div id="mcq-container" class="flex-1 flex flex-col justify-between">
+            <div id="mcq-question-box" class="text-lg text-slate-200 mb-4 font-medium">Loading Assessment...</div>
+            
+            <div id="mcq-options-box" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-4">
+                <div id="mcq-feedback" class="text-sm font-medium text-slate-400">Select an option to verify.</div>
+                <div class="flex gap-2">
+                    <button id="mcq-prev-btn" class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition duration-150">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> Previous
+                    </button>
+                    <button id="mcq-next-btn" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition duration-150">
+                        Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-8">
+        <div class="flex items-center gap-3 text-indigo-400 mb-2">
+            <i class="fa-solid fa-flag-checkered text-xl"></i>
+            <span class="text-sm font-bold tracking-wider uppercase">Review Dashboard</span>
+        </div>
+        <h2 class="text-4xl font-bold text-white mb-6">Summary: Loop Mastery</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+            <div class="bg-slate-900/40 p-5 rounded-xl border border-slate-800 flex flex-col items-center text-center justify-center">
+                <div class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 text-xl mb-3"><i class="fa-solid fa-repeat"></i></div>
+                <h3 class="font-bold text-white mb-1">Repetition Power</h3>
+                <p class="text-xs text-slate-400">Automation blocks save developer time, streamlining multi-step computation profiles seamlessly.</p>
+            </div>
+            <div class="bg-slate-900/40 p-5 rounded-xl border border-slate-800 flex flex-col items-center text-center justify-center">
+                <div class="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center text-cyan-400 text-xl mb-3"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 class="font-bold text-white mb-1">State Integrity</h3>
+                <p class="text-xs text-slate-400">Always guarantee standard escape progression parameters to structurally avoid run infinite execution locks.</p>
+            </div>
+            <div class="bg-slate-900/40 p-5 rounded-xl border border-slate-800 flex flex-col items-center text-center justify-center">
+                <div class="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-400 text-xl mb-3"><i class="fa-solid fa-sliders"></i></div>
+                <h3 class="font-bold text-white mb-1">Precise Interventions</h3>
+                <p class="text-xs text-slate-400">Deploy explicit control operations like break or continue to alter step paths tracking unique dynamic criteria.</p>
+            </div>
+        </div>
+        <div class="mt-6 text-center text-slate-500 text-xs">
+            Course material finished successfully. Press <span class="key-box">&larr;</span> to review slides.
+        </div>
+    </div>
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // --- MCQs DATA STRUCT (Verbatim User Provided Questions) ---
+    const mcqQuestions = [
+        {
+            q: "What is the purpose of a while loop in Python?",
+            options: [
+                "A. To repeat a block of code a specific number of times.",
+                "B. To repeat a block of code as long as a condition is True.",
+                "C. To terminate the program when a condition is False.",
+                "D. To check conditions without executing any code."
+            ],
+            correct: 1,
+            feedback: "Correct! while loops watch a conditional boolean statement and loop uninterrupted until that condition registers as False."
+        },
+        {
+            q: "What will the following code output?< class='font-mono block my-2 text-slate-400 bg-slate-950 p-2 rounded text-xs'>i = 1<br>while i <= 3:<br>    print(i)<br>    i += 1",
+            options: [
+                "A. 1 2 3",
+                "B. 1 1 1",
+                "C. 1 2",
+                "D. Infinite loop"
+            ],
+            correct: 0,
+            feedback: "Correct! i counts from 1 up to 3 inclusive, updating each iteration before stopping when i reaches 4."
+        },
+        {
+            q: "What does the break statement do in a while loop?",
+            options: [
+                "A. Skips the current iteration and moves to the next iteration.",
+                "B. Exits the loop immediately.",
+                "C. Restarts the loop from the beginning.",
+                "D. Ends the program."
+            ],
+            correct: 1,
+            feedback: "Correct! break immediately interrupts structural flow patterns, terminating loop parsing contexts cleanly."
+        },
+        {
+            q: "What will happen if the condition in a while loop never becomes False?",
+            options: [
+                "A. The loop will execute once and stop.",
+                "B. The program will throw an error.",
+                "C. The loop will run indefinitely (infinite loop).",
+                "D. The loop will terminate automatically after 10 iterations."
+            ],
+            correct: 2,
+            feedback: "Correct! If the exit conditional parameters never match False states, the evaluation keeps looping indefinitely."
+        },
+        {
+            q: "Which of the following statements is used to skip the current iteration in a while loop?",
+            options: [
+                "A. break",
+                "B. skip",
+                "C. continue",
+                "D. pass"
+            ],
+            correct: 2,
+            feedback: "Correct! continue halts current pass lines and advances logic immediately into evaluating next step statements."
+        },
+        {
+            q: "What will the following code print?< class='font-mono block my-2 text-slate-400 bg-slate-950 p-2 rounded text-xs'>x = 0<br>while x < 5:<br>    if x == 3:<br>        break<br>    print(x)<br>    x += 1",
+            options: [
+                "A. 0 1 2 3 4",
+                "B. 0 1 2",
+                "C. 0 1 2 3",
+                "D. Nothing, the code will throw an error."
+            ],
+            correct: 1,
+            feedback: "Correct! Output stops instantly when x targets 3, aborting execution before reaching printing routines."
+        },
+        {
+            q: "What is the correct syntax for a while loop?",
+            options: [
+                "A. while condition { do something }",
+                "B. while (condition) { do something }",
+                "C. while condition: do something",
+                "D. while condition: # indent block under loop"
+            ],
+            correct: 3,
+            feedback: "Correct! Python demands trailing colons behind tracking operations followed by strictly indented execution spaces."
+        },
+        {
+            q: "Which of the following situations is most suitable for using a while loop?",
+            options: [
+                "A. Printing a message 5 times.",
+                "B. Calculating factorial of a number.",
+                "C. Waiting for a user to enter a specific input.",
+                "D. Iterating over elements in a list."
+            ],
+            correct: 2,
+            feedback: "Correct! while sequences run optimally when processing variables whose definitive end durations are unknown beforehand."
+        }
+    ];
+
+    // --- PRESENTATION CONTROLLER ---
+    let currentSlide = 1;
+    const totalSlides = document.querySelectorAll('.slide').length;
+    const progressBar = document.getElementById('progress');
+    const counterDisplay = document.getElementById('slide-counter');
+
+    function updatePresentation() {
+        document.querySelectorAll('.slide').forEach((slide, idx) => {
+            if (idx + 1 === currentSlide) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+        
+        counterDisplay.innerText = `${currentSlide} / ${totalSlides}`;
+        progressBar.style.width = `${((currentSlide - 1) / (totalSlides - 1)) * 100}%`;
+        
+        // Re-trigger highlight logic inside code containers
+        Prism.highlightAll();
+    }
+
+    function navigateRight() {
+        if (currentSlide < totalSlides) {
+            currentSlide++;
+            updatePresentation();
+        }
+    }
+
+    function navigateLeft() {
+        if (currentSlide > 1) {
+            currentSlide--;
+            updatePresentation();
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        // Prevent default spacebar window tracking actions
+        if (e.key === " " && document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            navigateRight();
+        } else if (e.key === "ArrowRight" && document.activeElement.tagName !== 'TEXTAREA') {
+            navigateRight();
+        } else if (e.key === "ArrowLeft" && document.activeElement.tagName !== 'TEXTAREA') {
+            navigateLeft();
+        }
+    });
+
+    // --- MCQ ENGINE ---
+    let currentMcqIdx = 0;
+    const mcqQuestionBox = document.getElementById('mcq-question-box');
+    const mcqOptionsBox = document.getElementById('mcq-options-box');
+    const mcqFeedback = document.getElementById('mcq-feedback');
+    const mcqProgress = document.getElementById('mcq-progress');
+    const mcqNextBtn = document.getElementById('mcq-next-btn');
+    const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+
+    function renderMcqQuestion() {
+        const activeQ = mcqQuestions[currentMcqIdx];
+        mcqProgress.innerText = `Question ${currentMcqIdx + 1} of ${mcqQuestions.length}`;
+        mcqQuestionBox.innerHTML = activeQ.q;
+        mcqOptionsBox.innerHTML = '';
+        mcqFeedback.className = "text-sm font-medium text-slate-400";
+        mcqFeedback.innerText = "Select an option to verify.";
+        mcqNextBtn.disabled = true;
+
+        if (currentMcqIdx === 0) {
+            mcqPrevBtn.disabled = true;
+        } else {
+            mcqPrevBtn.disabled = false;
+        }
+
+        if (currentMcqIdx === mcqQuestions.length - 1) {
+            mcqNextBtn.innerHTML = `Finish Quiz <i class="fa-solid fa-flag-checkered ml-1"></i>`;
+        } else {
+            mcqNextBtn.innerHTML = `Next Question <i class="fa-solid fa-chevron-right ml-1"></i>`;
+        }
+
+        activeQ.options.forEach((opt, index) => {
+            const optBtn = document.createElement('button');
+            optBtn.className = "mcq-option w-full p-3 rounded-xl font-heading text-left text-sm font-medium flex items-center justify-between";
+            optBtn.innerText = opt;
+            optBtn.addEventListener('click', () => handleMcqSelection(index));
+            mcqOptionsBox.appendChild(optBtn);
+        });
+    }
+
+    function handleMcqSelection(selectedIndex) {
+        const activeQ = mcqQuestions[currentMcqIdx];
+        const optionButtons = mcqOptionsBox.querySelectorAll('.mcq-option');
+        
+        optionButtons.forEach((btn, idx) => {
+            btn.classList.add('disabled');
+            if (idx === activeQ.correct) {
+                btn.classList.add('correct');
+            }
+            if (idx === selectedIndex && selectedIndex !== activeQ.correct) {
+                btn.classList.add('incorrect');
+            }
+        });
+
+        if (selectedIndex === activeQ.correct) {
+            mcqFeedback.className = "text-sm font-bold text-green-400";
+            mcqFeedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${activeQ.feedback}`;
+        } else {
+            mcqFeedback.className = "text-sm font-bold text-red-400";
+            mcqFeedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Incorrect evaluation. Review syntax flow!`;
+        }
+        
+        mcqNextBtn.disabled = false;
+    }
+
+    mcqNextBtn.addEventListener('click', () => {
+        if (currentMcqIdx < mcqQuestions.length - 1) {
+            currentMcqIdx++;
+            renderMcqQuestion();
+        } else {
+            mcqFeedback.className = "text-sm font-bold text-indigo-400";
+            mcqFeedback.innerHTML = `<i class="fa-solid fa-trophy"></i> Assessment finalized! Advance to next summary panel.`;
+            navigateRight();
+        }
+    });
+
+    mcqPrevBtn.addEventListener('click', () => {
+        if (currentMcqIdx > 0) {
+            currentMcqIdx--;
+            renderMcqQuestion();
+        }
+    });
+
+    // --- BUG HUNT MODULE ---
+    let bugsFound = 0;
+    document.querySelectorAll('.bug-line').forEach(line => {
+        line.addEventListener('click', () => {
+            const isBug = line.getAttribute('data-is-bug') === 'true';
+            const bugExplanation = document.getElementById('bug-explanation');
+            
+            if (isBug) {
+                if (!line.classList.contains('selected-correct')) {
+                    line.classList.add('selected-correct');
+                    bugsFound++;
+                    document.getElementById('bugs-found-count').innerText = bugsFound;
+                    
+                    if (line.getAttribute('data-line') === "2") {
+                        bugExplanation.innerHTML = `<span class='text-green-400 font-bold'>Bug Found!</span> Missing structural colon (<code class='font-mono'>:</code>) at termination boundary of while clause statement.`;
+                    } else if (line.getAttribute('data-line') === "4") {
+                        bugExplanation.innerHTML = `<span class='text-green-400 font-bold'>Bug Found!</span> Loop index increments (<code class='font-mono'>+= 1</code>) on countdown matrix instead of stepping down (<code class='font-mono'>-= 1</code>), rendering execution infinite.`;
+                    }
+                }
+            } else {
+                line.classList.add('selected-bug');
+                bugExplanation.innerHTML = `<span class='text-red-400 font-bold'>False Trap!</span> Line is syntactically sound and validates correctly. Check counter step tracking logic instead.`;
+                setTimeout(() => line.classList.remove('selected-bug'), 1200);
+            }
+
+            if (bugsFound === 2) {
+                bugExplanation.innerHTML = `<span class='text-indigo-400 font-bold'><i class="fa-solid fa-wand-magic-sparkles"></i> Code Repaired!</span> Excellent eye. Missing colons and inverted operators represent highly common loop pipeline faults.`;
+            }
+        });
+    });
+
+    // --- PYODIDE SANDBOX ENGINE ---
+    let pyodideInstance = null;
+
+    async function initPyodide() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.getElementById('pyodide-status').className = "text-xs text-green-400 flex items-center gap-1.5";
+            document.getElementById('pyodide-status').innerHTML = `<i class="fa-solid fa-circle-check"></i> Runtime Ready`;
+            document.getElementById('run-btn-1').disabled = false;
+            document.getElementById('run-btn-2').disabled = false;
+        } catch (err) {
+            document.getElementById('pyodide-status').className = "text-xs text-red-400 flex items-center gap-1.5";
+            document.getElementById('pyodide-status').innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Loading Failed`;
+        }
+    }
+
+    async function runPythonSandbox(editorId, consoleId) {
+        if (!pyodideInstance) return;
+        const code = document.getElementById(editorId).value;
+        const consoleOut = document.getElementById(consoleId);
+        consoleOut.innerText = "Executing runtime directives...";
+
+        // Intercept standard internal print streams
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(code);
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            consoleOut.innerText = stdout + (stderr ? `\nError Output:\n${stderr}` : "");
+            if (!stdout && !stderr) {
+                consoleOut.innerText = "Execution completed cleanly with no printed stdout expressions return.";
+            }
+        } catch (err) {
+            consoleOut.innerText = `Python Stack Error:\n${err}`;
+        }
+    }
+
+    document.getElementById('run-btn-1').addEventListener('click', () => runPythonSandbox('code-editor-1', 'output-console-1'));
+    document.getElementById('run-btn-2').addEventListener('click', () => runPythonSandbox('code-editor-2', 'output-console-2'));
+
+    // Initialize application pipelines
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentation();
+        renderMcqQuestion();
+        initPyodide();
+    });
+</script>
+</body>
+</html>

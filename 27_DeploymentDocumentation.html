@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment, Documentation, and Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --color-bg: #0f172a;
+            --color-surface: #1e293b;
+            --color-primary: #3b82f6;
+            --color-success: #10b981;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-text-main: #f8fafc;
+            --color-text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'Fira Code', monospace !important;
+        }
+
+        #presentation-container {
+            position: relative;
+            width: 90vw;
+            height: 80vh;
+            max-width: 1280px;
+            max-height: 720px;
+            background-color: var(--color-surface);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.98) translateY(10px);
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            z-index: 50;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background-color: var(--color-primary);
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .key-box {
+            background: #334155;
+            color: #f1f5f9;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 0 0 #1e293b;
+        }
+
+        .pyodide-console {
+            background-color: #090d16;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            padding: 1rem;
+            height: 120px;
+            overflow-y: auto;
+            color: #38bdf8;
+        }
+
+        .bug-line {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .bug-line:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            background-color: rgba(239, 68, 68, 0.15);
+            border-left-color: var(--color-danger);
+        }
+        .bug-line.selected-clean {
+            background-color: rgba(16, 185, 129, 0.15);
+            border-left-color: var(--color-success);
+        }
+
+        /* MCQ Options styling */
+        .mcq-option {
+            background-color: #334155;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mcq-option:hover:not(.disabled) {
+            background-color: #475569;
+            transform: translateX(4px);
+        }
+        .mcq-option.correct {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+            border-color: var(--color-success) !important;
+            color: #a7f3d0;
+        }
+        .mcq-option.incorrect {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-color: var(--color-danger) !important;
+            color: #fca5a5;
+        }
+
+        /* Nav controls overlay */
+        .nav-btn {
+            background: rgba(51, 65, 85, 0.6);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+        .nav-btn:hover {
+            background: rgba(51, 65, 85, 1);
+            color: #fff;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / N</div>
+
+<div id="presentation-container">
+    
+    <div class="slide active flex flex-col justify-between" id="slide-1">
+        <div class="flex items-center gap-4 border-b border-slate-700 pb-4">
+            <div class="p-3 bg-blue-600/20 text-blue-400 rounded-xl">
+                <i class="fa-solid fa-rocket text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Deployment, Documentation &amp; Presentation</h1>
+                <p class="text-slate-400 text-lg mt-1">Day 27: The Final Phase of the Software Development Life Cycle (SDLC)</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+            <div class="space-y-4">
+                <h2 class="text-2xl font-semibold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-blue-400"></i> Topic Overview
+                </h2>
+                <p class="text-slate-300 leading-relaxed text-lg">
+                    Once development and testing are completely finished, your software enters its final critical chapter. 
+                    Building a masterpiece doesn't matter if nobody else can use it, understand it, or see it working!
+                </p>
+                <blockquote class="border-l-4 border-blue-500 bg-slate-800/50 p-4 rounded-r-lg text-slate-300 italic">
+                    "This essential phase ensures your work is understandable, reusable, and easy for others to access securely and efficiently."
+                </blockquote>
+            </div>
+
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 flex flex-col justify-center space-y-4">
+                <h3 class="text-lg font-bold text-slate-300 tracking-wide uppercase">The 3 Pillars of This Phase</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500/20 text-blue-400 font-bold">1</span>
+                        <span class="text-slate-200 font-medium">Deployment — Ship it to the audience</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold">2</span>
+                        <span class="text-slate-200 font-medium">Documentation — Explain how it functions</span>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-purple-500/20 text-purple-400 font-bold">3</span>
+                        <span class="text-slate-200 font-medium">Presentation — Showcase the core value</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-2">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-blue-600/20 text-blue-400 rounded-lg">
+                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Key Concept 1: Deployment</h2>
+            </div>
+            <span class="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs font-semibold uppercase tracking-wider">Pillar #1</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+            <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-3 flex flex-col justify-between">
+                <div>
+                    <div class="text-emerald-400 mb-2"><i class="fa-solid fa-circle-check text-2xl"></i></div>
+                    <h3 class="text-lg font-bold text-slate-200 mb-1">Error-Free Check</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        Before shifting runtime code, make absolute sure your project executes completely without crash errors or hidden unhandled bugs.
+                    </p>
+                </div>
+                <div class="text-xs bg-slate-900/60 p-2 rounded text-slate-500 font-mono">Run final integrations</div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-3 flex flex-col justify-between">
+                <div>
+                    <div class="text-blue-400 mb-2"><i class="fa-solid fa-box-open text-2xl"></i></div>
+                    <h3 class="text-lg font-bold text-slate-200 mb-1">Packaging &amp; Distribution</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        Package or upload the source code so others can use it instantly. Push cleanly to platforms like <strong>GitHub</strong> or package everything securely into a shared <strong>.zip file</strong>.
+                    </p>
+                </div>
+                <div class="text-xs bg-slate-900/60 p-2 rounded text-slate-500 font-mono">git push origin main</div>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-3 flex flex-col justify-between">
+                <div>
+                    <div class="text-purple-400 mb-2"><i class="fa-solid fa-laptop-code text-2xl"></i></div>
+                    <h3 class="text-lg font-bold text-slate-200 mb-1">Cross-Machine Testing</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        Verify installation and setup commands perform successfully on an entirely external terminal machine to avoid local environment bias.
+                    </p>
+                </div>
+                <div class="text-xs bg-slate-900/60 p-2 rounded text-slate-500 font-mono">"Works on my machine" rule</div>
+            </div>
+        </div>
+
+        <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+            <div>
+                <strong class="text-amber-400 text-sm font-semibold">Common Developer Mistake:</strong>
+                <p class="text-slate-300 text-sm mt-0.5">Forgetting to clear local absolute paths (like <code class="font-mono bg-slate-900 px-1 text-pink-400 text-xs">C:\Users\John\Projects...</code>). Always leverage safe, relative runtime paths for full cross-system operability!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-3">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-emerald-600/20 text-emerald-400 rounded-lg">
+                    <i class="fa-solid fa-file-lines text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Key Concept 2: Documentation &amp; The Anatomy of a README</h2>
+            </div>
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold uppercase tracking-wider">Pillar #2</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 my-auto">
+            <div class="md:col-span-2 space-y-3">
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    A great <code class="font-mono bg-slate-800 text-emerald-400 px-1.5 py-0.5 rounded text-xs">README.md</code> markdown template functions as the absolute entry gateway for developers interacting with your team repository.
+                </p>
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-center gap-2 text-slate-300"><i class="fa-regular fa-circle-check text-emerald-400"></i> Project Title &amp; Core Objective Description</div>
+                    <div class="flex items-center gap-2 text-slate-300"><i class="fa-regular fa-circle-check text-emerald-400"></i> Distinct Feature Maps &amp; Target Purpose</div>
+                    <div class="flex items-center gap-2 text-slate-300"><i class="fa-regular fa-circle-check text-emerald-400"></i> Precise Step-by-Step Installation Protocols</div>
+                    <div class="flex items-center gap-2 text-slate-300"><i class="fa-regular fa-circle-check text-emerald-400"></i> Interactive Input/Output Samples &amp; Captures</div>
+                    <div class="flex items-center gap-2 text-slate-300"><i class="fa-regular fa-circle-check text-emerald-400"></i> Verified Contributor / Strategic Author Attributions</div>
+                </div>
+                <div class="p-3 bg-slate-800/40 rounded-lg border border-slate-700">
+                    <p class="text-xs text-slate-400"><i class="fa-solid fa-circle-info text-blue-400 mr-1"></i> <strong>Pro Tip:</strong> Markdown (<code class="font-mono text-xs">.md</code>) formatting enables easy styling hierarchy without heavy visual overhead.</p>
+                </div>
+            </div>
+
+            <div class="md:col-span-3">
+                <div class="flex justify-between items-center bg-slate-900 px-4 py-2 rounded-t-lg border-t border-x border-slate-700">
+                    <span class="text-xs text-slate-400 font-mono flex items-center gap-2"><i class="fa-brands fa-markdown text-blue-400 text-sm"></i> README.md Snippet Example</span>
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                </div>
+                <pre class="rounded-b-lg border-b border-x border-slate-700 text-xs font-mono m-0" style="padding:1rem !important;"><code class="language-markdown"># To-Do Application v1.0
+
+A fast CLI utility built using Python to track goals.
+
+## Core Features
+* Append custom task priorities
+* Real-time item removal status
+
+## Setup Instructions
+```bash
+pip install -r requirements.txt
+python main.py
+```</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-4">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-purple-600/20 text-purple-400 rounded-lg">
+                    <i class="fa-brands fa-python text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Live Workspace: Simulating Readme Instructions</h2>
+            </div>
+            <div id="pyodide-status" class="text-xs px-3 py-1 rounded-full bg-slate-800 border border-slate-700 flex items-center gap-2 text-amber-400">
+                <i class="fa-solid fa-spinner fa-spin"></i> Loading Python environment...
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto">
+            <div class="flex flex-col space-y-2">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Editable Python Script (Simulating App Workflow)</span>
+                    <span class="font-mono text-pink-400 text-[10px]">Editable code area</span>
+                </label>
+                <textarea id="python-code-editor" class="flex-grow p-3 bg-[#111729] border border-slate-700 rounded-lg text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 min-h-[160px] resize-none">def show_readme_demo():
+    print("--- APP DEPLOYMENT SUCCESSFUL ---")
+    features = ["1. Secure Storage", "2. Clean CLI Output", "3. Error Handling"]
+    print("Loaded application features:")
+    for f in features:
+        print(f" [+] {f}")
+
+show_readme_demo()</textarea>
+                <button id="run-code-btn" disabled class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition duration-200 text-sm shadow-md">
+                    <i class="fa-solid fa-play"></i> Run Code Script
+                </button>
+            </div>
+
+            <div class="flex flex-col space-y-2">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Execution Standard Console Output</label>
+                <div id="python-output-console" class="pyodide-console flex-grow text-xs">Console standard outputs will stream here directly once the active execution runs.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-5">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-purple-600/20 text-purple-400 rounded-lg">
+                    <i class="fa-solid fa-display text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Key Concept 3: Delivering a Winning Presentation</h2>
+            </div>
+            <span class="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-xs font-semibold uppercase tracking-wider">Pillar #3</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+            <div class="bg-slate-800/50 border border-slate-700/80 rounded-xl p-5 space-y-4">
+                <h3 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i> What You Should Do First
+                </h3>
+                <div class="space-y-3">
+                    <div class="p-3 bg-slate-900/50 rounded-lg border-l-4 border-emerald-500">
+                        <h4 class="text-sm font-bold text-slate-200">Run the Live Demonstration early!</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Always run the live, functioning application right out of the gate to instantly validate it solves the baseline problem statement effectively.</p>
+                    </div>
+                    <div class="p-3 bg-slate-900/50 rounded-lg border-l-4 border-blue-500">
+                        <h4 class="text-sm font-bold text-slate-200">Highlight architectural pathways</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Clearly state how you methodically followed the structural phases of the 5-day SDLC lifecycle from baseline setup blocks.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-700/80 rounded-xl p-5 space-y-4">
+                <h3 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+                    <i class="fa-solid fa-compass"></i> Critical Narrative Flow Structure
+                </h3>
+                <div class="space-y-2 text-sm text-slate-300">
+                    <div class="flex gap-2 items-start"><span class="text-blue-400 font-bold">•</span><span><strong>The Problem:</strong> Contextualize the real-world problem statement clearly.</span></div>
+                    <div class="flex gap-2 items-start"><span class="text-blue-400 font-bold">•</span><span><strong>The Strategy:</strong> Showcase core structural application highlights.</span></div>
+                    <div class="flex gap-2 items-start"><span class="text-blue-400 font-bold">•</span><span><strong>The Hurdles:</strong> Intelligently describe engineering challenges faced and how you debugged them.</span></div>
+                </div>
+                <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2 text-xs">
+                    <i class="fa-solid fa-ban text-red-400 mt-0.5"></i>
+                    <p class="text-slate-300"><strong>Avoid Pitfalls:</strong> Do not read every single line of code character by character. Focus explicitly on system functionality, architecture, and core design elements!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-6">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-red-600/20 text-red-400 rounded-lg">
+                    <i class="fa-solid fa-bug text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Interactive Code Review: Spot the Deployment Bugs</h2>
+            </div>
+            <div class="bg-red-500/10 text-red-400 border border-red-500/20 rounded-full px-3 py-1 text-xs font-bold tracking-wide">
+                Bugs Identified: <span id="bug-tracker-count">0</span> / 2
+            </div>
+        </div>
+
+        <p class="text-slate-300 text-sm">
+            Click on the specific problematic line(s) below that violate deployment path safety rules or structure constraints.
+        </p>
+
+        <div class="my-auto">
+            <div class="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden font-mono text-sm leading-relaxed">
+                <div class="bg-slate-800/80 px-4 py-2 border-b border-slate-700 text-xs text-slate-400 flex justify-between items-center">
+                    <span>deployment_script.py</span>
+                    <span class="text-[10px] text-slate-500">Interactive Lines</span>
+                </div>
+                <div class="p-4 space-y-1 bg-[#111729]">
+                    <div class="bug-line p-1 rounded px-2 text-slate-400" data-is-bug="false" data-feedback="Clean step! Defining tracking function parameters safely.">Line 1: def initialize_deployment_path():</div>
+                    <div class="bug-line p-1 rounded px-2 text-slate-400" data-is-bug="true" data-feedback="Bug found! Hardcoded absolute Windows directory paths fail on multi-machine deployment targets.">Line 2:     local_backup_folder = "C:\\Users\\Admin\\Desktop\\Project\\backup"</div>
+                    <div class="bug-line p-1 rounded px-2 text-slate-400" data-is-bug="false" data-feedback="Clean step! Standard valid array verification execution.">Line 3:     print("Verifying deployment targets...")</div>
+                    <div class="bug-line p-1 rounded px-2 text-slate-400" data-is-bug="true" data-feedback="Bug found! Using standard image asset extension string .jpg for a plain markdown readme tracker document profile structure.">Line 4:     readme_extension_type = ".jpg"</div>
+                </div>
+            </div>
+            <div id="bug-hunt-feedback" class="mt-3 text-xs min-h-[24px] text-slate-400 text-center font-medium"></div>
+        </div>
+    </div>
+
+    <div class="slide flex flex-col justify-between" id="slide-7">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-emerald-600/20 text-emerald-400 rounded-lg">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-100">Check Your Understanding</h2>
+            </div>
+            <div id="mcq-progress-badge" class="bg-slate-800 text-slate-300 border border-slate-700 rounded-full px-3 py-1 text-xs font-bold tracking-wide">
+                Question 1 of 10
+            </div>
+        </div>
+
+        <div class="my-auto space-y-6" id="mcq-dynamic-container">
+            </div>
+
+        <div class="flex justify-between items-center border-t border-slate-700 pt-4">
+            <button id="mcq-prev-btn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Previous Question
+            </button>
+            <button id="mcq-next-btn" disabled class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2">
+                Next Question <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<div class="flex gap-4 mt-4 z-40">
+    <button id="global-prev-btn" class="nav-btn w-10 h-10 rounded-full flex items-center justify-center text-slate-300 text-sm shadow-lg"><i class="fa-solid fa-chevron-left"></i></button>
+    <button id="global-next-btn" class="nav-btn w-10 h-10 rounded-full flex items-center justify-center text-slate-300 text-sm shadow-lg"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // 1. Raw User Provided Verification MCQ Dataset Array Matrix
+    const rawMcqDataset = [
+        {
+            question: "What is the purpose of a README file?",
+            options: {
+                a: "To store the Python code",
+                b: "To provide instructions and information about the project",
+                c: "To find bugs",
+                d: "To replace the flowchart"
+            },
+            answer: "b"
+        },
+        {
+            question: "Which phase of SDLC involves sharing your code with others and writing instructions?",
+            options: {
+                a: "Design",
+                b: "Requirements",
+                c: "Deployment & Documentation",
+                d: "Planning"
+            },
+            answer: "c"
+        },
+        {
+            question: "What is the standard file extension for a README file?",
+            options: {
+                a: ".py",
+                b: ".exe",
+                c: ".md",
+                d: ".jpg"
+            },
+            answer: "c"
+        },
+        {
+            question: "When presenting your project, what should you do first?",
+            options: {
+                a: "Explain every line of code",
+                b: "Run the program to show it works",
+                c: "Talk about your childhood",
+                d: "Complain about the bugs"
+            },
+            answer: "b"
+        },
+        {
+            question: "Why is documentation important for a developer who works in a team?",
+            options: {
+                a: "It makes the code look longer",
+                b: "It helps teammates understand and use the code without asking questions",
+                c: "It is not important",
+                d: "It makes the computer faster"
+            },
+            answer: "b"
+        },
+        {
+            question: "What does \".md\" stand for?",
+            options: {
+                a: "Main Document",
+                b: "Markdown",
+                c: "Mode",
+                d: "Manual Design"
+            },
+            answer: "b"
+        },
+        {
+            question: "In your To-Do project presentation, you should mention:",
+            options: {
+                a: "How you followed the SDLC phases",
+                b: "What the weather was like during development",
+                c: "The price of your laptop",
+                d: "Your favorite movie"
+            },
+            answer: "a"
+        },
+        {
+            question: "True or False: Documentation is only for beginners.",
+            options: {
+                a: "True",
+                b: "False"
+            },
+            answer: "b"
+        },
+        {
+            question: "Which platform is commonly used to host code and README files?",
+            options: {
+                a: "YouTube",
+                b: "GitHub",
+                c: "Instagram",
+                d: "Netflix"
+            },
+            answer: "b"
+        },
+        {
+            question: "What is the final stage of the 5-day SDLC we followed?",
+            options: {
+                a: "Planning",
+                b: "Testing",
+                c: "Deployment & Documentation",
+                d: "Design"
+            },
+            answer: "c"
+        }
+    ];
+
+    // Slide Engine State Tracking Properties
+    let currentSlideIndex = 1;
+    const allSlidesList = document.querySelectorAll('.slide');
+    const totalSlidesCount = allSlidesList.length;
+
+    // MCQ Internal Slide State Trackers
+    let currentMcqIndex = 0;
+    let selectedMcqAnswersTracking = {}; // Maps question index to selected letter
+
+    // Bug Hunt Trackers
+    let identifiedBugsCount = 0;
+    const maxBugsToFind = 2;
+
+    // Pyodide Instance Wrapper Reference
+    let pyodideInstance = null;
+
+    // 2. Initialize Slide Navigation Core Engines
+    function updatePresentationDeckDisplay() {
+        allSlidesList.forEach((slide, index) => {
+            if ((index + 1) === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Counter UI adjustment
+        document.getElementById('slide-counter').innerText = `${currentSlideIndex} / ${totalSlidesCount}`;
+        
+        // Progress percentage calculation
+        const overallProgressPercentage = ((currentSlideIndex - 1) / (totalSlidesCount - 1)) * 100;
+        document.getElementById('progress').style.width = `${overallProgressPercentage}%`;
+
+        // Dynamic Prism Highlighting call fallback safety checks
+        if (window.Prism) {
+            Prism.highlightAll();
+        }
+    }
+
+    function navigateToNextSlide() {
+        if (currentSlideIndex < totalSlidesCount) {
+            currentSlideIndex++;
+            updatePresentationDeckDisplay();
+        }
+    }
+
+    function navigateToPrevSlide() {
+        if (currentSlideIndex > 1) {
+            currentSlideIndex--;
+            updatePresentationDeckDisplay();
+        }
+    }
+
+    // Connect global mouse click click triggers 
+    document.getElementById('global-next-btn').addEventListener('click', navigateToNextSlide);
+    document.getElementById('global-prev-btn').addEventListener('click', navigateToPrevSlide);
+
+    // Keyboard bindings configurations map setup
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return; // Bypass if typing
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateToNextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigateToPrevSlide();
+        }
+    });
+
+    // 3. Pyodide Live Engine Pipeline Runtime Implementation
+    async function loadPyodideRuntimeEnvironment() {
+        const statusBox = document.getElementById('pyodide-status');
+        const runButton = document.getElementById('run-code-btn');
+        try {
+            pyodideInstance = await loadPyodide();
+            statusBox.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Runtime Ready';
+            statusBox.classList.remove('text-amber-400');
+            statusBox.classList.add('text-emerald-400');
+            runButton.removeAttribute('disabled');
+        } catch (err) {
+            statusBox.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-400"></i> Load Failure';
+            console.error(err);
+        }
+    }
+
+    document.getElementById('run-code-btn').addEventListener('click', async () => {
+        if (!pyodideInstance) return;
+        const consoleOut = document.getElementById('python-output-console');
+        const customCodeInput = document.getElementById('python-code-editor').value;
+        consoleOut.innerText = "Executing runtime calculations...";
+
+        // Intercept standard write outputs overrides
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(customCodeInput);
+            const standardOutput = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const errorOutput = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            if (errorOutput.trim().length > 0) {
+                consoleOut.innerText = errorOutput;
+                consoleOut.style.color = "#ef4444"; // Color red alert
+            } else {
+                consoleOut.innerText = standardOutput || "Script executed completely with no output strings generated.";
+                consoleOut.style.color = "#38bdf8"; // Standard blue-ish cyan console skin
+            }
+        } catch (err) {
+            consoleOut.innerText = err.message;
+            consoleOut.style.color = "#ef4444";
+        }
+    });
+
+    // 4. Bug Hunt Architecture Operations Core
+    document.querySelectorAll('.bug-line').forEach(elementLine => {
+        elementLine.addEventListener('click', function() {
+            if (this.classList.contains('selected-bug') || this.classList.contains('selected-clean')) return;
+
+            const isTargetBug = this.getAttribute('data-is-bug') === 'true';
+            const interactiveFeedbackText = this.getAttribute('data-feedback');
+            const reportingUIBox = document.getElementById('bug-hunt-feedback');
+
+            if (isTargetBug) {
+                this.classList.remove('text-slate-400');
+                this.classList.add('selected-bug');
+                identifiedBugsCount++;
+                document.getElementById('bug-tracker-count').innerText = identifiedBugsCount;
+                reportingUIBox.innerText = `Correct! ${interactiveFeedbackText}`;
+                reportingUIBox.style.color = "#10b981";
+            } else {
+                this.classList.remove('text-slate-400');
+                this.classList.add('selected-clean');
+                reportingUIBox.innerText = `Incorrect line targeted. ${interactiveFeedbackText}`;
+                reportingUIBox.style.color = "#ef4444";
+            }
+        });
+    });
+
+    // 5. MCQ Assessment Flow Layout Generator Functionality
+    function renderTargetMcqQuestionItem() {
+        const frameContainer = document.getElementById('mcq-dynamic-container');
+        const progressBadge = document.getElementById('mcq-progress-badge');
+        const nextActionBtn = document.getElementById('mcq-next-btn');
+        const prevActionBtn = document.getElementById('mcq-prev-btn');
+
+        // Check bounds limits criteria
+        if (currentMcqIndex >= rawMcqDataset.length) {
+            // Render Quiz Complete Completion Screen view
+            progressBadge.innerText = "Quiz Completed";
+            frameContainer.innerHTML = `
+                <div class="text-center py-8 space-y-4">
+                    <div class="inline-flex p-4 bg-emerald-500/20 text-emerald-400 rounded-full text-4xl mb-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-100">You've completed the quiz evaluation!</h3>
+                    <p class="text-slate-400 max-w-md mx-auto text-sm">
+                        All set. You have successfully processed and verified your deployment instructions, readme documentation file structural setups, and interactive presentation modules.
+                    </p>
+                    <button onclick="restartMcqAssessmentCycle()" class="mt-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 font-bold rounded text-xs text-slate-200 transition">
+                        Restart Assessment Check
+                    </button>
+                </div>
+            `;
+            nextActionBtn.style.display = 'none';
+            prevActionBtn.removeAttribute('disabled');
+            return;
+        }
+
+        // Show standard single question view element maps
+        nextActionBtn.style.display = 'flex';
+        progressBadge.innerText = `Question ${currentMcqIndex + 1} of ${rawMcqDataset.length}`;
+        
+        const activeQuestionObject = rawMcqDataset[currentMcqIndex];
+        const isAlreadyAnswered = selectedMcqAnswersTracking.hasOwnProperty(currentMcqIndex);
+        const selectedSavedAnswerKey = selectedMcqAnswersTracking[currentMcqIndex];
+
+        // Frame building question text layouts blocks
+        let interactiveOptionsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">`;
+        
+        Object.keys(activeQuestionObject.options).forEach(keyOptionIdentifier => {
+            let stateStyleClass = "";
+            if (isAlreadyAnswered) {
+                if (keyOptionIdentifier === activeQuestionObject.answer) {
+                    stateStyleClass = "correct disabled border border-emerald-500";
+                } else if (keyOptionIdentifier === selectedSavedAnswerKey) {
+                    stateStyleClass = "incorrect disabled border border-red-500";
+                } else {
+                    stateStyleClass = "disabled opacity-40";
+                }
+            }
+
+            interactiveOptionsHtml += `
+                <div class="mcq-option p-3 rounded-lg border border-slate-700/60 flex items-center gap-3 cursor-pointer text-sm font-medium text-slate-200 ${stateStyleClass}" 
+                     onclick="handleMcqOptionSelectionClick('${keyOptionIdentifier}')">
+                    <span class="w-6 h-6 rounded bg-slate-900/60 flex items-center justify-center text-xs font-bold font-mono text-blue-400">${keyOptionIdentifier.toUpperCase()}</span>
+                    <span>${activeQuestionObject.options[keyOptionIdentifier]}</span>
+                </div>
+            `;
+        });
+        interactiveOptionsHtml += `</div>`;
+
+        let feedbackFrameBoxHtml = '';
+        if (isAlreadyAnswered) {
+            const isCorrectAnswerMatch = selectedSavedAnswerKey === activeQuestionObject.answer;
+            feedbackFrameBoxHtml = `
+                <div class="p-3 rounded-lg text-xs font-semibold ${isCorrectAnswerMatch ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                    ${isCorrectAnswerMatch ? '<i class="fa-solid fa-circle-check mr-1"></i> Correct verification!' : `<i class="fa-solid fa-circle-xmark mr-1"></i> Incorrect. The correct response key is: [${activeQuestionObject.answer.toUpperCase()}]`}
+                </div>
+            `;
+        }
+
+        frameContainer.innerHTML = `
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-slate-200 leading-snug">${activeQuestionObject.question}</h3>
+                ${interactiveOptionsHtml}
+                ${feedbackFrameBoxHtml}
+            </div>
+        `;
+
+        // Update action controls states tracking triggers
+        if (isAlreadyAnswered) {
+            nextActionBtn.removeAttribute('disabled');
+        } else {
+            nextActionBtn.setAttribute('disabled', 'true');
+        }
+
+        if (currentMcqIndex === 0) {
+            prevActionBtn.setAttribute('disabled', 'true');
+        } else {
+            prevActionBtn.removeAttribute('disabled');
+        }
+    }
+
+    function handleMcqOptionSelectionClick(chosenKeyIdentifier) {
+        if (selectedMcqAnswersTracking.hasOwnProperty(currentMcqIndex)) return; // Already handled blocker
+
+        selectedMcqAnswersTracking[currentMcqIndex] = chosenKeyIdentifier;
+        renderTargetMcqQuestionItem(); // Force re-render to calculate feedback state indicators
+    }
+
+    function restartMcqAssessmentCycle() {
+        currentMcqIndex = 0;
+        selectedMcqAnswersTracking = {};
+        renderTargetMcqQuestionItem();
+    }
+
+    // Connect local inner sub slide mcq tracking button event logic systems
+    document.getElementById('mcq-next-btn').addEventListener('click', () => {
+        currentMcqIndex++;
+        renderTargetMcqQuestionItem();
+    });
+
+    document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+        if (currentMcqIndex > 0) {
+            currentMcqIndex--;
+            renderTargetMcqQuestionItem();
+        }
+    });
+
+    // 6. Primary Page Launch Lifecycle Engine Triggers
+    window.addEventListener('DOMContentLoaded', () => {
+        updatePresentationDeckDisplay();
+        loadPyodideRuntimeEnvironment();
+        renderTargetMcqQuestionItem();
+    });
+</script>
+</body>
+</html>

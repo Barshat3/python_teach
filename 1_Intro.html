@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started with Python</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --accent: #10B981;
+            --accent-warn: #F59E0B;
+            --accent-danger: #EF4444;
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 700px;
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #slide-counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            z-index: 50;
+        }
+
+        .key-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+            font-family: monospace;
+        }
+
+        .pyodide-loader {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            align-self: flex-start;
+        }
+
+        .pyodide-loader.loading {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--accent-warn);
+        }
+
+        /* MCQ Options */
+        .mcq-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .mcq-option:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--primary-light);
+            transform: translateX(4px);
+        }
+
+        .mcq-option.correct {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: var(--accent) !important;
+            color: #FFF;
+        }
+
+        .mcq-option.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--accent-danger) !important;
+            color: #FFF;
+        }
+
+        /* Bug Hunt Interactive Lines */
+        .bug-line {
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+        .bug-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bug-line.selected-bug {
+            border-left-color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+        .bug-line.selected-correct {
+            border-left-color: var(--accent);
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div id="slide-counter">1 / 7</div>
+
+<div id="presentation-container">
+    
+    <div class="slide active" id="slide-0">
+        <div class="flex flex-col justify-center h-full text-center max-w-4xl mx-auto space-y-6">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full w-max mx-auto text-sm font-semibold tracking-wide uppercase">
+                <i class="fa-brands fa-python"></i> Class 1 — Level Up
+            </div>
+            <h1 class="text-5xl md:text-6xl font-black tracking-tight leading-none bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">
+                Getting Started with Python
+            </h1>
+            <p class="text-xl text-slate-400 font-medium max-w-2xl mx-auto">
+                Welcome to the world of coding. Today, you will install your toolchain, run your very first syntax statements, and craft a micro-introduction engine.
+            </p>
+            <div class="pt-8 flex justify-center gap-4 text-sm text-slate-500 border-t border-slate-800">
+                <div><i class="fa-regular fa-clock mr-2"></i>55 Minutes Total</div>
+                <div>•</div>
+                <div><i class="fa-solid fa-laptop-code mr-2"></i>Interactive Lab Included</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-1">
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <h2 class="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-sm text-white font-mono">01</span>
+                    Setting Up the Development Environment
+                </h2>
+                <p class="text-slate-400 mb-6">Before writing logic, we need to guarantee that your machine or browser interface talks fluent Python.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl space-y-4">
+                        <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-download text-indigo-400"></i> Local Machine Blueprint
+                        </h3>
+                        <ol class="space-y-3 text-sm text-slate-400 list-decimal pl-4">
+                            <li>Navigate to the official pipeline: <span class="text-indigo-400 font-mono">python.org</span></li>
+                            <li>Download the stable environment engine match for your OS.</li>
+                            <li>Boot up your Integrated Development Environment (<span class="text-emerald-400">IDLE</span>, <span class="text-indigo-400">VS Code</span>).</li>
+                        </ol>
+                        <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-xs flex gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                            <span><strong>Crucial Checklist:</strong> Check the box for "Add Python to PATH" during installation on Windows execution structures.</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl space-y-4">
+                        <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-cloud text-emerald-400"></i> Cloud IDE Sandbox Route
+                        </h3>
+                        <p class="text-sm text-slate-400">
+                            Zero setup required. You can utilize browser-based terminals like <span class="text-emerald-400 font-bold">Replit</span> to generate code pipelines immediately.
+                        </p>
+                        
+                        <div class="bg-slate-950 p-4 rounded-lg border border-slate-800/80 font-mono text-xs space-y-2">
+                            <div class="text-slate-500"># Verification Command in standard terminal:</div>
+                            <div class="flex items-center justify-between text-slate-300">
+                                <span>python --version</span>
+                                <span class="text-slate-500">Outputs: Python 3.x.x</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-600/10 border border-indigo-600/30 p-4 rounded-xl flex items-center justify-between mt-auto">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold animate-pulse">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-indigo-300 text-sm">HANDS-ON TASK (Verification Matrix)</h4>
+                        <p class="text-xs text-slate-400">Open your environment shell/editor, insert the runtime validation phrase, and ensure it builds clean.</p>
+                    </div>
+                </div>
+                <div class="font-mono text-xs bg-slate-950 px-3 py-1.5 rounded border border-slate-800 text-emerald-400">
+                    print("Hello, Python!")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-2">
+        <div class="flex flex-col h-full">
+            <h2 class="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-sm text-white font-mono">02</span>
+                Anatomy of Your First Python Program
+            </h2>
+            <p class="text-slate-400 mb-6">Let's strip down the baseline text display directive line-by-line.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-5 bg-slate-900/50 border border-slate-800 p-5 rounded-xl space-y-4">
+                    <h3 class="text-md font-bold text-slate-300 uppercase tracking-wider text-xs">Structural Anatomy</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-3 bg-indigo-500/10 border-l-4 border-indigo-500 rounded-r-lg">
+                            <span class="font-mono text-indigo-300 font-bold block">print() Function</span>
+                            <span class="text-xs text-slate-400">An in-built runtime execution command engine designed to output data directly onto the system display.</span>
+                        </div>
+
+                        <div class="p-3 bg-emerald-500/10 border-l-4 border-emerald-500 rounded-r-lg">
+                            <span class="font-mono text-emerald-300 font-bold block">Parentheses ( )</span>
+                            <span class="text-xs text-slate-400">The parameters gateway. Everything contained within these enclosures is passed directly into the function engine.</span>
+                        </div>
+
+                        <div class="p-3 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-lg">
+                            <span class="font-mono text-amber-300 font-bold block">Double Quotes "..."</span>
+                            <span class="text-xs text-slate-400">Tells Python that the internal elements are text sequences (<span class="italic">Strings</span>), not operational runtime variables.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 relative">
+                        <div class="absolute top-3 right-3 text-xs font-mono text-slate-600">Syntax Core View</div>
+                        <pre class="font-mono text-xl leading-relaxed"><span class="text-indigo-400 font-bold">print</span><span class="text-slate-400">(</span><span class="text-emerald-400">"Hello, World!"</span><span class="text-slate-400">)</span></pre>
+                    </div>
+
+                    <div class="bg-slate-900/30 border border-slate-800 p-5 rounded-xl space-y-3">
+                        <h4 class="font-bold text-sm text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-scale-balanced text-amber-400"></i> Code Execution Core Rules
+                        </h4>
+                        <ul class="text-xs text-slate-400 space-y-2 list-disc pl-4">
+                            <li><strong class="text-slate-200">Case Sensitivity Matrix:</strong> Python considers <span class="font-mono text-red-400">Print()</span> and <span class="font-mono text-emerald-400">print()</span> entirely distinct. Lowercase is mandatory for building basic commands.</li>
+                            <li><strong class="text-slate-200">Indentation Consistency:</strong> Lines at the baseline level of execution must contain no empty preceding whitespace, otherwise runtime structures fail.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-3">
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-3xl font-bold tracking-tight flex items-center gap-3">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-sm text-white font-mono">03</span>
+                        Live Interactive Coding Playground
+                    </h2>
+                    <div id="pyodide-status" class="pyodide-loader loading">
+                        <i class="fa-solid fa-spinner animate-spin"></i>
+                        <span>Loading Environment...</span>
+                    </div>
+                </div>
+                <p class="text-slate-400 mb-4">Modify the code below to output your profile data. Complete the task blocks using live interpreter mechanics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 my-auto">
+                <div class="flex flex-col space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>Python Code Editor</span>
+                        <span class="font-mono text-indigo-400">editable region</span>
+                    </label>
+                    <textarea id="python-editor" class="w-full h-48 bg-slate-950 border border-slate-800 text-slate-200 p-4 rounded-xl font-mono text-sm focus:outline-none focus:border-indigo-500 transition-colors" spellcheck="false"># Task: Print your name and a fun hobby below!
+print("My name is Alex.")
+print("A fun fact about me is that I love hiking.")</textarea>
+                    <button id="run-btn" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                        <i class="fa-solid fa-play"></i> Run Code Execution
+                    </button>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">System Terminal Output Console</span>
+                    <div id="console-output" class="w-full h-60 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-sm text-emerald-400 overflow-y-auto whitespace-pre">Console output will stream here when execution completes...</div>
+                </div>
+            </div>
+
+            <div class="text-xs text-slate-500 border-t border-slate-800 pt-3 flex gap-4">
+                <span><strong class="text-slate-400">Challenge Variant:</strong> Try removing one of the closing parentheses to intentionally witness system syntax errors.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-4">
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <h2 class="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-sm text-white font-mono">04</span>
+                    Syntax Parameters & Formatting Mastery
+                </h2>
+                <p class="text-slate-400 mb-6">Discover the flexibility of Python strings and how to inject complex formats smoothly.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl space-y-3">
+                        <h3 class="text-lg font-bold text-slate-200">The Quote Interoperability Rule</h3>
+                        <p class="text-xs text-slate-400">
+                            Python permits either single quotes <span class="font-mono text-amber-400">'...'</span> or double quotes <span class="font-mono text-emerald-400">"..."</span> to wrap strings, provided they remain balanced at the start and finish lines.
+                        </p>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs space-y-1.5">
+                            <div>print(<span class="text-emerald-400">"Enclosed in double quotes"</span>)</div>
+                            <div>print(<span class="text-amber-400">'Enclosed in single quotes'</span>)</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-xl space-y-3">
+                        <h3 class="text-lg font-bold text-slate-200">The Newline Engine (<span class="font-mono text-indigo-400">\n</span>)</h3>
+                        <p class="text-xs text-slate-400">
+                            Inserting an escape token character sequence like <span class="font-mono text-indigo-400">\n</span> forces the internal execution pointer to drop output to an entirely new line.
+                        </p>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs space-y-1">
+                            <span class="text-slate-500"># Direct Code input:</span>
+                            <div class="text-indigo-300">print("Line One!\nLine Two!")</div>
+                            <span class="text-slate-500 mt-1 block"># Visual Result:</span>
+                            <div class="text-slate-400 pl-2 border-l border-slate-700">Line One!<br>Line Two!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-emerald-600/10 to-indigo-600/10 border border-emerald-500/20 p-4 rounded-xl mt-4">
+                <div class="flex items-start gap-3">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-bold">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-slate-200">Mini-Project Architecture: Multi-Line Introduction Script</h4>
+                        <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                            Combine all structural concepts to build a dynamic personal intro. <br />
+                            <strong class="text-indigo-400">Challenge Matrix:</strong> Can you utilize exactly one <code class="font-mono bg-slate-950 px-1 py-0.5 rounded text-xs text-indigo-300">print()</code> statement combined with internal <code class="font-mono bg-slate-950 px-1 py-0.5 rounded text-xs text-indigo-300">\n</code> operators to render name, career goals, and hobby indicators on individual lines?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-5">
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-3xl font-bold tracking-tight flex items-center gap-3">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-sm text-white font-mono">05</span>
+                        Interactive Engine Bug Hunt
+                    </h2>
+                    <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-3 py-1 rounded-lg text-xs" id="bug-tracker">
+                        Bugs Found: 0 / 2
+                    </div>
+                </div>
+                <p class="text-slate-400 mb-6">Locate and tap directly on the code rows containing critical runtime issues that crash compiler engines.</p>
+            </div>
+
+            <div class="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden my-auto font-mono text-sm md:text-base">
+                <div class="bg-slate-900 border-b border-slate-800 px-4 py-2 text-xs text-slate-500 flex justify-between">
+                    <span>buggy_script.py</span>
+                    <span>Click on lines to scan</span>
+                </div>
+                <div class="divide-y divide-slate-900/60">
+                    <div class="bug-line p-4 text-slate-400 flex items-center gap-4" data-bug="true" data-feedback="Incorrect casing detected! 'Print' must be all lowercase 'print' to be recognized by Python's engine.">
+                        <span class="text-xs text-slate-600 w-4 select-none">1</span>
+                        <span class="font-mono">Print("Welcome to the compiler sandbox.")</span>
+                    </div>
+                    <div class="bug-line p-4 text-slate-300 flex items-center gap-4" data-bug="false">
+                        <span class="text-xs text-slate-600 w-4 select-none">2</span>
+                        <span class="font-mono">print("Initializing profile verification sequence...")</span>
+                    </div>
+                    <div class="bug-line p-4 text-slate-400 flex items-center gap-4" data-bug="true" data-feedback="Syntax Error! String literal missing end quotation mark before function parameter closures.">
+                        <span class="text-xs text-slate-600 w-4 select-none">3</span>
+                        <span class="font-mono">print("Verifying structural components)</span>
+                    </div>
+                    <div class="bug-line p-4 text-slate-300 flex items-center gap-4" data-bug="false">
+                        <span class="text-xs text-slate-600 w-4 select-none">4</span>
+                        <span class="font-mono">print("System execution completed.\nGoodbye!")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bug-feedback-box" class="h-12 flex items-center text-xs font-semibold text-slate-400 transition-all rounded-lg px-4 bg-slate-900/40 border border-slate-800/60">
+                Click lines to pinpoint operational system flaws.
+            </div>
+        </div>
+    </div>
+
+    <div class="slide" id="slide-6">
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-3xl font-bold tracking-tight flex items-center gap-3">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400"></i>
+                        Check Your Understanding
+                    </h2>
+                    <span id="mcq-progress-indicator" class="text-xs bg-slate-800 border border-slate-700 px-3 py-1 rounded-full text-slate-400 font-mono font-bold">
+                        Question 1 of 6
+                    </span>
+                </div>
+                <div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-6">
+                    <div id="mcq-inner-progress" class="h-full bg-indigo-500 transition-all duration-300" style="width: 16.66%"></div>
+                </div>
+            </div>
+
+            <div id="mcq-question-wrapper" class="my-auto space-y-6">
+                </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-4 mt-auto">
+                <button id="mcq-prev-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition-all disabled:opacity-30 disabled:pointer-events-none">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+                </button>
+                <div id="mcq-explanation" class="text-xs font-medium text-slate-400 max-w-xl text-center px-4"></div>
+                <button id="mcq-next-btn" disabled class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-600 text-white font-bold rounded-xl text-sm transition-all">
+                    Next Question <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // VERBATIM MCQ ARRAY STRUCT DATA GENERATED FROM PROMPT SPECIFICATIONS
+    const mcqDataset = [
+        {
+            question: "What is Python?",
+            options: [
+                { key: "A", text: "A type of snake." },
+                { key: "B", text: "A programming language used for various applications." },
+                { key: "C", text: "A web browser." },
+                { key: "D", text: "A video game." }
+            ],
+            answer: "B",
+            explanation: "Python is a powerful high-level general-purpose programming language utilized for web applications, automation, data science, and machine learning structures."
+        },
+        {
+            question: "Which function is used to display text in Python?",
+            options: [
+                { key: "A", text: "print()" },
+                { key: "B", text: "display()" },
+                { key: "C", text: "show()" },
+                { key: "D", text: "output()" }
+            ],
+            answer: "A",
+            explanation: "The global function block print() evaluates system objects and channels them directly out through stdout configurations."
+        },
+        {
+            question: "What is the correct way to write a string in Python?",
+            options: [
+                { key: "A", text: '"Hello, World!"' },
+                { key: "B", text: "Hello, World!" },
+                { key: "C", text: "{Hello, World!}" },
+                { key: "D", text: "[Hello, World!]" }
+            ],
+            answer: "A",
+            explanation: "Strings are character literals defined by containing matching pairs of double or single configuration quotation marks."
+        },
+        {
+            question: "What happens if you forget to use quotes around a string in Python?",
+            options: [
+                { key: "A", text: "The program will display the string correctly." },
+                { key: "B", text: "Python will automatically add the quotes for you." },
+                { key: "C", text: "You will get a SyntaxError." },
+                { key: "D", text: "Nothing happens; the program ignores the string." }
+            ],
+            answer: "C",
+            explanation: "Omitting quotes triggers a parsing failure (SyntaxError) because the language runtime tries to execute raw text strings as live operational tokens or functions."
+        },
+        {
+            question: "Which of the following is an example of a correct Python program?",
+            options: [
+                { key: "A", text: 'Print("Hello, World!")' },
+                { key: "B", text: 'print(Hello, World!)' },
+                { key: "C", text: 'print("Hello, World!")' },
+                { key: "D", text: 'display("Hello, World!")' }
+            ],
+            answer: "C",
+            explanation: "Option C follows perfect lowercase naming patterns combined with closed string data formatting tags."
+        },
+        {
+            question: "Which symbol is used to create a new line in a string?",
+            options: [
+                { key: "A", text: "/" },
+                { key: "B", text: "\\n" },
+                { key: "C", text: "#" },
+                { key: "D", text: "$" }
+            ],
+            answer: "B",
+            explanation: "The escape character syntax format '\\n' signals the console engine to insert an immediate programmatic carriage return."
+        }
+    ];
+
+    // Core Architecture Slide Controller Properties
+    let currentSlideIndex = 0;
+    const allSlidesElements = document.querySelectorAll('.slide');
+    const totalSlidesCount = allSlidesElements.length;
+    
+    // MCQ State Tracking Elements
+    let currentMcqIndex = 0;
+    let selectedMcqAnswerKey = null;
+
+    // Bug Hunt State Mechanics
+    let totalTargetBugsCount = 2;
+    let successfullyIdentifiedBugs = 0;
+
+    // Pyodide Core Integration Engine Elements
+    let pyodideInstance = null;
+
+    async function initializePyodideRuntime() {
+        const statusElement = document.getElementById('pyodide-status');
+        const runBtnElement = document.getElementById('run-btn');
+        try {
+            pyodideInstance = await loadPyodide();
+            statusElement.classList.remove('loading');
+            statusElement.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            statusElement.style.color = '#10B981';
+            statusElement.style.borderColor = '#10B981';
+            statusElement.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Python Sandbox Active</span>';
+            if(runBtnElement) runBtnElement.disabled = false;
+        } catch (error) {
+            statusElement.innerHTML = '<i class="fa-solid fa-circle-xmark"></i><span>Failed to load compiler</span>';
+            console.error(error);
+        }
+    }
+
+    // Initialize slide counters on boot loop
+    function evaluateSlideDeckNavigationState() {
+        allSlidesElements.forEach((slide, idx) => {
+            if (idx === currentSlideIndex) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Sync metadata components
+        document.getElementById('slide-counter').innerText = `${currentSlideIndex + 1} / ${totalSlidesCount}`;
+        const calcProgressPercentage = ((currentSlideIndex + 1) / totalSlidesCount) * 100;
+        document.getElementById('progress').style.width = `${calcProgressPercentage}%`;
+
+        // Execute dynamic Prism adjustments if highlighting container visibility matches
+        Prism.highlightAll();
+    }
+
+    function routeToNextSlide() {
+        if (currentSlideIndex < totalSlidesCount - 1) {
+            currentSlideIndex++;
+            evaluateSlideDeckNavigationState();
+        }
+    }
+
+    function routeToPreviousSlide() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            evaluateSlideDeckNavigationState();
+        }
+    }
+
+    // MCQ Interactive Architecture Methods
+    function renderCurrentMcqInterface() {
+        const questionData = mcqDataset[currentMcqIndex];
+        const wrapper = document.getElementById('mcq-question-wrapper');
+        const progressText = document.getElementById('mcq-progress-indicator');
+        const progressInnerBar = document.getElementById('mcq-inner-progress');
+        const nextBtn = document.getElementById('mcq-next-btn');
+        const prevBtn = document.getElementById('mcq-prev-btn');
+        const explanationField = document.getElementById('mcq-explanation');
+
+        // Reset system context views
+        explanationField.innerText = "";
+        nextBtn.disabled = true;
+        prevBtn.disabled = currentMcqIndex === 0;
+
+        if (currentMcqIndex === mcqDataset.length - 1) {
+            nextBtn.innerHTML = 'Complete Quiz <i class="fa-solid fa-flag-checkered ml-1"></i>';
+        } else {
+            nextBtn.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ml-1"></i>';
+        }
+
+        progressText.innerText = `Question ${currentMcqIndex + 1} of ${mcqDataset.length}`;
+        progressInnerBar.style.width = `${((currentMcqIndex + 1) / mcqDataset.length) * 100}%`;
+
+        wrapper.innerHTML = `
+            <h3 class="text-xl font-bold text-slate-100 font-heading">
+                ${questionData.question}
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="mcq-options-grid">
+                ${questionData.options.map(opt => `
+                    <div class="mcq-option p-4 rounded-xl border flex items-start gap-3 text-sm font-medium" data-key="${opt.key}">
+                        <span class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 text-xs font-mono font-bold flex items-center justify-center text-slate-400 select-none shrink-0">${opt.key}</span>
+                        <span class="pt-0.5 text-slate-300">${opt.text}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Wire event triggers directly onto the newly structural options markup blocks
+        const optionCards = wrapper.querySelectorAll('.mcq-option');
+        optionCards.forEach(card => {
+            card.addEventListener('click', () => handleMcqSelection(card, optionCards, questionData));
+        });
+    }
+
+    function handleMcqSelection(selectedCard, allCards, questionData) {
+        // Prevent clicking multiple choices after verification checks freeze state
+        if (selectedCard.parentElement.classList.contains('frozen')) return;
+        selectedCard.parentElement.classList.add('frozen');
+
+        const selectedKey = selectedCard.getAttribute('data-key');
+        const correctKey = questionData.answer;
+        const explanationField = document.getElementById('mcq-explanation');
+        const nextBtn = document.getElementById('mcq-next-btn');
+
+        allCards.forEach(card => {
+            card.classList.add('disabled');
+            const cardKey = card.getAttribute('data-key');
+            if (cardKey === correctKey) {
+                card.classList.add('correct');
+            } else if (cardKey === selectedKey) {
+                card.classList.add('incorrect');
+            }
+        });
+
+        if (selectedKey === correctKey) {
+            explanationField.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Correct!</span> ${questionData.explanation}`;
+        } else {
+            explanationField.innerHTML = `<span class="text-red-400 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i> Incorrect.</span> ${questionData.explanation}`;
+        }
+
+        nextBtn.disabled = false;
+    }
+
+    // Keyboard capture controls routing matrix
+    window.addEventListener('keydown', (e) => {
+        // Guard checking against structural form intercepts
+        if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
+            return; 
+        }
+
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            routeToNextSlide();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            routeToPreviousSlide();
+        }
+    });
+
+    // Wire application mechanics on page structure complete load trigger
+    document.addEventListener('DOMContentLoaded', () => {
+        initializePyodideRuntime();
+        renderCurrentMcqInterface();
+
+        // Run Button configuration event loop logic
+        const executionBtn = document.getElementById('run-btn');
+        if (executionBtn) {
+            executionBtn.addEventListener('click', async () => {
+                if (!pyodideInstance) return;
+                const userCode = document.getElementById('python-editor').value;
+                const outputConsole = document.getElementById('console-output');
+                outputConsole.innerText = "Executing runtime sequences...";
+                
+                // Construct standard output hijack patterns internally inside Pyodide framework environments
+                try {
+                    pyodideInstance.runPython(`
+                        import sys
+                        import io
+                        sys.stdout = io.StringIO()
+                        sys.stderr = io.StringIO()
+                    `);
+                    
+                    await pyodideInstance.runPythonAsync(userCode);
+                    
+                    const systemStdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+                    const systemStderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+                    
+                    if (systemStderr.trim().length > 0) {
+                        outputConsole.className = "w-full h-60 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-sm text-red-400 overflow-y-auto whitespace-pre";
+                        outputConsole.innerText = systemStderr;
+                    } else {
+                        outputConsole.className = "w-full h-60 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-sm text-emerald-400 overflow-y-auto whitespace-pre";
+                        outputConsole.innerText = systemStdout || "Success: Code compiled with zero return values.";
+                    }
+                } catch (err) {
+                    outputConsole.className = "w-full h-60 bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-sm text-red-400 overflow-y-auto whitespace-pre";
+                    outputConsole.innerText = err.message;
+                }
+            });
+        }
+
+        // Bug Hunt logic structures validation checks
+        const bugLines = document.querySelectorAll('.bug-line');
+        const bugTracker = document.getElementById('bug-tracker');
+        const bugFeedbackBox = document.getElementById('bug-feedback-box');
+
+        bugLines.forEach(line => {
+            line.addEventListener('click', () => {
+                if(line.classList.contains('selected-bug') || line.classList.contains('selected-correct')) return;
+
+                const isBug = line.getAttribute('data-bug') === 'true';
+                if(isBug) {
+                    line.classList.add('selected-bug');
+                    successfullyIdentifiedBugs++;
+                    bugTracker.innerText = `Bugs Found: ${successfullyIdentifiedBugs} / ${totalTargetBugsCount}`;
+                    bugFeedbackBox.className = "h-12 flex items-center text-xs font-semibold transition-all rounded-lg px-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+                    bugFeedbackBox.innerText = line.getAttribute('data-feedback');
+                    
+                    if(successfullyIdentifiedBugs === totalTargetBugsCount) {
+                        bugTracker.className = "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-lg text-xs";
+                        bugTracker.innerHTML = '<i class="fa-solid fa-square-check mr-1"></i> Area Cleaned';
+                    }
+                } else {
+                    line.classList.add('selected-correct');
+                    bugFeedbackBox.className = "h-12 flex items-center text-xs font-semibold transition-all rounded-lg px-4 bg-red-500/10 border border-red-500/20 text-red-400";
+                    bugFeedbackBox.innerText = "Clean code pattern targeted. No operational flaw located here.";
+                }
+            });
+        });
+
+        // MCQ Control Buttons Event Assignments
+        document.getElementById('mcq-next-btn').addEventListener('click', () => {
+            if (currentMcqIndex < mcqDataset.length - 1) {
+                currentMcqIndex++;
+                renderCurrentMcqInterface();
+            } else {
+                // Completed State Execution Flow path
+                document.getElementById('mcq-question-wrapper').innerHTML = `
+                    <div class="text-center py-12 space-y-4">
+                        <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mx-auto animate-bounce">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold tracking-tight text-white font-heading">Assessment Run Completed Successfully</h3>
+                        <p class="text-sm text-slate-400 max-w-md mx-auto">You have evaluated all user-provided concept parameters verification assessments correctly.</p>
+                    </div>
+                `;
+                document.getElementById('mcq-next-btn').style.display = 'none';
+                document.getElementById('mcq-prev-btn').style.display = 'none';
+                document.getElementById('mcq-explanation').style.display = 'none';
+                document.getElementById('mcq-progress-indicator').innerText = "Quiz Completed";
+            }
+        });
+
+        document.getElementById('mcq-prev-btn').addEventListener('click', () => {
+            if (currentMcqIndex > 0) {
+                currentMcqIndex--;
+                renderCurrentMcqInterface();
+                document.getElementById('mcq-next-btn').style.display = 'inline-block';
+                document.getElementById('mcq-explanation').style.display = 'block';
+            }
+        });
+
+        // Initialize slide layout structure views
+        evaluateSlideDeckNavigationState();
+    });
+</script>
+</body>
+</html>

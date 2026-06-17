@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Dictionary Projects</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+        }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1, h2, h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .slide {
+            display: none;
+            width: 90vw;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 750px;
+            background: var(--card-dark);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            position: relative;
+            overflow-y: auto;
+        }
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #slide-counter {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            transition: width 0.3s ease;
+            width: 0%;
+            z-index: 50;
+        }
+        .nav-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .key-box {
+            background: #334155;
+            color: #cbd5e1;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            border-bottom: 2px solid #1e293b;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+        .editor-container {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .console-output {
+            background: #090d16;
+            font-family: 'Fira Code', monospace;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .buggy-line {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .buggy-line:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .buggy-line.selected-bug {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-left: 4px solid var(--accent-red);
+        }
+        .buggy-line.selected-ok {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border-left: 4px solid var(--accent-green);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body>
+
+<div id="presentation-container">
+
+    <div class="slide active">
+        <div id="slide-counter"></div>
+        <div class="flex flex-col justify-center items-center h-full text-center">
+            <div class="p-4 bg-indigo-600/10 rounded-2xl border border-indigo-500/20 mb-6">
+                <i class="fa-solid fa-cubes text-5xl text-indigo-400 animate-pulse"></i>
+            </div>
+            <h1 class="text-5xl font-bold tracking-tight text-white mb-4">Python Dictionary Projects</h1>
+            <p class="text-xl text-slate-400 max-w-2xl mb-8">
+                Master dictionaries by building real-world mini-applications. Explore conditional validation, data collection, and functional state management.
+            </p>
+            <div class="grid grid-cols-3 gap-4 max-w-3xl w-full text-left mt-4">
+                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div class="text-amber-400 font-bold mb-1"><i class="fa-solid fa-graduation-cap mr-2"></i>Project 1</div>
+                    <div class="text-sm text-slate-300">Student Gradebook with automated pass/fail loops.</div>
+                </div>
+                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div class="text-emerald-400 font-bold mb-1"><i class="fa-solid fa-calculator mr-2"></i>Project 2</div>
+                    <div class="text-sm text-slate-300">Word Counter tracking string element frequencies.</div>
+                </div>
+                <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div class="text-indigo-400 font-bold mb-1"><i class="fa-solid fa-address-book mr-2"></i>Project 3</div>
+                    <div class="text-sm text-slate-300">Contact Book utilizing encapsulated CRUD operations.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div id="slide-counter"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
+                        <i class="fa-solid fa-clock"></i> 15 Minutes
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Project 1: Student Gradebook</h2>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Learn how to iterate across nested map elements and apply simple conditional checks directly on dictionary values.
+                    </p>
+                    <ul class="space-y-3 text-sm text-slate-300">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-amber-400 mt-1 text-xs"></i>
+                            <span>Store student names as <strong>keys</strong> and marks as <strong>values</strong>.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-amber-400 mt-1 text-xs"></i>
+                            <span>Inject new structural components into raw map formats instantly.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-amber-400 mt-1 text-xs"></i>
+                            <span>Verify pass/fail thresholds using standard <code>if-else</code> structures during iteration.</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-amber-500/5 border border-amber-500/10 p-3.5 rounded-xl text-xs text-amber-200/80">
+                    <span class="font-bold block text-amber-400 mb-1"><i class="fa-solid fa-lightbulb mr-1.5"></i>Analogy & Best Practice</span>
+                    Think of a dictionary like an actual exam ledger. The name points straight to the specific grade score without needing to scroll row-by-row. Remember to use <code>.items()</code> to unpack keys and values cleanly inside loops!
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-between">
+                <div class="editor-container flex-1 flex flex-col bg-[#1e293b]">
+                    <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800">
+                        <span>gradebook.py</span>
+                        <div class="flex items-center gap-1.5 py-1 px-2 rounded bg-slate-800/50 text-slate-400 pyodide-status">
+                            <i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> <span class="text-[11px]">Syncing runtime...</span>
+                        </div>
+                    </div>
+                    <textarea class="w-full flex-1 p-4 bg-[#1b2433] text-slate-200 font-mono text-xs focus:outline-none resize-none" id="code-p1" spellcheck="false">students = {"Sita": 85, "Ram": 72, "Hari": 35}
+
+# Append a new student to record state
+students["Gopal"] = 64
+
+for name, mark in students.items():
+    if mark >= 40:
+        print(f"{name} has passed with {mark}")
+    else:
+        print(f"{name} has failed with {mark}")</textarea>
+                    <div class="bg-slate-900 p-2 flex justify-end">
+                        <button onclick="runCode('code-p1', 'out-p1', this)" class="run-btn px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition" disabled>
+                            <i class="fa-solid fa-play"></i> Run Script
+                        </button>
+                    </div>
+                    <div class="console-output h-32 p-3 text-xs text-emerald-400 overflow-y-auto" id="out-p1">> Execution logs will output here...</div >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div id="slide-counter"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">
+                        <i class="fa-solid fa-clock"></i> 15 Minutes
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Project 2: Word Counter</h2>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Build a frequency distribution map. This structure is foundational for processing text-based inputs and log parsing pipelines.
+                    </p>
+                    <ul class="space-y-3 text-sm text-slate-300">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-xs"></i>
+                            <span>Parse complete sentences into dynamic lists with <code>.split()</code>.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-xs"></i>
+                            <span>Safely check for existing map keys with the <code>in</code> operator.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-emerald-400 mt-1 text-xs"></i>
+                            <span>Dynamically initialize counters or increment tracked frequencies.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-red-500/10 border border-red-500/20 p-3.5 rounded-xl text-xs text-red-200/80">
+                    <span class="font-bold block text-red-400 mb-1"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>Common Pitfall</span>
+                    Attempting to modify or increment a key that does not exist in a dictionary yet will trigger a immediate <code>KeyError</code>. Always guard your mutations using membership assertions (<code>if word in count</code>) or defaults!
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-between">
+                <div class="editor-container flex-1 flex flex-col bg-[#1e293b]">
+                    <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800">
+                        <span>word_counter.py</span>
+                        <div class="flex items-center gap-1.5 py-1 px-2 rounded bg-slate-800/50 text-slate-400 pyodide-status">
+                            <i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> <span class="text-[11px]">Syncing runtime...</span>
+                        </div>
+                    </div>
+                    <textarea class="w-full flex-1 p-4 bg-[#1b2433] text-slate-200 font-mono text-xs focus:outline-none resize-none" id="code-p2" spellcheck="false">sentence = "apple banana apple orange banana apple"
+words = sentence.split()
+count = {}
+
+for word in words:
+    if word in count:
+        count[word] += 1
+    else:
+        count[word] = 1
+
+print("Word Frequencies:")
+print(count)</textarea>
+                    <div class="bg-slate-900 p-2 flex justify-end">
+                        <button onclick="runCode('code-p2', 'out-p2', this)" class="run-btn px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition" disabled>
+                            <i class="fa-solid fa-play"></i> Run Script
+                        </button>
+                    </div>
+                    <div class="console-output h-32 p-3 text-xs text-emerald-400 overflow-y-auto" id="out-p2">> Execution logs will output here...</div >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div id="slide-counter"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+            <div class="lg:col-span-5 flex flex-col justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
+                        <i class="fa-solid fa-clock"></i> 15 Minutes
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Project 3: Contact Book</h2>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Wrap raw business logic rules directly inside independent functional scopes to create modular code.
+                    </p>
+                    <ul class="space-y-2.5 text-sm text-slate-300">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-indigo-400 mt-1 text-xs"></i>
+                            <span>Store identifiers as keys and link tracking numbers as values.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-indigo-400 mt-1 text-xs"></i>
+                            <span>Encapsulate addition, rendering, and removal loops into functions.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-circle-check text-indigo-400 mt-1 text-xs"></i>
+                            <span>Safely purge elements utilizing the <code>del</code> statement.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-indigo-500/5 border border-indigo-500/10 p-3.5 rounded-xl text-xs text-indigo-200/80">
+                    <span class="font-bold block text-indigo-400 mb-1"><i class="fa-solid fa-code-fork mr-1.5"></i>State Mutation Note</span>
+                    Notice how the global dictionary <code>contacts</code> is safely accessed and altered from directly within local function scopes without needing explicitly redefined declarations.
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 flex flex-col justify-between">
+                <div class="editor-container flex-1 flex flex-col bg-[#1e293b]">
+                    <div class="bg-slate-900 px-4 py-2 flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-800">
+                        <span>contacts.py</span>
+                        <div class="flex items-center gap-1.5 py-1 px-2 rounded bg-slate-800/50 text-slate-400 pyodide-status">
+                            <i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> <span class="text-[11px]">Syncing runtime...</span>
+                        </div>
+                    </div>
+                    <textarea class="w-full flex-1 p-4 bg-[#1b2433] text-slate-200 font-mono text-xs focus:outline-none resize-none" id="code-p3" spellcheck="false">contacts = {}
+
+def add_contact(name, number):
+    contacts[name] = number
+
+def view_contacts():
+    if not contacts:
+        print("[System Ledger is Empty]")
+    for name, number in contacts.items():
+        print(f"{name} : {number}")
+
+def delete_contact(name):
+    if name in contacts:
+        del contacts[name]
+
+add_contact("Sita", "9812345678")
+add_contact("Ram", "9801234567")
+print("--- Initial Ledger ---")
+view_contacts()
+
+print("\n--- Removing Ram ---")
+delete_contact("Ram")
+view_contacts()</textarea>
+                    <div class="bg-slate-900 p-2 flex justify-end">
+                        <button onclick="runCode('code-p3', 'out-p3', this)" class="run-btn px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition" disabled>
+                            <i class="fa-solid fa-play"></i> Run Script
+                        </button>
+                    </div>
+                    <div class="console-output h-32 p-3 text-xs text-emerald-400 overflow-y-auto" id="out-p3">> Execution logs will output here...</div >
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div id="slide-counter"></div>
+        <div class="flex flex-col h-full">
+            <div>
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 mb-3">
+                    <i class="fa-solid fa-bug"></i> Interactive Debugging
+                </span>
+                <h2 class="text-3xl font-bold text-white mb-2">Code Bug Hunt!</h2>
+                <p class="text-slate-400 text-sm mb-4">
+                    The block below tries to populate a map but contains hidden formatting bugs. Find and click the faulty lines!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-stretch">
+                <div class="lg:col-span-7 flex flex-col justify-center">
+                    <div class="bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700 font-mono text-sm leading-relaxed shadow-2xl">
+                        <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                            <span>faulty_updater.py</span>
+                            <span class="text-[11px] text-red-400 font-semibold">Click problematic rows</span>
+                        </div>
+                        <div class="p-4 bg-[#1b2433] space-y-1 selection:bg-transparent" id="bug-hunt-container">
+                            <div class="buggy-line py-1 px-3 rounded text-slate-300" data-is-bug="false" data-feedback="Correct: Initial dictionary declaration is completely valid.">data = {"alpha": 10, "beta": 20}</div>
+                            <div class="buggy-line py-1 px-3 rounded text-slate-300" data-is-bug="true" data-feedback="Bug Found! Trying to increment a key ('gamma') that does not exist throws a KeyError.">data["gamma"] += 1</div>
+                            <div class="buggy-line py-1 px-3 rounded text-slate-300" data-is-bug="false" data-feedback="Correct: Standard membership evaluation operations are error-free.">if "alpha" in data:</div>
+                            <div class="buggy-line py-1 px-3 rounded text-slate-300" data-is-bug="true" data-feedback="Bug Found! 'del' is a statement, not a function. Avoid calling it like del(data, 'beta'). Use 'del data[key]' instead.">    del(data, "beta")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col justify-between bg-slate-800/30 border border-slate-700/40 rounded-xl p-5">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-200 mb-3">Status Board</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                            <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                                <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Found</div>
+                                <div class="text-2xl font-bold text-red-400 id-count" id="bugs-found">0 / 2</div>
+                            </div>
+                            <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                                <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Attempts</div>
+                                <div class="text-2xl font-bold text-indigo-400" id="bug-attempts">0</div>
+                            </div>
+                        </div>
+                        <div class="p-3.5 bg-slate-900/80 rounded-lg min-h-[90px] border border-slate-800 text-xs text-slate-300" id="bug-feedback">
+                            <span class="text-slate-500 italic"><i class="fa-solid fa-mouse-pointer mr-1"></i> Choose an unverified code row to run runtime analysis...</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-700/30 text-[11px] text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>
+                        <span>Tracking errors reinforces understanding of core runtime mechanics.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div id="slide-counter"></div>
+        <div class="flex flex-col h-full justify-between">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
+                    <i class="fa-solid fa-circle-question"></i> Knowledge Check
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-1">Quick Check</h2>
+                <p class="text-slate-400 text-sm" id="mcq-quiz-progress">Question 1 of 3</p>
+            </div>
+
+            <div class="my-auto max-w-3xl mx-auto w-full" id="mcq-box">
+                <h3 class="text-xl text-slate-200 font-medium mb-6" id="mcq-question-text"></h3>
+                <div class="grid grid-cols-1 gap-3.5" id="mcq-options-container"></div>
+                <div class="mt-4 p-3.5 rounded-xl text-xs hidden" id="mcq-feedback-box"></div>
+            </div>
+
+            <div class="flex justify-between items-center pt-4 border-t border-slate-800">
+                <button onclick="prevQuestion()" id="mcq-prev-btn" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-semibold flex items-center gap-1.5 transition invisible">
+                    <i class="fa-solid fa-arrow-left"></i> Previous Question
+                </button>
+                <button onclick="nextQuestion()" id="mcq-next-btn" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold flex items-center gap-1.5 transition invisible">
+                    Next Question <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+
+<script>
+    // --- MCQS ENGINE CONFIGURATION (VERBATIM DOMAINS) ---
+    const mcqQuestions = [
+        {
+            question: "What output is produced if you check a student score equal to 35 in the Gradebook system?",
+            options: [
+                "The system prints that they passed because 35 is a valid type integer.",
+                "The condition evaluation falls into the else branch and prints that they failed.",
+                "It throws an out of bounds mapping IndexError directly.",
+                "The key is ignored entirely and execution passes onto the next item."
+            ],
+            correct: 1,
+            feedback: "Correct! Since 35 is strictly less than 40, the condition 'mark >= 40' evaluates to False, triggering the 'else' block."
+        },
+        {
+            question: "Why does Project 2 implement the clause: 'if word in count'?",
+            options: [
+                "To safely prevent a KeyError which occurs when trying to increment a key that does not exist yet.",
+                "To automatically translate strings to lower-case values.",
+                "To format tracking arrays dynamically inside local stack configurations.",
+                "To check if the target string contains any numerical elements."
+            ],
+            correct: 0,
+            feedback: "Correct! Dictionaries cannot increment values for non-existent keys directly; initialization checks are essential."
+        },
+        {
+            question: "Which statement is utilized within the Contact Book system to remove an existing key-value mapping?",
+            options: [
+                "contacts.remove_key()",
+                "pop_item_state()",
+                "del",
+                "purge"
+            ],
+            correct: 2,
+            feedback: "Correct! The 'del' statement is the built-in Python mechanic used to cleanly remove a key and its associated value from a dictionary."
+        }
+    ];
+
+    // --- PRESENTATION ENGINE VARIABLES ---
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let pyodideInstance = null;
+
+    // --- INITIALIZE SLIDESHOW ENGINE ---
+    function updateSlideLayout() {
+        slides.forEach((slide, idx) => {
+            if(idx === currentSlideIndex) {
+                slide.classList.add('active');
+                // Dynamically label localized slide counts
+                const countBadge = slide.querySelector('#slide-counter');
+                if (countBadge) countBadge.innerText = `${idx + 1} / ${totalSlides}`;
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        // Sync global metrics indicators
+        const progressPercent = ((currentSlideIndex + 1) / totalSlides) * 100;
+        document.getElementById('progress').style.width = `${progressPercent}%`;
+        
+        // Refresh structural code highlights
+        setTimeout(() => { Prism.highlightAll(); }, 50);
+    }
+
+    // --- NAVIGATION HANDLERS ---
+    function navigateForward() {
+        if (currentSlideIndex < totalSlides - 1) {
+            currentSlideIndex++;
+            updateSlideLayout();
+        }
+    }
+
+    function navigateBackward() {
+        if (currentSlideIndex > 0) {
+            currentSlideIndex--;
+            updateSlideLayout();
+        }
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            navigateForward();
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            navigateBackward();
+        }
+    });
+
+    // --- PYODIDE COMPILATION SYSTEM ---
+    async function initializePyodideRuntime() {
+        try {
+            pyodideInstance = await loadPyodide();
+            document.querySelectorAll('.pyodide-status').forEach(statusContainer => {
+                statusContainer.innerHTML = `<span class="text-emerald-400 text-[11px]"><i class="fa-solid fa-circle-check"></i> Ready</span>`;
+            });
+            document.querySelectorAll('.run-btn').forEach(button => button.removeAttribute('disabled'));
+        } catch(err) {
+            console.error("Pyodide loading failed:", err);
+            document.querySelectorAll('.pyodide-status').forEach(statusContainer => {
+                statusContainer.innerHTML = `<span class="text-red-400 text-[11px]"><i class="fa-solid fa-circle-xmark"></i> Runtime Error</span>`;
+            });
+        }
+    }
+
+    async function runCode(textareaId, outputId, buttonElement) {
+        if (!pyodideInstance) return;
+        const codeText = document.getElementById(textareaId).value;
+        const consoleElement = document.getElementById(outputId);
+        
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+        consoleElement.innerText = "> Running script via Pyodide kernel...\n";
+
+        // Intercept standard output stream layers
+        pyodideInstance.runPython(`
+            import sys
+            import io
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
+        `);
+
+        try {
+            await pyodideInstance.runPythonAsync(codeText);
+            const stdout = pyodideInstance.runPython("sys.stdout.getvalue()");
+            const stderr = pyodideInstance.runPython("sys.stderr.getvalue()");
+            
+            consoleElement.innerText = stdout + stderr;
+            if (!consoleElement.innerText.trim()) {
+                consoleElement.innerText = "> Script executed successfully with zero standard output logs.";
+            }
+        } catch (err) {
+            consoleElement.innerText = `Runtime Error:\n${err.message}`;
+        } finally {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = `<i class="fa-solid fa-play"></i> Run Script`;
+        }
+    }
+
+    // --- INTERACTIVE BUG HUNT SYSTEM ---
+    let totalBugsCount = 2;
+    let correctlyIdentifiedBugs = 0;
+    let totalAttemptsCount = 0;
+    const discoveredBugSet = new Set();
+
+    document.querySelectorAll('.buggy-line').forEach((lineElement, elementIndex) => {
+        lineElement.addEventListener('click', () => {
+            if (discoveredBugSet.has(elementIndex)) return;
+            
+            totalAttemptsCount++;
+            const isBuggyLine = lineElement.getAttribute('data-is-bug') === 'true';
+            const executionFeedback = lineElement.getAttribute('data-feedback');
+            
+            document.getElementById('bug-feedback').innerText = executionFeedback;
+            
+            if (isBuggyLine) {
+                lineElement.classList.add('selected-bug');
+                discoveredBugSet.add(elementIndex);
+                correctlyIdentifiedBugs++;
+                document.getElementById('bug-feedback').classList.add('text-red-400');
+                document.getElementById('bug-feedback').classList.remove('text-slate-300', 'text-emerald-400');
+            } else {
+                lineElement.classList.add('selected-ok');
+                document.getElementById('bug-feedback').classList.add('text-emerald-400');
+                document.getElementById('bug-feedback').classList.remove('text-slate-300', 'text-red-400');
+            }
+            
+            document.getElementById('bugs-found').innerText = `${correctlyIdentifiedBugs} / ${totalBugsCount}`;
+            document.getElementById('bug-attempts').innerText = totalAttemptsCount;
+
+            if (correctlyIdentifiedBugs === totalBugsCount) {
+                document.getElementById('bug-feedback').innerHTML = `<div class="font-bold text-emerald-400 mb-1"><i class="fa-solid fa-trophy mr-1"></i> Debugging Complete!</div>All structural errors successfully identified and isolated.`;
+            }
+        });
+    });
+
+    // --- INTERACTIVE MCQ ENGINE SYSTEM ---
+    let activeQuestionIndex = 0;
+    let selectedAnswerIdx = null;
+
+    function renderActiveQuestion() {
+        selectedAnswerIdx = null;
+        const currentData = mcqQuestions[activeQuestionIndex];
+        
+        document.getElementById('mcq-quiz-progress').innerText = `Question ${activeQuestionIndex + 1} of ${mcqQuestions.length}`;
+        document.getElementById('mcq-question-text').innerText = currentData.question;
+        
+        const optionsBox = document.getElementById('mcq-options-container');
+        optionsBox.innerHTML = '';
+        
+        const feedbackBox = document.getElementById('mcq-feedback-box');
+        feedbackBox.classList.add('hidden');
+        feedbackBox.className = "mt-4 p-3.5 rounded-xl text-xs hidden"; // Reset fallback classes
+
+        currentData.options.forEach((optionText, index) => {
+            const optionBtn = document.createElement('button');
+            optionBtn.className = "w-full text-left p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 text-slate-200 text-sm transition flex items-center justify-between group";
+            optionBtn.innerHTML = `<span>${optionText}</span><i class="fa-regular fa-circle text-slate-500 group-hover:text-slate-400 transition"></i>`;
+            optionBtn.onclick = () => verifySelectedMCQ(index, optionBtn);
+            optionsBox.appendChild(optionBtn);
+        });
+
+        // Control control button configurations visibility states
+        document.getElementById('mcq-prev-btn').classList.toggle('invisible', activeQuestionIndex === 0);
+        document.getElementById('mcq-next-btn').classList.add('invisible');
+    }
+
+    function verifySelectedMCQ(chosenIndex, targetBtn) {
+        if (selectedAnswerIdx !== null) return; // Prevent picking multiple answers
+        selectedAnswerIdx = chosenIndex;
+        
+        const currentData = mcqQuestions[activeQuestionIndex];
+        const feedbackBox = document.getElementById('mcq-feedback-box');
+        const allOptionButtons = document.getElementById('mcq-options-container').children;
+
+        if (chosenIndex === currentData.correct) {
+            targetBtn.className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/20 border-2 border-emerald-500 text-emerald-200 text-sm font-semibold transition flex items-center justify-between";
+            targetBtn.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400";
+            
+            feedbackBox.innerHTML = `<span class="font-bold block mb-0.5"><i class="fa-solid fa-square-check mr-1.5"></i>Correct!</span>${currentData.feedback}`;
+            feedbackBox.classList.remove('hidden');
+            feedbackBox.classList.add('bg-emerald-500/10', 'text-emerald-300', 'border', 'border-emerald-500/20');
+        } else {
+            targetBtn.className = "w-full text-left p-3.5 rounded-xl bg-red-500/20 border-2 border-red-500 text-red-200 text-sm font-semibold transition flex items-center justify-between";
+            targetBtn.querySelector('i').className = "fa-solid fa-circle-xmark text-red-400";
+            
+            // Highlight actual valid route mapping
+            const correctBtn = allOptionButtons[currentData.correct];
+            correctBtn.className = "w-full text-left p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 text-sm transition flex items-center justify-between";
+            correctBtn.querySelector('i').className = "fa-solid fa-circle-check text-emerald-400";
+
+            feedbackBox.innerHTML = `<span class="font-bold block mb-0.5"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>Incorrect Reflection</span>${currentData.feedback}`;
+            feedbackBox.classList.remove('hidden');
+            feedbackBox.classList.add('bg-red-500/10', 'text-red-300', 'border', 'border-red-500/20');
+        }
+
+        // Handle termination boundaries layout changes
+        const nextButton = document.getElementById('mcq-next-btn');
+        nextButton.classList.remove('invisible');
+        if (activeQuestionIndex === mcqQuestions.length - 1) {
+            nextButton.innerHTML = `Complete Quiz <i class="fa-solid fa-flag-checkered"></i>`;
+        } else {
+            nextButton.innerHTML = `Next Question <i class="fa-solid fa-arrow-right"></i>`;
+        }
+    }
+
+    function nextQuestion() {
+        if (activeQuestionIndex < mcqQuestions.length - 1) {
+            activeQuestionIndex++;
+            renderActiveQuestion();
+        } else {
+            // Render finalized scoring metrics summary states
+            document.getElementById('mcq-box').innerHTML = `
+                <div class="text-center py-8">
+                    <div class="inline-flex p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 mb-4 text-emerald-400 text-4xl">
+                        <i class="fa-solid fa-circle-check animate-bounce"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Assessment Finished!</h3>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        You have successfully navigated through all the review items. Use the presentation controls to review previous project files if necessary.
+                    </p>
+                </div>
+            `;
+            document.getElementById('mcq-next-btn').classList.add('invisible');
+            document.getElementById('mcq-prev-btn').classList.add('invisible');
+        }
+    }
+
+    function prevQuestion() {
+        if (activeQuestionIndex > 0) {
+            activeQuestionIndex--;
+            renderActiveQuestion();
+        }
+    }
+
+    // --- ENGINE INITIALIZATION ENTRY POINT ---
+    window.addEventListener('DOMContentLoaded', () => {
+        updateSlideLayout();
+        renderActiveQuestion();
+        initializePyodideRuntime();
+    });
+</script>
+</body>
+</html>
