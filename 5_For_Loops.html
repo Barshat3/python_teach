@@ -150,6 +150,8 @@
             max-height: 180px;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-50 antialiased selection:bg-indigo-500/30">
 
@@ -446,7 +448,11 @@ for i in range(1, 11):
 
 <div class="id-holder" id="slide-counter">1 / 7</div>
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // Answers Array provided explicitly by user content
@@ -661,6 +667,7 @@ for i in range(1, 11):
     // Boot everything up
     initPyodideEngine();
     syncMcqQuestionState();
+    initializeSlideNavigation(navigatePrev, navigateNext);
 </script>
 </body>
 </html>

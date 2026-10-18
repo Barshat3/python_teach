@@ -1,0 +1,89 @@
+/* Reserve separate space for slide content, the counter, and touch controls. */
+body #presentation-container {
+    position: fixed;
+    top: calc(5rem + env(safe-area-inset-top, 0px));
+    bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+    left: env(safe-area-inset-left, 0px);
+    right: env(safe-area-inset-right, 0px);
+    width: 94%;
+    max-width: 1200px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0 auto;
+}
+
+body #presentation-container > .slide,
+body #presentation-container > .slide-container {
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: clamp(1.25rem, 3vw, 3rem);
+    overflow-y: auto;
+    justify-content: safe center;
+}
+
+body #presentation-container > .slide > *,
+body #presentation-container > .slide-container > * {
+    flex-shrink: 0;
+}
+
+body #slide-counter {
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+    right: calc(1.5rem + env(safe-area-inset-right, 0px));
+}
+
+#slide-navigation {
+    position: fixed;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    left: env(safe-area-inset-left, 0px);
+    right: env(safe-area-inset-right, 0px);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: #cbd5e1;
+    font: 0.875rem 'Nunito', sans-serif;
+}
+
+#slide-navigation button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border: 1px solid #64748b;
+    border-radius: 1rem;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#slide-navigation button:hover:not(:disabled) {
+    background: #334155;
+}
+
+#slide-navigation button:focus-visible {
+    outline: 3px solid #38bdf8;
+    outline-offset: 3px;
+}
+
+#slide-navigation button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.slide-navigation-hint {
+    max-width: 12rem;
+    text-align: center;
+}

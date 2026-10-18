@@ -160,6 +160,8 @@
             color: #f87171;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -456,14 +458,11 @@ safe_remove(10)
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">
-    Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides
-</div>
-
-<div class="fixed bottom-4 right-4 z-50 flex gap-2">
-    <button id="prev-slide" class="nav-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-left"></i></button>
-    <button id="next-slide" class="nav-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-white"><i class="fa-solid fa-arrow-right"></i></button>
-</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // --- MCQS RAW USER-SUPPLIED DATA STRUCTURE ---
@@ -552,8 +551,8 @@ safe_remove(10)
         document.getElementById('progress').style.width = `${progressPercent}%`;
         
         // Button disable evaluation states
-        document.getElementById('prev-slide').disabled = (currentSlideIndex === 0);
-        document.getElementById('next-slide').disabled = (currentSlideIndex === totalSlides - 1);
+        document.getElementById('slide-previous').disabled = (currentSlideIndex === 0);
+        document.getElementById('slide-next').disabled = (currentSlideIndex === totalSlides - 1);
         
         // Force syntax engine refresh inside active cards
         Prism.highlightAll();
@@ -574,8 +573,6 @@ safe_remove(10)
     }
     
     // Bind click buttons
-    document.getElementById('next-slide').addEventListener('click', nextSlide);
-    document.getElementById('prev-slide').addEventListener('click', prevSlide);
     
     // Key event listeners
     window.addEventListener('keydown', (e) => {
@@ -804,6 +801,7 @@ safe_remove(10)
         renderMcqQuestion();
         initPyodideEngine();
     });
+    initializeSlideNavigation(prevSlide, nextSlide);
 </script>
 </body>
 </html>

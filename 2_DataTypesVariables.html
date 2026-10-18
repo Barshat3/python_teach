@@ -171,6 +171,8 @@
             background: #0f172a !important;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -456,7 +458,11 @@ print("My name is", name, "and I am", age, "years old.")</code></pre>
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // System Slide Orchestration Data Configurations
@@ -491,16 +497,10 @@ print("My name is", name, "and I am", age, "years old.")</code></pre>
         
         if (e.key === 'ArrowRight' || e.key === ' ') {
             e.preventDefault();
-            if(currentSlideIdx < slides.length - 1) {
-                currentSlideIdx++;
-                updatePresentationState();
-            }
+            navigateNextSlide();
         } else if (e.key === 'ArrowLeft') {
             e.preventDefault();
-            if(currentSlideIdx > 0) {
-                currentSlideIdx--;
-                updatePresentationState();
-            }
+            navigatePreviousSlide();
         }
     });
 
@@ -732,6 +732,21 @@ print(area)`
     paintMcqEngine();
     updatePresentationState();
 
+    function navigateNextSlide() {
+        if (currentSlideIdx < slides.length - 1) {
+            currentSlideIdx++;
+            updatePresentationState();
+        }
+    }
+
+    function navigatePreviousSlide() {
+        if (currentSlideIdx > 0) {
+            currentSlideIdx--;
+            updatePresentationState();
+        }
+    }
+
+    initializeSlideNavigation(navigatePreviousSlide, navigateNextSlide);
 </script>
 </body>
 </html>

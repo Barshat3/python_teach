@@ -203,6 +203,8 @@
             background: #64748b;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -506,13 +508,12 @@ show_readme_demo()</textarea>
 
 </div>
 
-<div class="flex gap-4 mt-4 z-40">
-    <button id="global-prev-btn" class="nav-btn w-10 h-10 rounded-full flex items-center justify-center text-slate-300 text-sm shadow-lg"><i class="fa-solid fa-chevron-left"></i></button>
-    <button id="global-next-btn" class="nav-btn w-10 h-10 rounded-full flex items-center justify-center text-slate-300 text-sm shadow-lg"><i class="fa-solid fa-chevron-right"></i></button>
-</div>
-
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // 1. Raw User Provided Verification MCQ Dataset Array Matrix
@@ -671,8 +672,6 @@ show_readme_demo()</textarea>
     }
 
     // Connect global mouse click click triggers 
-    document.getElementById('global-next-btn').addEventListener('click', navigateToNextSlide);
-    document.getElementById('global-prev-btn').addEventListener('click', navigateToPrevSlide);
 
     // Keyboard bindings configurations map setup
     window.addEventListener('keydown', (e) => {
@@ -886,6 +885,7 @@ show_readme_demo()</textarea>
         loadPyodideRuntimeEnvironment();
         renderTargetMcqQuestionItem();
     });
+    initializeSlideNavigation(navigateToPrevSlide, navigateToNextSlide);
 </script>
 </body>
 </html>

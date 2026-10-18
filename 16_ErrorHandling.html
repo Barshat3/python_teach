@@ -156,12 +156,18 @@
             border-left: 4px solid var(--accent-red) !important;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body class="bg-[#0F172A] text-slate-100 antialiased">
 
 <div id="slide-counter">1 / 1</div>
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint hidden md:block">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <div id="pyodide-status-banner" class="fixed top-4 left-6 z-50 flex items-center gap-2 bg-slate-800/80 backdrop-blur-md border border-slate-700 px-4 py-1.5 rounded-full text-xs">
     <span class="relative flex h-2 w-2">
@@ -880,7 +886,7 @@ finally:
         initializePyodideEngine();
         renderMcqQuestionState();
     });
+    initializeSlideNavigation(prevSlide, nextSlide);
 </script>
-
 </body>
 </html>
