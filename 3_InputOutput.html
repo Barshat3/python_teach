@@ -137,6 +137,8 @@
             background: rgba(255,255,255,0.2);
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans">
 
@@ -595,7 +597,11 @@ print(f"Hi {name}, it's amazing that you study {subject} for {hours} hours every
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // System Slide Engine State Variables
@@ -956,6 +962,7 @@ builtins.input = mocked_input
             initializeMCQSlideFlow();
         }
     }
+    initializeSlideNavigation(() => navigateSlide(-1), () => navigateSlide(1));
 </script>
 </body>
 </html>

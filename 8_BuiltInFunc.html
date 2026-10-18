@@ -119,6 +119,8 @@
             border-left: 4px solid #10b981;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -424,7 +426,11 @@ print(type(value)) # Output: &lt;class 'int'&gt;</code></pre>
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // 1. Core State Properties Initialization Framework
@@ -768,6 +774,7 @@ print("Sum tracking for positive arrays:", sum(positives))`
         userMcqAnswers = new Array(mcqData.length).fill(null);
         renderActiveMcqQuestionBlock();
     }
+    initializeSlideNavigation(prevSlide, nextSlide);
 </script>
 </body>
 </html>

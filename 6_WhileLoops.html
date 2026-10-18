@@ -200,6 +200,8 @@
             pointer-events: none;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -208,7 +210,7 @@
 
 <div id="slide-counter">1 / 8</div>
 
-<div class="slide-deck">
+<div id="presentation-container" class="slide-deck">
     <div class="slide active" id="slide-1">
         <div class="flex items-center gap-3 text-indigo-400 mb-2">
             <i class="fa-solid fa-rotate-right text-xl animate-spin-slow"></i>
@@ -495,7 +497,11 @@ while num <= 20:
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // --- MCQs DATA STRUCT (Verbatim User Provided Questions) ---
@@ -804,6 +810,7 @@ while num <= 20:
         renderMcqQuestion();
         initPyodide();
     });
+    initializeSlideNavigation(navigateLeft, navigateRight);
 </script>
 </body>
 </html>

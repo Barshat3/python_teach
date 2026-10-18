@@ -188,6 +188,8 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -507,11 +509,12 @@ Welcome to the interactive workspace terminal. Hit 'Compile and Run Script' abov
 
 </div>
 
-<button class="nav-btn" id="prev-slide-btn" disabled><i class="fa-solid fa-arrow-left mr-1"></i> Previous</button>
-<button class="nav-btn" id="next-slide-btn">Next <i class="fa-solid fa-arrow-right ml-1"></i></button>
-
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // 1. Data Store Definition: Verbatim MCQ Input Data mapping
@@ -595,8 +598,8 @@ Welcome to the interactive workspace terminal. Hit 'Compile and Run Script' abov
         document.getElementById('progress').style.width = `${metricPercentage}%`;
 
         // Navigation Boundary Protection
-        document.getElementById('prev-slide-btn').disabled = (currentSlideIndex === 1);
-        document.getElementById('next-slide-btn').disabled = (currentSlideIndex === totalSlidesCount);
+        document.getElementById('slide-previous').disabled = (currentSlideIndex === 1);
+        document.getElementById('slide-next').disabled = (currentSlideIndex === totalSlidesCount);
 
         // Re-run prism highlighting on slide shifts to preserve layout rules
         setTimeout(() => { Prism.highlightAll(); }, 5);
@@ -617,8 +620,6 @@ Welcome to the interactive workspace terminal. Hit 'Compile and Run Script' abov
     }
 
     // Connect global navigation event hooks
-    document.getElementById('next-slide-btn').addEventListener('click', navigateNextSlide);
-    document.getElementById('prev-slide-btn').addEventListener('click', navigatePrevSlide);
 
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
@@ -807,7 +808,7 @@ Welcome to the interactive workspace terminal. Hit 'Compile and Run Script' abov
         refreshDeckState();
         renderMcqQuestionState();
     });
+    initializeSlideNavigation(navigatePrevSlide, navigateNextSlide);
 </script>
-
 </body>
 </html>

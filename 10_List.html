@@ -140,6 +140,8 @@
             border-radius: 4px;
         }
     </style>
+    <link rel="stylesheet" href="slide-navigation.css">
+    <script src="slide-navigation.js"></script>
 </head>
 <body>
 
@@ -469,7 +471,11 @@ print("Total Container Scale Metric:", len(fruits))</textarea>
 </div>
 
 <div class="progress-bar" id="progress"></div>
-<div class="nav-hint">Use <span class="key-box">&larr;</span><span class="key-box">&rarr;</span> or <span class="key-box">Space</span> to navigate slides</div>
+<nav id="slide-navigation" aria-label="Slide navigation">
+    <button id="slide-previous" type="button" aria-label="Previous slide" disabled>&larr;</button>
+    <span class="slide-navigation-hint">Tap the arrows or use arrow keys / Space</span>
+    <button id="slide-next" type="button" aria-label="Next slide">&rarr;</button>
+</nav>
 
 <script>
     // Explicit MCQ Object Registry Map Structure Array Matrix Source
@@ -841,6 +847,7 @@ print("Total Container Scale Metric:", len(fruits))</textarea>
 
     // Kickstart System Architecture Layout Lifecycle Loops
     window.addEventListener('DOMContentLoaded', initializationEngineSequence);
+    initializeSlideNavigation(() => navigateToSlidePosition(currentSlideIndex - 1), () => navigateToSlidePosition(currentSlideIndex + 1));
 </script>
 </body>
 </html>
